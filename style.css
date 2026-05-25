@@ -2057,6 +2057,10 @@ h3 {
   margin-top: var(--space-lg);
 }
 
+.compact-actions {
+  margin-top: var(--space-md);
+}
+
 .disabled-action {
   opacity: 0.72;
   cursor: default;
@@ -2210,6 +2214,252 @@ h3 {
 
 .legal-section {
   padding-top: 0;
+}
+
+.infographic-hero {
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-xl);
+}
+
+.infographic-title {
+  max-width: 920px;
+}
+
+.infographic-title p:not(.eyebrow) {
+  max-width: 760px;
+  margin-top: var(--space-md);
+  color: var(--color-muted);
+}
+
+.infographic-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.86fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: stretch;
+  margin-top: var(--space-xl);
+}
+
+.infographic-map::before {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  z-index: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(140, 244, 255, 0.4), rgba(216, 183, 106, 0.38), transparent);
+  content: "";
+}
+
+.infographic-node,
+.infographic-core,
+.infographic-card,
+.infographic-split,
+.delivery-timeline li,
+.handoff-board {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(12, 22, 48, 0.88), rgba(5, 8, 20, 0.76)),
+    radial-gradient(circle at 16% 0%, rgba(216, 183, 106, 0.1), transparent 14rem);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.infographic-node,
+.infographic-card,
+.delivery-timeline li {
+  padding: var(--space-lg);
+}
+
+.infographic-node span,
+.delivery-timeline li span,
+.do-dont-grid span,
+.asset-lanes span {
+  color: var(--color-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.infographic-node h2,
+.infographic-card h2,
+.delivery-timeline h2,
+.infographic-split h2,
+.handoff-board h2 {
+  margin-top: var(--space-sm);
+  font-size: clamp(1.55rem, 2.6vw, 2.25rem);
+}
+
+.infographic-node p,
+.infographic-card p,
+.delivery-timeline p,
+.infographic-split p,
+.handoff-board p,
+.do-dont-grid p {
+  margin-top: var(--space-sm);
+  color: var(--color-muted);
+}
+
+.infographic-core {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  padding: var(--space-lg);
+  text-align: center;
+  border-color: rgba(216, 183, 106, 0.38);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(216, 183, 106, 0.24), transparent 10rem),
+    radial-gradient(circle at 50% 58%, rgba(140, 244, 255, 0.16), transparent 12rem),
+    rgba(5, 8, 20, 0.86);
+}
+
+.infographic-core h2 {
+  margin-top: 0.1rem;
+  color: var(--color-gold-soft);
+  font-size: clamp(2.25rem, 4.2vw, 3.6rem);
+}
+
+.infographic-core p {
+  color: var(--color-cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.infographic-core small {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.core-ring {
+  position: absolute;
+  inset: 26px;
+  border: 1px solid rgba(140, 244, 255, 0.16);
+  border-radius: 50%;
+}
+
+.core-ring::before,
+.core-ring::after {
+  position: absolute;
+  inset: 28px;
+  border: 1px dashed rgba(216, 183, 106, 0.22);
+  border-radius: inherit;
+  content: "";
+}
+
+.core-ring::after {
+  inset: 72px;
+  border-color: rgba(140, 244, 255, 0.18);
+}
+
+.infographic-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: var(--space-lg);
+}
+
+.infographic-pill-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.38rem 0.74rem;
+  border: 1px solid rgba(140, 244, 255, 0.22);
+  border-radius: 999px;
+  color: var(--color-muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.infographic-section {
+  padding-top: 0;
+}
+
+.infographic-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.infographic-split,
+.handoff-board {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
+  gap: var(--space-lg);
+  align-items: center;
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.do-dont-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.do-dont-grid article {
+  min-height: 220px;
+  padding: var(--space-md);
+  border: 1px solid rgba(140, 244, 255, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.delivery-timeline {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+}
+
+.delivery-timeline li {
+  min-height: 290px;
+}
+
+.delivery-timeline li::after {
+  position: absolute;
+  top: 31px;
+  right: -13px;
+  z-index: 3;
+  width: 26px;
+  height: 1px;
+  background: rgba(140, 244, 255, 0.44);
+  content: "";
+}
+
+.delivery-timeline li:last-child::after {
+  display: none;
+}
+
+.asset-lanes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.asset-lanes span {
+  display: grid;
+  min-height: 72px;
+  place-items: center;
+  border: 1px dashed rgba(140, 244, 255, 0.32);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  background:
+    linear-gradient(135deg, rgba(140, 244, 255, 0.08), rgba(216, 183, 106, 0.06)),
+    rgba(255, 255, 255, 0.035);
+  text-align: center;
 }
 
 .legal-card {
@@ -2383,7 +2633,10 @@ h3 {
   .report-layout,
   .perspective-layout,
   .expansion-layout,
-  .origin-layout {
+  .origin-layout,
+  .infographic-map,
+  .infographic-split,
+  .handoff-board {
     grid-template-columns: 1fr;
   }
 
@@ -2432,7 +2685,9 @@ h3 {
   .choice-grid,
   .option-grid,
   .community-grid,
-  .flow-list {
+  .flow-list,
+  .three-columns,
+  .delivery-timeline {
     width: 100%;
     max-width: 100%;
     margin-inline: auto;
@@ -2466,8 +2721,15 @@ h3 {
   .choice-grid,
   .option-grid,
   .community-grid,
-  .flow-list {
+  .flow-list,
+  .three-columns,
+  .delivery-timeline {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .infographic-map::before,
+  .delivery-timeline li::after {
+    display: none;
   }
 
   .flow-list {
@@ -2564,6 +2826,17 @@ h3 {
   .hero-actions,
   .button {
     width: 100%;
+  }
+
+  .do-dont-grid,
+  .asset-lanes,
+  .three-columns,
+  .delivery-timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-timeline li {
+    min-height: auto;
   }
 
   .studio-panel {
