@@ -1,0 +1,544 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>FeatherTune ライバル度分析レポート</title>
+<style>*, ::before, ::after { box-sizing: border-box; margin: 0px; padding: 0px; }
+:root { --indigo: #1A237E; --purple: #4527A0; --teal: #00695C; --teal2: #00897B; --grey: #6B7280; --border: #E0E6F0; --shadow: 0 4px 20px rgba(0,0,0,.10); }
+body { font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif; background: rgb(238, 242, 255); color: rgb(26, 26, 46); min-height: 100vh; }
+#screen-upload { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; }
+.app-logo { text-align: center; margin-bottom: 32px; }
+.app-logo h1 { font-size: 1.6em; font-weight: 800; background-image: ; background-position-x: ; background-position-y: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-color: ; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 0.06em; }
+.app-logo p { font-size: 0.82em; color: var(--grey); margin-top: 6px; }
+.upload-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; width: 100%; max-width: 860px; align-items: center; }
+.upload-card { background: rgb(255, 255, 255); border: 2px dashed var(--border); border-radius: 14px; padding: 28px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+.upload-card:hover { border-color: var(--purple); box-shadow: var(--shadow); }
+.upload-card.loaded { border-color: var(--teal2); border-style: solid; }
+.upload-card input[type="file"] { display: none; }
+.upload-card .uc-icon { font-size: 2.2em; margin-bottom: 10px; display: block; }
+.upload-card .uc-label { font-size: 0.88em; font-weight: 700; color: var(--indigo); display: block; margin-bottom: 6px; }
+.upload-card .uc-hint { font-size: 0.74em; color: var(--grey); line-height: 1.5; }
+.upload-card .uc-filename { margin-top: 10px; font-size: 0.75em; color: var(--teal); font-weight: 600; word-break: break-all; display: none; }
+.upload-card.loaded .uc-filename { display: block; }
+.vs-badge { width: 48px; height: 48px; background: linear-gradient(135deg,var(--indigo),var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgb(255, 255, 255); font-size: 0.75em; font-weight: 800; flex-shrink: 0; }
+.btn-analyze { margin-top: 28px; padding: 14px 48px; background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); font-size: 1em; font-weight: 700; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 30px; cursor: pointer; letter-spacing: 0.06em; box-shadow: rgba(69, 39, 160, 0.35) 0px 4px 16px; transition: opacity 0.2s, transform 0.1s; display: block; }
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-analyze:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+#screen-result { display: none; }
+.action-bar { width: 100%; max-width: 1180px; margin: 0px auto 12px; display: flex; gap: 10px; padding: 12px 0px; align-items: center; }
+.btn-back, .btn-print, .btn-dl { padding: 9px 22px; border-radius: 20px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; font-size: 0.82em; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s; }
+.btn-back { background: rgb(232, 234, 246); color: var(--indigo); }
+.btn-print { background: linear-gradient(135deg,var(--teal),var(--teal2)); color: rgb(255, 255, 255); }
+.btn-dl { background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); }
+.btn-back:hover, .btn-print:hover, .btn-dl:hover { opacity: 0.85; }
+.action-bar .spacer { flex: 1 1 0%; }
+.page-wrap { width: 100%; max-width: 1180px; margin: 0px auto 24px; background: rgb(255, 255, 255); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.ph { background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.ph h1 { font-size: 1.08em; font-weight: 800; letter-spacing: 0.06em; }
+.ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.ph-meta { font-size: 0.72em; opacity: 0.88; text-align: right; line-height: 1.7; }
+.p1-main { display: grid; grid-template-columns: 1fr 0.9fr 1fr; border-bottom: 1px solid var(--border); }
+.p1-col { padding: 18px 16px; }
+.p1-col-a { border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+.p1-col-b { border-left: 1px solid var(--border); position: relative; overflow: hidden; }
+.p1-col-ctr { background: rgb(247, 248, 255); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.song-title { font-size: 1.05em; font-weight: 800; color: var(--indigo); margin-bottom: 10px; line-height: 1.3; }
+.smr { display: flex; justify-content: space-between; padding: 4px 0px; font-size: 0.78em; border-bottom: 1px dotted rgb(238, 240, 248); gap: 6px; }
+.smr .sl { color: var(--grey); flex-shrink: 0; }
+.smr .sv { font-weight: 600; text-align: right; word-break: break-all; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 0.7em; font-weight: 700; }
+.b-ai { background: rgb(255, 243, 224); color: rgb(230, 81, 0); }
+.b-j { background: rgb(232, 245, 233); color: rgb(46, 125, 50); }
+.b-low { background: rgb(232, 245, 233); color: rgb(27, 94, 32); }
+.b-med { background: rgb(255, 248, 225); color: rgb(245, 127, 23); }
+.b-high { background: rgb(255, 235, 238); color: rgb(183, 28, 28); }
+.p1-dual { display: flex; gap: 16px; justify-content: center; }
+.p1-gu { text-align: center; }
+.p1-gu .gl { font-size: 0.65em; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 5px; }
+.p1-gw { position: relative; width: 96px; height: 96px; margin: 0px auto; }
+.p1-gw svg { width: 100%; height: 100%; }
+.p1-gs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.55em; font-weight: 800; line-height: 1; }
+.p1-gs .gu { font-size: 0.35em; font-weight: 400; color: var(--grey); display: block; margin-top: 1px; }
+.rank-pill { display: inline-block; padding: 3px 12px; border-radius: 14px; font-size: 0.72em; font-weight: 800; margin-top: 4px; color: rgb(255, 255, 255); }
+.rk-A { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.rk-B { background: linear-gradient(135deg, rgb(126, 87, 194), rgb(92, 107, 192)); }
+.rk-C { background: linear-gradient(135deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.rk-D { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.p1-gu .rl { font-size: 0.6em; color: var(--grey); margin-top: 2px; }
+.p1-vs { font-size: 0.85em; font-weight: 800; color: rgb(159, 168, 218); letter-spacing: 0.08em; }
+.p1-score-sec { background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); color: rgb(255, 255, 255); padding: 14px 22px; }
+.p1-score-title { font-size: 0.78em; font-weight: 700; color: rgb(179, 157, 219); letter-spacing: 0.07em; margin-bottom: 10px; }
+.ft-grid { display: grid; grid-template-columns: 0.85fr 0.85fr 0.8fr 1.7fr 0.8fr; gap: 10px; margin-bottom: 0px; }
+.fc { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.13); border-radius: 8px; padding: 9px 11px; }
+.fc .fc-t { font-size: 0.62em; color: rgb(179, 157, 219); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.fc .fc-v { font-size: 0.75em; color: rgb(232, 234, 246); line-height: 1.55; }
+.p1-verdict-sec { background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); color: rgb(255, 255, 255); padding: 0px 22px 14px; }
+.verdict { background: rgba(179, 157, 219, 0.13); border: 1px solid rgba(179, 157, 219, 0.35); border-radius: 8px; padding: 9px 14px; font-size: 0.78em; color: rgb(232, 234, 246); line-height: 1.7; }
+.verdict strong { color: rgb(206, 147, 216); }
+.disclaimer { background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 120, 120, 0.35); border-radius: 8px; padding: 8px 12px; font-size: 0.68em; color: rgb(255, 205, 210); line-height: 1.6; margin-bottom: 10px; }
+.disclaimer strong { color: rgb(255, 138, 128); }
+.p2-subhd { background: linear-gradient(135deg, rgb(40, 53, 147), rgb(69, 39, 160)); color: rgb(255, 255, 255); padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; }
+.p2-subhd .p2-t { font-size: 0.9em; font-weight: 700; letter-spacing: 0.05em; }
+.p2-subhd .p2-m { font-size: 0.68em; opacity: 0.85; }
+.three-col { display: grid; grid-template-columns: 1fr 1.08fr 1fr; }
+.col { padding: 14px 13px; border-right: 1px solid var(--border); }
+.col:last-child { border-right-width: medium; border-right-style: none; border-right-color: currentcolor; }
+.col-hd { text-align: center; padding: 8px 7px 10px; border-radius: 7px; font-weight: 800; font-size: 0.88em; letter-spacing: 0.03em; margin-bottom: 12px; color: rgb(255, 255, 255); }
+.col-hd .sub { font-size: 0.7em; font-weight: 400; opacity: 0.9; display: block; margin-top: 2px; word-break: break-all; }
+.col-a .col-hd { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.col-ctr .col-hd { background: linear-gradient(135deg, rgb(69, 39, 160), rgb(106, 27, 154)); }
+.col-b .col-hd { background: linear-gradient(135deg, rgb(0, 105, 92), rgb(0, 137, 123)); }
+.ds { margin-bottom: 11px; }
+.ds-title { font-size: 0.63em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgb(92, 107, 192); border-bottom: 1.5px solid rgb(232, 234, 246); padding-bottom: 3px; margin-bottom: 6px; }
+.dr { display: flex; justify-content: space-between; align-items: flex-start; padding: 3px 0px; font-size: 0.73em; border-bottom: 1px dotted rgb(238, 240, 248); gap: 5px; }
+.dr .lbl { color: var(--grey); flex-shrink: 0; min-width: 60px; font-size: 0.88em; }
+.dr .val { font-weight: 600; color: rgb(26, 26, 46); text-align: right; word-break: break-all; }
+.chord-blk { background: rgb(245, 246, 255); border: 1px solid rgb(197, 202, 233); border-radius: 5px; padding: 5px 7px; font-family: "Courier New", monospace; font-size: 0.66em; color: rgb(40, 53, 147); word-break: break-all; line-height: 1.6; margin-top: 3px; }
+.lyr-blk { background: rgb(250, 250, 250); border-left: 3px solid rgb(159, 168, 218); padding: 5px 8px; font-size: 0.68em; color: rgb(55, 65, 81); line-height: 1.8; border-radius: 0px 4px 4px 0px; margin-top: 3px; }
+.bi { display: flex; align-items: center; padding: 3px 0px; font-size: 0.7em; border-bottom: 1px dotted rgb(237, 231, 246); gap: 4px; }
+.bi .bi-lbl { color: var(--grey); flex-shrink: 0; font-size: 0.88em; min-width: 54px; }
+.bi .bi-bar-w { flex: 1 1 0%; height: 5px; background: rgb(232, 234, 246); border-radius: 3px; overflow: hidden; }
+.bi .bi-bar { height: 100%; border-radius: 3px; }
+.bar-h { background: linear-gradient(90deg, rgb(67, 160, 71), rgb(102, 187, 106)); }
+.bar-m { background: linear-gradient(90deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.bar-l { background: linear-gradient(90deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.bi .bi-pct { font-weight: 700; color: rgb(69, 39, 160); font-size: 0.88em; min-width: 26px; text-align: right; }
+.p2-tags-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--border); }
+.p2-tc { padding: 9px 14px; border-right: 1px solid var(--border); }
+.p2-tc:last-child { border-right-width: medium; border-right-style: none; border-right-color: currentcolor; }
+.p2-tc-title { font-size: 0.63em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(92, 107, 192); margin-bottom: 5px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.66em; font-weight: 600; }
+.tag-ok { background: rgb(232, 245, 233); color: rgb(27, 94, 32); }
+.tag-diff { background: rgb(255, 243, 224); color: rgb(230, 81, 0); }
+.p2-comment-row { padding: 10px 16px; background: linear-gradient(135deg, rgb(237, 231, 246), rgb(232, 234, 246)); border-top: 2px solid rgb(179, 157, 219); }
+.p2-comment-title { font-size: 0.63em; font-weight: 700; color: rgb(69, 39, 160); margin-bottom: 4px; letter-spacing: 0.04em; }
+.p2-comment-text { font-size: 0.76em; color: rgb(49, 27, 146); line-height: 1.65; }
+.p3-main { display: grid; grid-template-columns: 1fr 1.2fr 1fr; border-bottom: 1px solid var(--border); }
+.p3-col { padding: 14px 13px; }
+.p3-col-a { border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+.p3-col-b { border-left: 1px solid var(--border); position: relative; overflow: hidden; }
+.p3-col-ctr { background: rgb(247, 248, 255); }
+.p3-score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; font-weight: 800; margin-bottom: 10px; color: rgb(255, 255, 255); }
+.p3-sb-A { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.p3-sb-B { background: linear-gradient(135deg, rgb(126, 87, 194), rgb(92, 107, 192)); }
+.p3-sb-C { background: linear-gradient(135deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.p3-sb-D { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.p3-lbl { font-size: 0.6em; font-weight: 700; color: rgb(92, 107, 192); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1.5px solid rgb(232, 234, 246); padding-bottom: 2px; margin: 7px 0px 3px; }
+.p3-val { font-size: 0.72em; color: rgb(26, 26, 46); margin-bottom: 3px; line-height: 1.5; }
+.p3-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+.p3-tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 0.62em; font-weight: 600; background: rgb(232, 234, 246); color: rgb(69, 39, 160); }
+.p3-absbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.p3-abs-a { background: rgb(126, 87, 194); }
+.p3-abs-b { background: rgb(129, 168, 61); }
+.p3-mitem { margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px dotted rgb(216, 220, 240); }
+.p3-mlbl-ctr { text-align: center; font-size: 0.58em; color: rgb(92, 107, 192); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; }
+.p3-mrow2 { display: flex; align-items: center; gap: 3px; }
+.p3-mbars { flex: 1 1 0%; display: flex; flex-direction: column; gap: 2px; }
+.p3-mba { height: 5px; border-radius: 2px; background: linear-gradient(90deg, rgb(126, 87, 194), rgb(179, 157, 219)); }
+.p3-mbb { height: 5px; border-radius: 2px; background: linear-gradient(90deg, rgb(38, 166, 154), rgb(128, 203, 196)); }
+.p3-mnum { min-width: 18px; font-weight: 800; font-size: 0.68em; }
+.p3-mnum-a { color: rgb(126, 87, 194); text-align: right; }
+.p3-mnum-b { color: rgb(38, 166, 154); text-align: left; }
+.p3-radar-wrap { display: flex; gap: 6px; justify-content: center; margin-top: 8px; padding: 6px 4px; background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); border-radius: 8px; }
+.p3-bottom { padding: 8px 16px; background: linear-gradient(135deg, rgb(237, 231, 246), rgb(232, 234, 246)); border-top: 2px solid rgb(179, 157, 219); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.p3-bt-title { font-size: 0.6em; font-weight: 700; color: rgb(69, 39, 160); margin-bottom: 3px; letter-spacing: 0.04em; }
+.p3-bt-val { font-size: 0.7em; color: rgb(49, 27, 146); line-height: 1.6; font-style: italic; }
+@media print {
+  .p3-col { padding: 4px 6px; }
+  .p3-lbl { font-size: 0.49em; margin: 2px 0px 1px; }
+  .p3-val { font-size: 0.57em; line-height: 1.3; }
+  .p3-score-badge { font-size: 0.62em; padding: 2px 7px; margin-bottom: 4px; }
+  .p3-tags { gap: 2px; margin-bottom: 2px; }
+  .p3-tag { font-size: 0.48em; padding: 1px 4px; }
+  .p3-absbar { height: 5px; }
+  .p3-mitem { margin-bottom: 1px; padding-bottom: 1px; }
+  .p3-mlbl-ctr { font-size: 0.46em; margin-bottom: 0px; }
+  .p3-mrow2 { gap: 2px; }
+  .p3-mnum { font-size: 0.5em; min-width: 11px; }
+  .p3-bar-single { height: 5px !important; }
+  .p3-bottom { padding: 3px 10px; }
+  .p3-bt-title { font-size: 0.49em; margin-bottom: 1px; }
+  .p3-bt-val { font-size: 0.55em; line-height: 1.35; }
+  .p3-radar-wrap { padding: 2px; margin-top: 4px; }
+  #p3-col-a svg, #p3-col-b svg { width: 84px !important; height: 84px !important; }
+  .p3-sim-block { padding: 4px 7px !important; margin-top: 5px !important; }
+  .p3-sim-block div { font-size: 0.5em !important; line-height: 1.4; }
+  .p3-cmt-block { padding: 5px 7px !important; margin-top: 4px !important; }
+  .p3-cmt-block div { font-size: 0.53em !important; line-height: 1.5; }
+  .col-hd { padding: 4px 5px; font-size: 0.7em; margin-bottom: 5px; }
+}
+.mode-selector { display: flex; gap: 10px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap; }
+.mode-btn { padding: 10px 22px; border-radius: 24px; border: 2px solid var(--border); background: rgb(255, 255, 255); font-size: 0.85em; font-weight: 700; cursor: pointer; letter-spacing: 0.03em; color: var(--grey); transition: 0.2s; }
+.mode-btn.active { border-color: var(--purple); background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); box-shadow: rgba(69, 39, 160, 0.3) 0px 4px 14px; }
+.mode-btn:hover:not(.active) { border-color: var(--purple); color: var(--indigo); }
+.friend-ph { background: linear-gradient(135deg, rgb(136, 14, 79), rgb(233, 30, 99)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.friend-ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.friend-3col { display: grid; grid-template-columns: 1fr 1.15fr 1fr; border-bottom: 1px solid rgb(248, 187, 208); }
+.friend-col { padding: 16px 14px; }
+.friend-col-ctr { background: linear-gradient(rgb(255, 240, 243), rgb(255, 248, 251)); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 16px 12px; }
+.friend-col-a { border-right: 1px solid rgb(248, 187, 208); }
+.friend-col-b { border-left: 1px solid rgb(248, 187, 208); }
+.fg-wrap { position: relative; width: 110px; height: 110px; margin: 0px auto 8px; }
+.fg-wrap svg { width: 100%; height: 100%; }
+.fg-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; line-height: 1; }
+.friend-level { display: inline-block; padding: 3px 14px; border-radius: 14px; font-size: 0.75em; font-weight: 800; margin-bottom: 12px; }
+.fl-high { background: linear-gradient(135deg, rgb(173, 20, 87), rgb(233, 30, 99)); color: rgb(255, 255, 255); }
+.fl-mid { background: linear-gradient(135deg, rgb(233, 30, 99), rgb(240, 98, 146)); color: rgb(255, 255, 255); }
+.fl-low { background: linear-gradient(135deg, rgb(248, 187, 208), rgb(252, 228, 236)); color: rgb(173, 20, 87); border: 1px solid rgb(244, 143, 177); }
+.friend-bar { background: linear-gradient(90deg, rgb(233, 30, 99), rgb(244, 143, 177)) !important; }
+.friend-song-title { font-size: 0.95em; font-weight: 800; color: rgb(136, 14, 79); margin-bottom: 8px; line-height: 1.3; }
+.friend-smr { display: flex; justify-content: space-between; padding: 3px 0px; font-size: 0.75em; border-bottom: 1px dotted rgb(252, 207, 227); gap: 5px; }
+.friend-smr .sl { color: rgb(173, 20, 87); flex-shrink: 0; opacity: 0.8; }
+.friend-smr .sv { font-weight: 600; color: rgb(74, 0, 41); text-align: right; word-break: break-all; }
+.friend-foot { padding: 11px 18px; background: linear-gradient(135deg, rgb(252, 228, 236), rgb(255, 240, 243)); border-top: 2px solid rgb(244, 143, 177); }
+.friend-foot-title { font-size: 0.63em; font-weight: 700; color: rgb(173, 20, 87); margin-bottom: 4px; letter-spacing: 0.04em; }
+.friend-foot-text { font-size: 0.76em; color: rgb(136, 14, 79); line-height: 1.65; font-style: italic; }
+.rival-ph { background: linear-gradient(135deg, rgb(123, 31, 162), rgb(183, 28, 28)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.rival-ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.rival-3col { display: grid; grid-template-columns: 1fr 1.15fr 1fr; border-bottom: 1px solid rgb(255, 205, 210); }
+.rival-col { padding: 16px 14px; }
+.rival-col-ctr { background: linear-gradient(rgb(255, 243, 224), rgb(255, 248, 245)); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 16px 12px; }
+.rival-col-a { border-right: 1px solid rgb(255, 205, 210); position: relative; overflow: hidden; }
+.rival-col-b { border-left: 1px solid rgb(255, 205, 210); position: relative; overflow: hidden; }
+.rg-wrap { position: relative; width: 110px; height: 110px; margin: 0px auto 8px; }
+.rg-wrap svg { width: 100%; height: 100%; }
+.rg-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; line-height: 1; }
+.rival-level { display: inline-block; padding: 3px 14px; border-radius: 14px; font-size: 0.75em; font-weight: 800; margin-bottom: 12px; }
+.rl-high { background: linear-gradient(135deg, rgb(183, 28, 28), rgb(229, 57, 53)); color: rgb(255, 255, 255); }
+.rl-mid { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 154, 154)); color: rgb(255, 255, 255); }
+.rl-low { background: linear-gradient(135deg, rgb(255, 205, 210), rgb(255, 235, 238)); color: rgb(183, 28, 28); border: 1px solid rgb(239, 154, 154); }
+.rival-bar { background: linear-gradient(90deg, rgb(229, 57, 53), rgb(239, 154, 154)) !important; }
+.rival-song-title { font-size: 0.95em; font-weight: 800; color: rgb(123, 31, 162); margin-bottom: 8px; line-height: 1.3; }
+.rival-smr { display: flex; justify-content: space-between; padding: 3px 0px; font-size: 0.75em; border-bottom: 1px dotted rgb(255, 205, 210); gap: 5px; }
+.rival-smr .sl { color: rgb(183, 28, 28); flex-shrink: 0; opacity: 0.8; }
+.rival-smr .sv { font-weight: 600; color: rgb(74, 20, 140); text-align: right; word-break: break-all; }
+.rival-str { margin-top: 8px; padding: 6px 8px; background: rgba(183, 28, 28, 0.07); border-radius: 6px; border-left: 3px solid rgb(229, 57, 53); }
+.rival-str-title { font-size: 0.6em; font-weight: 700; color: rgb(183, 28, 28); letter-spacing: 0.05em; margin-bottom: 3px; }
+.rival-str-val { font-size: 0.68em; color: rgb(74, 20, 140); line-height: 1.5; }
+.rival-foot { padding: 11px 18px; background: linear-gradient(135deg, rgb(255, 235, 238), rgb(255, 243, 224)); border-top: 2px solid rgb(239, 154, 154); }
+.rival-foot-title { font-size: 0.63em; font-weight: 700; color: rgb(183, 28, 28); margin-bottom: 4px; letter-spacing: 0.04em; }
+.rival-foot-text { font-size: 0.76em; color: rgb(123, 31, 162); line-height: 1.65; font-style: italic; }
+@page { size: a4 landscape; margin: 7mm; }
+@media print {
+  * { box-sizing: border-box; }
+  body { margin: 0px; padding: 0px; background: rgb(255, 255, 255) !important; }
+  #screen-upload { display: none !important; }
+  #screen-result { display: block !important; padding: 0px !important; }
+  .action-bar { display: none !important; }
+  .page-wrap { width: 283mm; max-width: 283mm; box-shadow: none; border-radius: 0px; margin: 0px; overflow: visible; break-after: page; }
+  .page-wrap:last-child { break-after: avoid; }
+  .ph { padding: 7px 16px; print-color-adjust: exact; }
+  .ph h1 { font-size: 0.92em; }
+  .ph-sub { font-size: 0.62em; }
+  .ph-meta { font-size: 0.62em; }
+  .p1-main { border-bottom: 1px solid rgb(224, 230, 240); }
+  .p1-col { padding: 8px 10px; }
+  .song-title { font-size: 0.88em; margin-bottom: 6px; }
+  .smr { font-size: 0.66em; padding: 2px 0px; }
+  .p1-gw { width: 68px; height: 68px; }
+  .p1-gs { font-size: 1.15em; }
+  .p1-dual { gap: 10px; }
+  .p1-gu .gl { font-size: 0.6em; margin-bottom: 3px; }
+  .rank-pill { font-size: 0.6em; padding: 2px 8px; margin-top: 2px; }
+  .p1-gu .rl { font-size: 0.55em; }
+  .badge { font-size: 0.6em; }
+  .p1-vs { font-size: 0.75em; }
+  .p1-score-sec { padding: 7px 14px; print-color-adjust: exact; }
+  .p1-score-title { font-size: 0.7em; margin-bottom: 6px; }
+  .ft-grid { gap: 5px; }
+  .fc { padding: 5px 7px; }
+  .fc .fc-t { font-size: 0.56em; }
+  .fc .fc-v { font-size: 0.64em; line-height: 1.45; }
+  .p1-verdict-sec { padding: 0px 14px 8px; print-color-adjust: exact; }
+  .verdict { padding: 5px 10px; font-size: 0.66em; line-height: 1.5; }
+  .disclaimer { padding: 4px 8px; font-size: 0.6em; margin-bottom: 6px; line-height: 1.45; }
+  .p2-subhd { padding: 5px 14px; print-color-adjust: exact; }
+  .p2-subhd .p2-t { font-size: 0.82em; }
+  .p2-subhd .p2-m { font-size: 0.62em; }
+  .three-col { display: grid; grid-template-columns: 1fr 1.08fr 1fr; }
+  .col { padding: 8px 9px; }
+  .col-hd { padding: 5px 5px 6px; font-size: 0.75em; margin-bottom: 7px; print-color-adjust: exact; }
+  .col-hd .sub { font-size: 0.68em; }
+  .ds { margin-bottom: 6px; }
+  .ds-title { font-size: 0.56em; padding-bottom: 2px; margin-bottom: 4px; }
+  .dr { font-size: 0.62em; padding: 1px 0px; }
+  .dr .lbl { min-width: 52px; }
+  .chord-blk { font-size: 0.58em; padding: 3px 5px; line-height: 1.5; }
+  .lyr-blk { font-size: 0.58em; padding: 3px 6px; line-height: 1.55; }
+  .bi { font-size: 0.6em; padding: 1px 0px; }
+  .bi .bi-lbl { min-width: 48px; }
+  .bi .bi-bar-w { height: 4px; }
+  .bi .bi-pct { min-width: 22px; }
+  .p2-tc { padding: 5px 10px; }
+  .p2-tc-title { font-size: 0.56em; margin-bottom: 3px; }
+  .tag { font-size: 0.58em; padding: 1px 6px; }
+  .p2-tags-row { border-top: 1.5px solid rgb(224, 230, 240); }
+  .p2-comment-row { padding: 6px 12px; }
+  .p2-comment-title { font-size: 0.58em; margin-bottom: 2px; }
+  .p2-comment-text { font-size: 0.67em; line-height: 1.55; }
+}
+body{background:#EEF2FF;padding:16px;}
+.page-wrap{max-width:1180px;margin:0 auto 24px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+@media print{body{background:#fff;padding:0;}.page-wrap{border-radius:0;box-shadow:none;max-width:283mm;page-break-after:always;}.page-wrap:last-child{page-break-after:avoid;}}
+@page{size:A4 landscape;margin:7mm;}
+</style></head><body><div class="page-wrap" id="page5" style="display: block;">
+    <div class="rival-ph">
+      <div>
+        <div style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">⚔️ ライバル度分析レポート</div>
+        <div class="ph-sub">RIVALRY ANALYSIS — 2曲の競合・対決度判定</div>
+      </div>
+      <div class="ph-meta" id="ph5-meta">さあいまこそ愛を語ろう（さあいまこそあいをかたろう） vs みあげてごらん（ミアゲテゴラン）<br>作成日：2026/5/27 ／ ライバル度分析</div>
+    </div>
+    <div id="page5-content">
+  <div class="rival-3col">
+    <div class="rival-col rival-col-a">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11em;font-family:Impact,sans-serif;font-weight:900;background:linear-gradient(135deg,#7B1FA2,#CE93D8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0.09;pointer-events:none;user-select:none;z-index:0;">A</div>
+      <div style="position:relative;z-index:1;">
+      <div class="rival-song-title" style="background:linear-gradient(135deg,#7B1FA2,#CE93D8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">⚔ さあいまこそ愛を語ろう（さあいまこそあいをかたろう）</div>
+      <div class="rival-smr"><span class="sl">アーティスト</span><span class="sv">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+      <div class="rival-smr"><span class="sl">キー / テンポ</span><span class="sv">B♭ / 99BPM</span></div>
+      <div class="rival-smr"><span class="sl">CRS / Rank</span><span class="sv" style="color:#7B1FA2;font-weight:800;">62pt　Rank C</span></div>
+      <div class="rival-str"><div class="rival-str-title" style="color:#7B1FA2;">💪 武器となる強み</div><div class="rival-str-val">● 文体リズムの自然さ：10/10</div><div class="rival-str-val">● 表現構造の一貫性：10/10</div></div>
+      <div class="rival-str" style="border-left-color:#9C27B0;background:rgba(156,39,176,.05);"><div class="rival-str-title" style="color:#7B1FA2;">🎯 攻略ポイント</div><div class="rival-str-val" style="color:#7B1FA2;">△ 情景描写力：4/10</div></div>
+      <div style="margin-top:7px;font-size:.65em;color:#7B1FA2;">🏷 リズム主導型（リズム型 × 構造型）</div>
+      <div style="margin-top:12px;padding:12px 10px 10px;background:linear-gradient(135deg,#7B1FA214,#CE93D80A);border-radius:11px;border:1px solid #7B1FA228;">
+        <div style="font-size:.57em;font-weight:700;color:#7B1FA2;letter-spacing:.07em;margin-bottom:6px;text-align:center;">🎯 表現レーダー — 歌詞表現プロファイル</div>
+        <div style="display:flex;justify-content:center;"><svg width="152" height="152" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg">
+    <rect width="152" height="152" fill="rgba(255,255,255,.35)" rx="7"></rect>
+    <polygon points="76,56.24 91.79630336502817,65.36 91.79630336502817,83.6 76,92.72 60.20369663497184,83.60000000000001 60.203696634971834,65.36000000000001" fill="none" stroke="#7B1FA228" stroke-width="0.9"></polygon><polygon points="76,42.56 103.64353088879928,58.52 103.64353088879929,90.44 76,106.4 48.356469111200724,90.44000000000001 48.35646911120071,58.520000000000024" fill="none" stroke="#7B1FA228" stroke-width="0.9"></polygon><polygon points="76,28.880000000000003 115.4907584125704,51.68000000000001 115.49075841257041,97.28 76,120.08000000000001 36.50924158742961,97.28000000000002 36.50924158742958,51.680000000000035" fill="none" stroke="#7B1FA228" stroke-width="0.9"></polygon><line x1="76" y1="74.48" x2="76" y2="28.880000000000003" stroke="#7B1FA238" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="115.4907584125704" y2="51.68000000000001" stroke="#7B1FA238" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="115.49075841257041" y2="97.28" stroke="#7B1FA238" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="76" y2="120.08000000000001" stroke="#7B1FA238" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="36.50924158742961" y2="97.28000000000002" stroke="#7B1FA238" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="36.50924158742958" y2="51.680000000000035" stroke="#7B1FA238" stroke-width="0.8"></line>
+    <polygon points="76,47.120000000000005 91.79630336502817,65.36 103.64353088879929,90.44 76,120.08000000000001 52.305544952457765,88.16000000000001 36.50924158742958,51.680000000000035" fill="#7B1FA2" fill-opacity="0.22" stroke="#7B1FA2" stroke-width="1.3"></polygon>
+    <circle cx="76" cy="47.120000000000005" r="2.7" fill="#7B1FA2"></circle><circle cx="91.79630336502817" cy="65.36" r="2.7" fill="#7B1FA2"></circle><circle cx="103.64353088879929" cy="90.44" r="2.7" fill="#7B1FA2"></circle><circle cx="76" cy="120.08000000000001" r="2.7" fill="#7B1FA2"></circle><circle cx="52.305544952457765" cy="88.16000000000001" r="2.7" fill="#7B1FA2"></circle><circle cx="36.50924158742958" cy="51.680000000000035" r="2.7" fill="#7B1FA2"></circle><text x="76" y="39.824" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">6</text><text x="98.11482471103943" y="61.712" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">4</text><text x="109.96205223481056" y="94.088" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">7</text><text x="76" y="127.376" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">10</text><text x="45.9870236064465" y="91.80800000000002" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">6</text><text x="30.190720241418312" y="48.03200000000004" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#7B1FA2" font-weight="800">10</text><text x="76" y="9.120000000000005" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">比喩</text><text x="132.6034203913509" y="41.800000000000004" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">情景</text><text x="132.6034203913509" y="107.16" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">感情</text><text x="76" y="139.84" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">リズム</text><text x="19.3965796086491" y="107.16000000000003" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">既視感</text><text x="19.396579608649063" y="41.80000000000005" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#7B1FA2CC" font-weight="700">構造</text>
+  </svg></div>
+        <div style="margin-top:8px;padding:4px 6px 2px;background:#7B1FA20D;border-radius:7px;">
+          <div style="font-size:.54em;font-weight:700;color:#7B1FA2;letter-spacing:.05em;margin-bottom:4px;text-align:center;">⚡ CRS スコア内訳</div>
+          <div style="display:flex;justify-content:center;"><svg width="148" height="51" viewBox="0 0 148 51" xmlns="http://www.w3.org/2000/svg">
+      <text x="47" y="12.559999999999999" text-anchor="end" font-size="6.5" fill="#7B1FA290" font-weight="700">LYRICS</text>
+      <rect x="50" y="6" width="68" height="8" rx="3" fill="#7B1FA215"></rect>
+      <rect x="50" y="6" width="58" height="8" rx="3" fill="#7B1FA2" fill-opacity="0.72"></rect>
+      <text x="110" y="12.559999999999999" font-size="6.8" fill="#7B1FA2" font-weight="800">85/100</text>
+      <text x="47" y="26.56" text-anchor="end" font-size="6.5" fill="#7B1FA290" font-weight="700">MUSIC</text>
+      <rect x="50" y="20" width="68" height="8" rx="3" fill="#7B1FA215"></rect>
+      <rect x="50" y="20" width="27" height="8" rx="3" fill="#7B1FA2" fill-opacity="0.72"></rect>
+      <text x="79" y="26.56" font-size="6.8" fill="#7B1FA2" font-weight="800">40/100</text>
+      <text x="47" y="40.56" text-anchor="end" font-size="6.5" fill="#7B1FA290" font-weight="700">CRS TOTAL</text>
+      <rect x="50" y="34" width="68" height="8" rx="3" fill="#7B1FA215"></rect>
+      <rect x="50" y="34" width="42" height="8" rx="3" fill="#7B1FA2" fill-opacity="0.72"></rect>
+      <text x="94" y="40.56" font-size="6.8" fill="#7B1FA2" font-weight="800">62/100</text></svg></div>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div class="rival-col-ctr">
+      <div style="font-size:.60em;font-weight:700;color:#7B1FA2;letter-spacing:.08em;margin-bottom:6px;text-align:center;">⚔️ RIVALRY SCORE</div>
+      <div class="rg-wrap">
+        <svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="fg817B1FA2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7B1FA2"></stop><stop offset="100%" style="stop-color:#E53935"></stop>
+    </linearGradient></defs>
+    <circle cx="55" cy="55" r="41.8" fill="none" stroke="#F8BBD030" stroke-width="9.350000000000001"></circle>
+    <circle cx="55" cy="55" r="41.8" fill="none" stroke="url(#fg817B1FA2)" stroke-width="9.350000000000001" stroke-linecap="round" stroke-dasharray="212.7 262.6" transform="rotate(-90 55 55)"></circle>
+  </svg>
+        <div class="rg-num">
+          <div style="font-size:1.85em;font-weight:900;background:linear-gradient(135deg,#7B1FA2,#E53935);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;">81</div>
+          <div style="font-size:.52em;color:#B71C1C;">/100</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-bottom:8px;">
+        <span style="display:inline-block;padding:4px 14px;border-radius:16px;font-size:.78em;font-weight:800;background:linear-gradient(135deg,#7B1FA2,#B71C1C);color:#fff;box-shadow:0 3px 10px rgba(183,28,28,.3);">🔥 永遠の好敵手</span>
+      </div>
+      <div style="font-size:.50em;text-align:center;color:#9E9E9E;margin-bottom:5px;letter-spacing:.05em;">
+        <span style="color:#7B1FA2;font-weight:700;">■ A</span> &nbsp;vs&nbsp; <span style="color:#E53935;font-weight:700;">■ B</span>　各軸 優劣判定
+      </div>
+      <div style="width:100%;"><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">👑 主人公オーラ対決</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:62%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:64%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🔥 感情攻撃力</span>
+        <span style="font-size:.56em;font-weight:800;color:#7B1FA2;padding:1px 7px;background:rgba(123,31,162,.15);border-radius:8px;">Ａ優勢</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:70%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:60%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🎤 カラオケ制圧力</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:100%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:100%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🏆 チャート争奪戦</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:62%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:64%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">💥 ラスボス感</span>
+        <span style="font-size:.56em;font-weight:800;color:#7B1FA2;padding:1px 7px;background:rgba(123,31,162,.15);border-radius:8px;">Ａ優勢</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:60%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:50%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🌊 リスナー引力</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:100%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:100%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🎭 ドラマ主題歌適性</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:55%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:60%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🕛 深夜0時の覇権</span>
+        <span style="font-size:.56em;font-weight:800;color:#7B1FA2;padding:1px 7px;background:rgba(123,31,162,.15);border-radius:8px;">Ａ優勢</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:95%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:71%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">💔 涙腺破壊力</span>
+        <span style="font-size:.56em;font-weight:800;color:#7B1FA2;padding:1px 7px;background:rgba(123,31,162,.15);border-radius:8px;">Ａ優勢</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:78%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:57%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div><div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">🌟 時代を超える力</span>
+        <span style="font-size:.56em;font-weight:800;color:#546E7A;padding:1px 7px;background:rgba(84,110,122,.12);border-radius:8px;">拮抗🤝</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:60%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:55%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div></div>
+    </div>
+    <div class="rival-col rival-col-b">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11em;font-family:Impact,sans-serif;font-weight:900;background:linear-gradient(135deg,#E53935,#EF9A9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0.09;pointer-events:none;user-select:none;z-index:0;">B</div>
+      <div style="position:relative;z-index:1;">
+      <div class="rival-song-title" style="background:linear-gradient(135deg,#E53935,#EF9A9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">⚔ みあげてごらん（ミアゲテゴラン）</div>
+      <div class="rival-smr"><span class="sl">アーティスト</span><span class="sv">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+      <div class="rival-smr"><span class="sl">キー / テンポ</span><span class="sv">Ebm / 84BPM</span></div>
+      <div class="rival-smr"><span class="sl">CRS / Rank</span><span class="sv" style="color:#E53935;font-weight:800;">64pt　Rank C</span></div>
+      <div class="rival-str"><div class="rival-str-title" style="color:#E53935;">💪 武器となる強み</div><div class="rival-str-val">● 抽象性・具体性バランス：10/10</div><div class="rival-str-val">● 文体リズムの自然さ：10/10</div><div class="rival-str-val">● 表現構造の一貫性：10/10</div></div>
+      <div class="rival-str" style="border-left-color:#9C27B0;background:rgba(156,39,176,.05);"><div class="rival-str-title" style="color:#7B1FA2;">🎯 攻略ポイント</div><div class="rival-str-val" style="color:#7B1FA2;">△ 既視感の少なさ：5/10</div></div>
+      <div style="margin-top:7px;font-size:.65em;color:#7B1FA2;">🏷 詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）</div>
+      <div style="margin-top:12px;padding:12px 10px 10px;background:linear-gradient(135deg,#E5393514,#EF9A9A0A);border-radius:11px;border:1px solid #E5393528;">
+        <div style="font-size:.57em;font-weight:700;color:#E53935;letter-spacing:.07em;margin-bottom:6px;text-align:center;">🎯 表現レーダー — 歌詞表現プロファイル</div>
+        <div style="display:flex;justify-content:center;"><svg width="152" height="152" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg">
+    <rect width="152" height="152" fill="rgba(255,255,255,.35)" rx="7"></rect>
+    <polygon points="76,56.24 91.79630336502817,65.36 91.79630336502817,83.6 76,92.72 60.20369663497184,83.60000000000001 60.203696634971834,65.36000000000001" fill="none" stroke="#E5393528" stroke-width="0.9"></polygon><polygon points="76,42.56 103.64353088879928,58.52 103.64353088879929,90.44 76,106.4 48.356469111200724,90.44000000000001 48.35646911120071,58.520000000000024" fill="none" stroke="#E5393528" stroke-width="0.9"></polygon><polygon points="76,28.880000000000003 115.4907584125704,51.68000000000001 115.49075841257041,97.28 76,120.08000000000001 36.50924158742961,97.28000000000002 36.50924158742958,51.680000000000035" fill="none" stroke="#E5393528" stroke-width="0.9"></polygon><line x1="76" y1="74.48" x2="76" y2="28.880000000000003" stroke="#E5393538" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="115.4907584125704" y2="51.68000000000001" stroke="#E5393538" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="115.49075841257041" y2="97.28" stroke="#E5393538" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="76" y2="120.08000000000001" stroke="#E5393538" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="36.50924158742961" y2="97.28000000000002" stroke="#E5393538" stroke-width="0.8"></line><line x1="76" y1="74.48" x2="36.50924158742958" y2="51.680000000000035" stroke="#E5393538" stroke-width="0.8"></line>
+    <polygon points="76,47.120000000000005 99.69445504754225,60.800000000000004 99.69445504754225,88.16 76,120.08000000000001 56.25462079371481,85.88000000000001 36.50924158742958,51.680000000000035" fill="#E53935" fill-opacity="0.22" stroke="#E53935" stroke-width="1.3"></polygon>
+    <circle cx="76" cy="47.120000000000005" r="2.7" fill="#E53935"></circle><circle cx="99.69445504754225" cy="60.800000000000004" r="2.7" fill="#E53935"></circle><circle cx="99.69445504754225" cy="88.16" r="2.7" fill="#E53935"></circle><circle cx="76" cy="120.08000000000001" r="2.7" fill="#E53935"></circle><circle cx="56.25462079371481" cy="85.88000000000001" r="2.7" fill="#E53935"></circle><circle cx="36.50924158742958" cy="51.680000000000035" r="2.7" fill="#E53935"></circle><text x="76" y="39.824" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">6</text><text x="106.01297639355352" y="57.152" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">6</text><text x="106.01297639355352" y="91.80799999999999" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">6</text><text x="76" y="127.376" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">10</text><text x="49.93609944770354" y="89.52800000000002" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">5</text><text x="30.190720241418312" y="48.03200000000004" text-anchor="middle" dominant-baseline="middle" font-size="9.4" fill="#E53935" font-weight="800">10</text><text x="76" y="9.120000000000005" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">比喩</text><text x="132.6034203913509" y="41.800000000000004" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">情景</text><text x="132.6034203913509" y="107.16" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">感情</text><text x="76" y="139.84" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">リズム</text><text x="19.3965796086491" y="107.16000000000003" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">既視感</text><text x="19.396579608649063" y="41.80000000000005" text-anchor="middle" dominant-baseline="middle" font-size="8.8" fill="#E53935CC" font-weight="700">構造</text>
+  </svg></div>
+        <div style="margin-top:8px;padding:4px 6px 2px;background:#E539350D;border-radius:7px;">
+          <div style="font-size:.54em;font-weight:700;color:#E53935;letter-spacing:.05em;margin-bottom:4px;text-align:center;">⚡ CRS スコア内訳</div>
+          <div style="display:flex;justify-content:center;"><svg width="148" height="51" viewBox="0 0 148 51" xmlns="http://www.w3.org/2000/svg">
+      <text x="47" y="12.559999999999999" text-anchor="end" font-size="6.5" fill="#E5393590" font-weight="700">LYRICS</text>
+      <rect x="50" y="6" width="68" height="8" rx="3" fill="#E5393515"></rect>
+      <rect x="50" y="6" width="61" height="8" rx="3" fill="#E53935" fill-opacity="0.72"></rect>
+      <text x="113" y="12.559999999999999" font-size="6.8" fill="#E53935" font-weight="800">89/100</text>
+      <text x="47" y="26.56" text-anchor="end" font-size="6.5" fill="#E5393590" font-weight="700">MUSIC</text>
+      <rect x="50" y="20" width="68" height="8" rx="3" fill="#E5393515"></rect>
+      <rect x="50" y="20" width="26" height="8" rx="3" fill="#E53935" fill-opacity="0.72"></rect>
+      <text x="78" y="26.56" font-size="6.8" fill="#E53935" font-weight="800">38/100</text>
+      <text x="47" y="40.56" text-anchor="end" font-size="6.5" fill="#E5393590" font-weight="700">CRS TOTAL</text>
+      <rect x="50" y="34" width="68" height="8" rx="3" fill="#E5393515"></rect>
+      <rect x="50" y="34" width="44" height="8" rx="3" fill="#E53935" fill-opacity="0.72"></rect>
+      <text x="96" y="40.56" font-size="6.8" fill="#E53935" font-weight="800">64/100</text></svg></div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+  <div class="rival-foot">
+    <div class="rival-foot-title">⚔️ ライバル度判定コメント</div>
+    <div class="rival-foot-text">さあいまこそ愛を語ろう（さあいまこそあいをかたろう）とみあげてごらん（ミアゲテゴラン）——この2曲は同じ音楽的頂点を目指す「宿命のライバル」だ。🎤カラオケ制圧力と🌊リスナー引力で激突し、聴き手はどちらを選ぶか引き裂かれる。 CRSスコアは62対64と互角。実力では決着がつかない真の好敵手だ。 10軸中4軸でAが優勢——現時点ではAが一歩リード。</div>
+  </div></div>
+  </div></body></html>
