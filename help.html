@@ -64,10 +64,25 @@
             </div>
             <div class="help-message help-message-bot" data-help-answer aria-live="polite">
               <p>
-                こんにちは。FeatherTune案内係です。知りたい項目を選ぶと、次に見る場所までふんわり案内します。
+                こんにちは。FeatherTune案内係です。知りたい項目を選ぶか、下の欄に質問を書くと、次に見る場所までふんわり案内します。
                 難しい話は小さく分けます。音符の糸ほどき、まかせてください。
               </p>
             </div>
+            <form class="help-input-form" data-help-form>
+              <label for="help-question">質問を書く</label>
+              <div class="help-input-row">
+                <input
+                  id="help-question"
+                  name="question"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="例: ORIGIN登録はどこから？"
+                  data-help-input
+                />
+                <button type="submit">聞く</button>
+              </div>
+              <p class="help-input-note">入力内容は送信されません。このページ内だけで案内を選びます。</p>
+            </form>
             <div class="help-quick-grid" aria-label="よくある質問">
               <button type="button" data-help-topic="about">FeatherTuneとは？</button>
               <button type="button" data-help-topic="origin">ORIGIN登録したい</button>

@@ -4,6 +4,8 @@ const nav = document.querySelector("[data-nav]");
 const revealTargets = document.querySelectorAll(".reveal");
 const aiMark = document.querySelector("[data-ai-mark]");
 const helpAnswer = document.querySelector("[data-help-answer]");
+const helpForm = document.querySelector("[data-help-form]");
+const helpInput = document.querySelector("[data-help-input]");
 
 const helpTopics = {
   about: {
@@ -72,6 +74,73 @@ const helpTopics = {
       "LPを見ても迷う場合はメールでお問い合わせください。ORIGIN番号をお持ちの場合は、本文に書いていただくと確認が早くなります。",
     links: [["メールで問い合わせる", "mailto:contact@feathertune.com"]],
   },
+  fallback: {
+    title: "少しだけ迷子の質問です",
+    body:
+      "今の案内係では断定できませんでした。近いものを選ぶなら、全体像は1ページ図解、手順は流れ図解、個別の確認はお問い合わせが確実です。音符の糸が絡まったら、無理に引っ張らず小さくほどきます。",
+    links: [
+      ["1ページ図解を見る", "about-infographic.html"],
+      ["流れ図解を見る", "flow-infographic.html"],
+      ["メールで問い合わせる", "mailto:contact@feathertune.com"],
+    ],
+  },
+};
+
+const normalizeHelpQuestion = (question) =>
+  question
+    .trim()
+    .toLowerCase()
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (value) =>
+      String.fromCharCode(value.charCodeAt(0) - 0xfee0)
+    );
+
+const helpTopicKeywords = [
+  {
+    key: "rights",
+    words: ["著作権", "権利", "侵害", "jasrac", "nexTone", "ネクストーン", "法的", "盗作", "類似"],
+  },
+  {
+    key: "origin",
+    words: ["origin", "登録", "申し込み", "申込", "フォーム", "無料", "初回", "番号"],
+  },
+  {
+    key: "flow",
+    words: ["流れ", "手順", "納品", "受付", "いつ", "時間", "進め方", "提出", "音源", "設問"],
+  },
+  {
+    key: "report",
+    words: ["レポート", "スコア", "ランク", "crs", "見方", "サンプル", "分析結果"],
+  },
+  {
+    key: "discord",
+    words: ["discord", "ディスコード", "コミュニティ", "参加", "チャンネル", "チャット"],
+  },
+  {
+    key: "monitor",
+    words: ["monitor", "モニター", "メディア", "ランキング", "ポッドキャスト", "ラジオ", "枠"],
+  },
+  {
+    key: "contact",
+    words: ["問い合わせ", "連絡", "メール", "相談", "質問", "不明", "困っ"],
+  },
+  {
+    key: "about",
+    words: ["feathertune", "フェザーチューン", "何", "概要", "できること", "サービス"],
+  },
+];
+
+const detectHelpTopic = (question) => {
+  const normalized = normalizeHelpQuestion(question);
+
+  if (!normalized) {
+    return "fallback";
+  }
+
+  const matched = helpTopicKeywords.find(({ words }) =>
+    words.some((word) => normalized.includes(word.toLowerCase()))
+  );
+
+  return matched?.key ?? "fallback";
 };
 
 const renderHelpAnswer = (topicKey) => {
@@ -118,6 +187,12 @@ nav?.querySelectorAll("a").forEach((link) => {
 
 document.querySelectorAll("[data-help-topic]").forEach((button) => {
   button.addEventListener("click", () => renderHelpAnswer(button.dataset.helpTopic));
+});
+
+helpForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const topicKey = detectHelpTopic(helpInput?.value ?? "");
+  renderHelpAnswer(topicKey);
 });
 
 if (!document.body.classList.contains("no-floating-help") && !window.location.pathname.endsWith("/help.html")) {
