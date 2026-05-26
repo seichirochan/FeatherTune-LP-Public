@@ -1,0 +1,677 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>FeatherTune 楽曲類似度判定レポート</title>
+<style>*, ::before, ::after { box-sizing: border-box; margin: 0px; padding: 0px; }
+:root { --indigo: #1A237E; --purple: #4527A0; --teal: #00695C; --teal2: #00897B; --grey: #6B7280; --border: #E0E6F0; --shadow: 0 4px 20px rgba(0,0,0,.10); }
+body { font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif; background: rgb(238, 242, 255); color: rgb(26, 26, 46); min-height: 100vh; }
+#screen-upload { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 16px; }
+.app-logo { text-align: center; margin-bottom: 32px; }
+.app-logo h1 { font-size: 1.6em; font-weight: 800; background-image: ; background-position-x: ; background-position-y: ; background-size: ; background-repeat: ; background-attachment: ; background-origin: ; background-color: ; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 0.06em; }
+.app-logo p { font-size: 0.82em; color: var(--grey); margin-top: 6px; }
+.upload-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; width: 100%; max-width: 860px; align-items: center; }
+.upload-card { background: rgb(255, 255, 255); border: 2px dashed var(--border); border-radius: 14px; padding: 28px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+.upload-card:hover { border-color: var(--purple); box-shadow: var(--shadow); }
+.upload-card.loaded { border-color: var(--teal2); border-style: solid; }
+.upload-card input[type="file"] { display: none; }
+.upload-card .uc-icon { font-size: 2.2em; margin-bottom: 10px; display: block; }
+.upload-card .uc-label { font-size: 0.88em; font-weight: 700; color: var(--indigo); display: block; margin-bottom: 6px; }
+.upload-card .uc-hint { font-size: 0.74em; color: var(--grey); line-height: 1.5; }
+.upload-card .uc-filename { margin-top: 10px; font-size: 0.75em; color: var(--teal); font-weight: 600; word-break: break-all; display: none; }
+.upload-card.loaded .uc-filename { display: block; }
+.vs-badge { width: 48px; height: 48px; background: linear-gradient(135deg,var(--indigo),var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: rgb(255, 255, 255); font-size: 0.75em; font-weight: 800; flex-shrink: 0; }
+.btn-analyze { margin-top: 28px; padding: 14px 48px; background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); font-size: 1em; font-weight: 700; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 30px; cursor: pointer; letter-spacing: 0.06em; box-shadow: rgba(69, 39, 160, 0.35) 0px 4px 16px; transition: opacity 0.2s, transform 0.1s; display: block; }
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-analyze:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+#screen-result { display: none; }
+.action-bar { width: 100%; max-width: 1180px; margin: 0px auto 12px; display: flex; gap: 10px; padding: 12px 0px; align-items: center; }
+.btn-back, .btn-print, .btn-dl { padding: 9px 22px; border-radius: 20px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; font-size: 0.82em; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s; }
+.btn-back { background: rgb(232, 234, 246); color: var(--indigo); }
+.btn-print { background: linear-gradient(135deg,var(--teal),var(--teal2)); color: rgb(255, 255, 255); }
+.btn-dl { background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); }
+.btn-back:hover, .btn-print:hover, .btn-dl:hover { opacity: 0.85; }
+.action-bar .spacer { flex: 1 1 0%; }
+.page-wrap { width: 100%; max-width: 1180px; margin: 0px auto 24px; background: rgb(255, 255, 255); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.ph { background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.ph h1 { font-size: 1.08em; font-weight: 800; letter-spacing: 0.06em; }
+.ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.ph-meta { font-size: 0.72em; opacity: 0.88; text-align: right; line-height: 1.7; }
+.p1-main { display: grid; grid-template-columns: 1fr 0.9fr 1fr; border-bottom: 1px solid var(--border); }
+.p1-col { padding: 18px 16px; }
+.p1-col-a { border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+.p1-col-b { border-left: 1px solid var(--border); position: relative; overflow: hidden; }
+.p1-col-ctr { background: rgb(247, 248, 255); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.song-title { font-size: 1.05em; font-weight: 800; color: var(--indigo); margin-bottom: 10px; line-height: 1.3; }
+.smr { display: flex; justify-content: space-between; padding: 4px 0px; font-size: 0.78em; border-bottom: 1px dotted rgb(238, 240, 248); gap: 6px; }
+.smr .sl { color: var(--grey); flex-shrink: 0; }
+.smr .sv { font-weight: 600; text-align: right; word-break: break-all; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 0.7em; font-weight: 700; }
+.b-ai { background: rgb(255, 243, 224); color: rgb(230, 81, 0); }
+.b-j { background: rgb(232, 245, 233); color: rgb(46, 125, 50); }
+.b-low { background: rgb(232, 245, 233); color: rgb(27, 94, 32); }
+.b-med { background: rgb(255, 248, 225); color: rgb(245, 127, 23); }
+.b-high { background: rgb(255, 235, 238); color: rgb(183, 28, 28); }
+.p1-dual { display: flex; gap: 16px; justify-content: center; }
+.p1-gu { text-align: center; }
+.p1-gu .gl { font-size: 0.65em; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 5px; }
+.p1-gw { position: relative; width: 96px; height: 96px; margin: 0px auto; }
+.p1-gw svg { width: 100%; height: 100%; }
+.p1-gs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.55em; font-weight: 800; line-height: 1; }
+.p1-gs .gu { font-size: 0.35em; font-weight: 400; color: var(--grey); display: block; margin-top: 1px; }
+.rank-pill { display: inline-block; padding: 3px 12px; border-radius: 14px; font-size: 0.72em; font-weight: 800; margin-top: 4px; color: rgb(255, 255, 255); }
+.rk-A { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.rk-B { background: linear-gradient(135deg, rgb(126, 87, 194), rgb(92, 107, 192)); }
+.rk-C { background: linear-gradient(135deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.rk-D { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.p1-gu .rl { font-size: 0.6em; color: var(--grey); margin-top: 2px; }
+.p1-vs { font-size: 0.85em; font-weight: 800; color: rgb(159, 168, 218); letter-spacing: 0.08em; }
+.p1-score-sec { background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); color: rgb(255, 255, 255); padding: 14px 22px; }
+.p1-score-title { font-size: 0.78em; font-weight: 700; color: rgb(179, 157, 219); letter-spacing: 0.07em; margin-bottom: 10px; }
+.ft-grid { display: grid; grid-template-columns: 0.85fr 0.85fr 0.8fr 1.7fr 0.8fr; gap: 10px; margin-bottom: 0px; }
+.fc { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.13); border-radius: 8px; padding: 9px 11px; }
+.fc .fc-t { font-size: 0.62em; color: rgb(179, 157, 219); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.fc .fc-v { font-size: 0.75em; color: rgb(232, 234, 246); line-height: 1.55; }
+.p1-verdict-sec { background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); color: rgb(255, 255, 255); padding: 0px 22px 14px; }
+.verdict { background: rgba(179, 157, 219, 0.13); border: 1px solid rgba(179, 157, 219, 0.35); border-radius: 8px; padding: 9px 14px; font-size: 0.78em; color: rgb(232, 234, 246); line-height: 1.7; }
+.verdict strong { color: rgb(206, 147, 216); }
+.disclaimer { background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 120, 120, 0.35); border-radius: 8px; padding: 8px 12px; font-size: 0.68em; color: rgb(255, 205, 210); line-height: 1.6; margin-bottom: 10px; }
+.disclaimer strong { color: rgb(255, 138, 128); }
+.p2-subhd { background: linear-gradient(135deg, rgb(40, 53, 147), rgb(69, 39, 160)); color: rgb(255, 255, 255); padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; }
+.p2-subhd .p2-t { font-size: 0.9em; font-weight: 700; letter-spacing: 0.05em; }
+.p2-subhd .p2-m { font-size: 0.68em; opacity: 0.85; }
+.three-col { display: grid; grid-template-columns: 1fr 1.08fr 1fr; }
+.col { padding: 14px 13px; border-right: 1px solid var(--border); }
+.col:last-child { border-right-width: medium; border-right-style: none; border-right-color: currentcolor; }
+.col-hd { text-align: center; padding: 8px 7px 10px; border-radius: 7px; font-weight: 800; font-size: 0.88em; letter-spacing: 0.03em; margin-bottom: 12px; color: rgb(255, 255, 255); }
+.col-hd .sub { font-size: 0.7em; font-weight: 400; opacity: 0.9; display: block; margin-top: 2px; word-break: break-all; }
+.col-a .col-hd { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.col-ctr .col-hd { background: linear-gradient(135deg, rgb(69, 39, 160), rgb(106, 27, 154)); }
+.col-b .col-hd { background: linear-gradient(135deg, rgb(0, 105, 92), rgb(0, 137, 123)); }
+.ds { margin-bottom: 11px; }
+.ds-title { font-size: 0.63em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: rgb(92, 107, 192); border-bottom: 1.5px solid rgb(232, 234, 246); padding-bottom: 3px; margin-bottom: 6px; }
+.dr { display: flex; justify-content: space-between; align-items: flex-start; padding: 3px 0px; font-size: 0.73em; border-bottom: 1px dotted rgb(238, 240, 248); gap: 5px; }
+.dr .lbl { color: var(--grey); flex-shrink: 0; min-width: 60px; font-size: 0.88em; }
+.dr .val { font-weight: 600; color: rgb(26, 26, 46); text-align: right; word-break: break-all; }
+.chord-blk { background: rgb(245, 246, 255); border: 1px solid rgb(197, 202, 233); border-radius: 5px; padding: 5px 7px; font-family: "Courier New", monospace; font-size: 0.66em; color: rgb(40, 53, 147); word-break: break-all; line-height: 1.6; margin-top: 3px; }
+.lyr-blk { background: rgb(250, 250, 250); border-left: 3px solid rgb(159, 168, 218); padding: 5px 8px; font-size: 0.68em; color: rgb(55, 65, 81); line-height: 1.8; border-radius: 0px 4px 4px 0px; margin-top: 3px; }
+.bi { display: flex; align-items: center; padding: 3px 0px; font-size: 0.7em; border-bottom: 1px dotted rgb(237, 231, 246); gap: 4px; }
+.bi .bi-lbl { color: var(--grey); flex-shrink: 0; font-size: 0.88em; min-width: 54px; }
+.bi .bi-bar-w { flex: 1 1 0%; height: 5px; background: rgb(232, 234, 246); border-radius: 3px; overflow: hidden; }
+.bi .bi-bar { height: 100%; border-radius: 3px; }
+.bar-h { background: linear-gradient(90deg, rgb(67, 160, 71), rgb(102, 187, 106)); }
+.bar-m { background: linear-gradient(90deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.bar-l { background: linear-gradient(90deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.bi .bi-pct { font-weight: 700; color: rgb(69, 39, 160); font-size: 0.88em; min-width: 26px; text-align: right; }
+.p2-tags-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--border); }
+.p2-tc { padding: 9px 14px; border-right: 1px solid var(--border); }
+.p2-tc:last-child { border-right-width: medium; border-right-style: none; border-right-color: currentcolor; }
+.p2-tc-title { font-size: 0.63em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(92, 107, 192); margin-bottom: 5px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.66em; font-weight: 600; }
+.tag-ok { background: rgb(232, 245, 233); color: rgb(27, 94, 32); }
+.tag-diff { background: rgb(255, 243, 224); color: rgb(230, 81, 0); }
+.p2-comment-row { padding: 10px 16px; background: linear-gradient(135deg, rgb(237, 231, 246), rgb(232, 234, 246)); border-top: 2px solid rgb(179, 157, 219); }
+.p2-comment-title { font-size: 0.63em; font-weight: 700; color: rgb(69, 39, 160); margin-bottom: 4px; letter-spacing: 0.04em; }
+.p2-comment-text { font-size: 0.76em; color: rgb(49, 27, 146); line-height: 1.65; }
+.p3-main { display: grid; grid-template-columns: 1fr 1.2fr 1fr; border-bottom: 1px solid var(--border); }
+.p3-col { padding: 14px 13px; }
+.p3-col-a { border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+.p3-col-b { border-left: 1px solid var(--border); position: relative; overflow: hidden; }
+.p3-col-ctr { background: rgb(247, 248, 255); }
+.p3-score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; font-weight: 800; margin-bottom: 10px; color: rgb(255, 255, 255); }
+.p3-sb-A { background: linear-gradient(135deg, rgb(21, 101, 192), rgb(25, 118, 210)); }
+.p3-sb-B { background: linear-gradient(135deg, rgb(126, 87, 194), rgb(92, 107, 192)); }
+.p3-sb-C { background: linear-gradient(135deg, rgb(251, 140, 0), rgb(255, 167, 38)); }
+.p3-sb-D { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 83, 80)); }
+.p3-lbl { font-size: 0.6em; font-weight: 700; color: rgb(92, 107, 192); text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1.5px solid rgb(232, 234, 246); padding-bottom: 2px; margin: 7px 0px 3px; }
+.p3-val { font-size: 0.72em; color: rgb(26, 26, 46); margin-bottom: 3px; line-height: 1.5; }
+.p3-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+.p3-tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 0.62em; font-weight: 600; background: rgb(232, 234, 246); color: rgb(69, 39, 160); }
+.p3-absbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.p3-abs-a { background: rgb(126, 87, 194); }
+.p3-abs-b { background: rgb(129, 168, 61); }
+.p3-mitem { margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px dotted rgb(216, 220, 240); }
+.p3-mlbl-ctr { text-align: center; font-size: 0.58em; color: rgb(92, 107, 192); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; }
+.p3-mrow2 { display: flex; align-items: center; gap: 3px; }
+.p3-mbars { flex: 1 1 0%; display: flex; flex-direction: column; gap: 2px; }
+.p3-mba { height: 5px; border-radius: 2px; background: linear-gradient(90deg, rgb(126, 87, 194), rgb(179, 157, 219)); }
+.p3-mbb { height: 5px; border-radius: 2px; background: linear-gradient(90deg, rgb(38, 166, 154), rgb(128, 203, 196)); }
+.p3-mnum { min-width: 18px; font-weight: 800; font-size: 0.68em; }
+.p3-mnum-a { color: rgb(126, 87, 194); text-align: right; }
+.p3-mnum-b { color: rgb(38, 166, 154); text-align: left; }
+.p3-radar-wrap { display: flex; gap: 6px; justify-content: center; margin-top: 8px; padding: 6px 4px; background: linear-gradient(135deg, rgb(26, 26, 46), rgb(26, 35, 126)); border-radius: 8px; }
+.p3-bottom { padding: 8px 16px; background: linear-gradient(135deg, rgb(237, 231, 246), rgb(232, 234, 246)); border-top: 2px solid rgb(179, 157, 219); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.p3-bt-title { font-size: 0.6em; font-weight: 700; color: rgb(69, 39, 160); margin-bottom: 3px; letter-spacing: 0.04em; }
+.p3-bt-val { font-size: 0.7em; color: rgb(49, 27, 146); line-height: 1.6; font-style: italic; }
+@media print {
+  .p3-col { padding: 4px 6px; }
+  .p3-lbl { font-size: 0.49em; margin: 2px 0px 1px; }
+  .p3-val { font-size: 0.57em; line-height: 1.3; }
+  .p3-score-badge { font-size: 0.62em; padding: 2px 7px; margin-bottom: 4px; }
+  .p3-tags { gap: 2px; margin-bottom: 2px; }
+  .p3-tag { font-size: 0.48em; padding: 1px 4px; }
+  .p3-absbar { height: 5px; }
+  .p3-mitem { margin-bottom: 1px; padding-bottom: 1px; }
+  .p3-mlbl-ctr { font-size: 0.46em; margin-bottom: 0px; }
+  .p3-mrow2 { gap: 2px; }
+  .p3-mnum { font-size: 0.5em; min-width: 11px; }
+  .p3-bar-single { height: 5px !important; }
+  .p3-bottom { padding: 3px 10px; }
+  .p3-bt-title { font-size: 0.49em; margin-bottom: 1px; }
+  .p3-bt-val { font-size: 0.55em; line-height: 1.35; }
+  .p3-radar-wrap { padding: 2px; margin-top: 4px; }
+  #p3-col-a svg, #p3-col-b svg { width: 84px !important; height: 84px !important; }
+  .p3-sim-block { padding: 4px 7px !important; margin-top: 5px !important; }
+  .p3-sim-block div { font-size: 0.5em !important; line-height: 1.4; }
+  .p3-cmt-block { padding: 5px 7px !important; margin-top: 4px !important; }
+  .p3-cmt-block div { font-size: 0.53em !important; line-height: 1.5; }
+  .col-hd { padding: 4px 5px; font-size: 0.7em; margin-bottom: 5px; }
+}
+.mode-selector { display: flex; gap: 10px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap; }
+.mode-btn { padding: 10px 22px; border-radius: 24px; border: 2px solid var(--border); background: rgb(255, 255, 255); font-size: 0.85em; font-weight: 700; cursor: pointer; letter-spacing: 0.03em; color: var(--grey); transition: 0.2s; }
+.mode-btn.active { border-color: var(--purple); background: linear-gradient(135deg,var(--indigo),var(--purple)); color: rgb(255, 255, 255); box-shadow: rgba(69, 39, 160, 0.3) 0px 4px 14px; }
+.mode-btn:hover:not(.active) { border-color: var(--purple); color: var(--indigo); }
+.friend-ph { background: linear-gradient(135deg, rgb(136, 14, 79), rgb(233, 30, 99)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.friend-ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.friend-3col { display: grid; grid-template-columns: 1fr 1.15fr 1fr; border-bottom: 1px solid rgb(248, 187, 208); }
+.friend-col { padding: 16px 14px; }
+.friend-col-ctr { background: linear-gradient(rgb(255, 240, 243), rgb(255, 248, 251)); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 16px 12px; }
+.friend-col-a { border-right: 1px solid rgb(248, 187, 208); }
+.friend-col-b { border-left: 1px solid rgb(248, 187, 208); }
+.fg-wrap { position: relative; width: 110px; height: 110px; margin: 0px auto 8px; }
+.fg-wrap svg { width: 100%; height: 100%; }
+.fg-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; line-height: 1; }
+.friend-level { display: inline-block; padding: 3px 14px; border-radius: 14px; font-size: 0.75em; font-weight: 800; margin-bottom: 12px; }
+.fl-high { background: linear-gradient(135deg, rgb(173, 20, 87), rgb(233, 30, 99)); color: rgb(255, 255, 255); }
+.fl-mid { background: linear-gradient(135deg, rgb(233, 30, 99), rgb(240, 98, 146)); color: rgb(255, 255, 255); }
+.fl-low { background: linear-gradient(135deg, rgb(248, 187, 208), rgb(252, 228, 236)); color: rgb(173, 20, 87); border: 1px solid rgb(244, 143, 177); }
+.friend-bar { background: linear-gradient(90deg, rgb(233, 30, 99), rgb(244, 143, 177)) !important; }
+.friend-song-title { font-size: 0.95em; font-weight: 800; color: rgb(136, 14, 79); margin-bottom: 8px; line-height: 1.3; }
+.friend-smr { display: flex; justify-content: space-between; padding: 3px 0px; font-size: 0.75em; border-bottom: 1px dotted rgb(252, 207, 227); gap: 5px; }
+.friend-smr .sl { color: rgb(173, 20, 87); flex-shrink: 0; opacity: 0.8; }
+.friend-smr .sv { font-weight: 600; color: rgb(74, 0, 41); text-align: right; word-break: break-all; }
+.friend-foot { padding: 11px 18px; background: linear-gradient(135deg, rgb(252, 228, 236), rgb(255, 240, 243)); border-top: 2px solid rgb(244, 143, 177); }
+.friend-foot-title { font-size: 0.63em; font-weight: 700; color: rgb(173, 20, 87); margin-bottom: 4px; letter-spacing: 0.04em; }
+.friend-foot-text { font-size: 0.76em; color: rgb(136, 14, 79); line-height: 1.65; font-style: italic; }
+.rival-ph { background: linear-gradient(135deg, rgb(123, 31, 162), rgb(183, 28, 28)); color: rgb(255, 255, 255); padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; }
+.rival-ph .ph-sub { font-size: 0.68em; opacity: 0.82; margin-top: 2px; }
+.rival-3col { display: grid; grid-template-columns: 1fr 1.15fr 1fr; border-bottom: 1px solid rgb(255, 205, 210); }
+.rival-col { padding: 16px 14px; }
+.rival-col-ctr { background: linear-gradient(rgb(255, 243, 224), rgb(255, 248, 245)); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 16px 12px; }
+.rival-col-a { border-right: 1px solid rgb(255, 205, 210); position: relative; overflow: hidden; }
+.rival-col-b { border-left: 1px solid rgb(255, 205, 210); position: relative; overflow: hidden; }
+.rg-wrap { position: relative; width: 110px; height: 110px; margin: 0px auto 8px; }
+.rg-wrap svg { width: 100%; height: 100%; }
+.rg-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; line-height: 1; }
+.rival-level { display: inline-block; padding: 3px 14px; border-radius: 14px; font-size: 0.75em; font-weight: 800; margin-bottom: 12px; }
+.rl-high { background: linear-gradient(135deg, rgb(183, 28, 28), rgb(229, 57, 53)); color: rgb(255, 255, 255); }
+.rl-mid { background: linear-gradient(135deg, rgb(229, 57, 53), rgb(239, 154, 154)); color: rgb(255, 255, 255); }
+.rl-low { background: linear-gradient(135deg, rgb(255, 205, 210), rgb(255, 235, 238)); color: rgb(183, 28, 28); border: 1px solid rgb(239, 154, 154); }
+.rival-bar { background: linear-gradient(90deg, rgb(229, 57, 53), rgb(239, 154, 154)) !important; }
+.rival-song-title { font-size: 0.95em; font-weight: 800; color: rgb(123, 31, 162); margin-bottom: 8px; line-height: 1.3; }
+.rival-smr { display: flex; justify-content: space-between; padding: 3px 0px; font-size: 0.75em; border-bottom: 1px dotted rgb(255, 205, 210); gap: 5px; }
+.rival-smr .sl { color: rgb(183, 28, 28); flex-shrink: 0; opacity: 0.8; }
+.rival-smr .sv { font-weight: 600; color: rgb(74, 20, 140); text-align: right; word-break: break-all; }
+.rival-str { margin-top: 8px; padding: 6px 8px; background: rgba(183, 28, 28, 0.07); border-radius: 6px; border-left: 3px solid rgb(229, 57, 53); }
+.rival-str-title { font-size: 0.6em; font-weight: 700; color: rgb(183, 28, 28); letter-spacing: 0.05em; margin-bottom: 3px; }
+.rival-str-val { font-size: 0.68em; color: rgb(74, 20, 140); line-height: 1.5; }
+.rival-foot { padding: 11px 18px; background: linear-gradient(135deg, rgb(255, 235, 238), rgb(255, 243, 224)); border-top: 2px solid rgb(239, 154, 154); }
+.rival-foot-title { font-size: 0.63em; font-weight: 700; color: rgb(183, 28, 28); margin-bottom: 4px; letter-spacing: 0.04em; }
+.rival-foot-text { font-size: 0.76em; color: rgb(123, 31, 162); line-height: 1.65; font-style: italic; }
+@page { size: a4 landscape; margin: 7mm; }
+@media print {
+  * { box-sizing: border-box; }
+  body { margin: 0px; padding: 0px; background: rgb(255, 255, 255) !important; }
+  #screen-upload { display: none !important; }
+  #screen-result { display: block !important; padding: 0px !important; }
+  .action-bar { display: none !important; }
+  .page-wrap { width: 283mm; max-width: 283mm; box-shadow: none; border-radius: 0px; margin: 0px; overflow: visible; break-after: page; }
+  .page-wrap:last-child { break-after: avoid; }
+  .ph { padding: 7px 16px; print-color-adjust: exact; }
+  .ph h1 { font-size: 0.92em; }
+  .ph-sub { font-size: 0.62em; }
+  .ph-meta { font-size: 0.62em; }
+  .p1-main { border-bottom: 1px solid rgb(224, 230, 240); }
+  .p1-col { padding: 8px 10px; }
+  .song-title { font-size: 0.88em; margin-bottom: 6px; }
+  .smr { font-size: 0.66em; padding: 2px 0px; }
+  .p1-gw { width: 68px; height: 68px; }
+  .p1-gs { font-size: 1.15em; }
+  .p1-dual { gap: 10px; }
+  .p1-gu .gl { font-size: 0.6em; margin-bottom: 3px; }
+  .rank-pill { font-size: 0.6em; padding: 2px 8px; margin-top: 2px; }
+  .p1-gu .rl { font-size: 0.55em; }
+  .badge { font-size: 0.6em; }
+  .p1-vs { font-size: 0.75em; }
+  .p1-score-sec { padding: 7px 14px; print-color-adjust: exact; }
+  .p1-score-title { font-size: 0.7em; margin-bottom: 6px; }
+  .ft-grid { gap: 5px; }
+  .fc { padding: 5px 7px; }
+  .fc .fc-t { font-size: 0.56em; }
+  .fc .fc-v { font-size: 0.64em; line-height: 1.45; }
+  .p1-verdict-sec { padding: 0px 14px 8px; print-color-adjust: exact; }
+  .verdict { padding: 5px 10px; font-size: 0.66em; line-height: 1.5; }
+  .disclaimer { padding: 4px 8px; font-size: 0.6em; margin-bottom: 6px; line-height: 1.45; }
+  .p2-subhd { padding: 5px 14px; print-color-adjust: exact; }
+  .p2-subhd .p2-t { font-size: 0.82em; }
+  .p2-subhd .p2-m { font-size: 0.62em; }
+  .three-col { display: grid; grid-template-columns: 1fr 1.08fr 1fr; }
+  .col { padding: 8px 9px; }
+  .col-hd { padding: 5px 5px 6px; font-size: 0.75em; margin-bottom: 7px; print-color-adjust: exact; }
+  .col-hd .sub { font-size: 0.68em; }
+  .ds { margin-bottom: 6px; }
+  .ds-title { font-size: 0.56em; padding-bottom: 2px; margin-bottom: 4px; }
+  .dr { font-size: 0.62em; padding: 1px 0px; }
+  .dr .lbl { min-width: 52px; }
+  .chord-blk { font-size: 0.58em; padding: 3px 5px; line-height: 1.5; }
+  .lyr-blk { font-size: 0.58em; padding: 3px 6px; line-height: 1.55; }
+  .bi { font-size: 0.6em; padding: 1px 0px; }
+  .bi .bi-lbl { min-width: 48px; }
+  .bi .bi-bar-w { height: 4px; }
+  .bi .bi-pct { min-width: 22px; }
+  .p2-tc { padding: 5px 10px; }
+  .p2-tc-title { font-size: 0.56em; margin-bottom: 3px; }
+  .tag { font-size: 0.58em; padding: 1px 6px; }
+  .p2-tags-row { border-top: 1.5px solid rgb(224, 230, 240); }
+  .p2-comment-row { padding: 6px 12px; }
+  .p2-comment-title { font-size: 0.58em; margin-bottom: 2px; }
+  .p2-comment-text { font-size: 0.67em; line-height: 1.55; }
+}
+body{background:#EEF2FF;padding:16px;}
+.page-wrap{max-width:1180px;margin:0 auto 24px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+@media print{body{background:#fff;padding:0;}.page-wrap{border-radius:0;box-shadow:none;max-width:283mm;page-break-after:always;}.page-wrap:last-child{page-break-after:avoid;}}
+@page{size:A4 landscape;margin:7mm;}
+</style></head><body><div class="page-wrap" id="page1" style="display: block;">
+    <div class="ph">
+      <div>
+        <div class="ph h1" style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">🎵 FeatherTune 楽曲類似度判定レポート</div>
+        <div class="ph-sub">総合類似度 ＋ 著作物類似度 複合判定 — サマリー</div>
+      </div>
+      <div class="ph-meta" id="ph1-meta">分析対象：さあいまこそ愛を語ろう（さあいまこそあいをかたろう） vs みあげてごらん（ミアゲテゴラン）<br>作成日：2026/5/27 ／ FeatherTune 類似度判定システム</div>
+    </div>
+    <div class="p1-main">
+      <div class="p1-col p1-col-a" id="p1-col-a">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13em;font-family:Impact,'Arial Black','Arial',sans-serif;font-weight:900;color:#1A237E;opacity:0.12;pointer-events:none;user-select:none;line-height:1;z-index:0;">A</div>
+  <div style="position:relative;z-index:1;">
+  <div class="song-title">さあいまこそ愛を語ろう（さあいまこそあいをかたろう）</div>
+  <div class="smr"><span class="sl">アーティスト</span><span class="sv">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+  <div class="smr"><span class="sl">作詞 / 作曲</span><span class="sv">晴一郎 / suno.ai</span></div>
+  <div class="smr"><span class="sl">キー</span><span class="sv">B♭</span></div>
+  <div class="smr"><span class="sl">テンポ</span><span class="sv">99 BPM</span></div>
+  <div class="smr"><span class="sl">リリース</span><span class="sv">—</span></div>
+  <div class="smr"><span class="sl">ISRC</span><span class="sv" style="font-size:.88em;">QT66L2564409</span></div>
+  <div class="smr"><span class="sl">JASRAC</span><span class="sv"><span class="badge b-j">33278741</span></span></div>
+  <div class="smr"><span class="sl">AI生成確率</span><span class="sv"><span class="badge b-med">70%</span></span></div>
+  <div class="smr"><span class="sl">著作権リスク</span><span class="sv"><span class="badge b-low">Low</span></span></div>
+  <div style="margin-top:10px;font-size:.72em;font-style:italic;color:#283593;padding:6px 8px;background:#E8EAF6;border-radius:5px;line-height:1.6;">愛の全ての側面を力強く歌い上げた、心揺さぶる感動的なメッセージソング。</div>
+  </div>
+  </div>
+      <div class="p1-col p1-col-ctr" id="p1-col-ctr">
+  <div class="p1-vs">A &nbsp;vs&nbsp; B</div>
+  <div class="p1-dual">
+    <div class="p1-gu">
+      <div class="gl" style="color:#5C6BC0;">総合類似度</div>
+      <div class="p1-gw">
+        <svg viewBox="0 0 94 94" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g7E57C2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7E57C2"></stop><stop offset="100%" style="stop-color:#5C6BC0"></stop>
+    </linearGradient></defs>
+    <circle cx="47" cy="47" r="38" fill="none" stroke="#E8EAF6" stroke-width="8"></circle>
+    <circle cx="47" cy="47" r="38" fill="none" stroke="url(#g7E57C2)" stroke-width="8" stroke-linecap="round" stroke-dasharray="102.7 238.8" transform="rotate(-90 47 47)"></circle>
+  </svg>
+        <div class="p1-gs" style="color:#4527A0;">43<span class="gu">/100</span></div>
+      </div>
+      <div class="rank-pill rk-C">ランク C</div>
+      <div class="rl">部分的な類似</div>
+    </div>
+    <div class="p1-gu">
+      <div class="gl" style="color:#B71C1C;">著作物類似度</div>
+      <div class="p1-gw">
+        <svg viewBox="0 0 94 94" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="gC62828" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#C62828"></stop><stop offset="100%" style="stop-color:#E53935"></stop>
+    </linearGradient></defs>
+    <circle cx="47" cy="47" r="38" fill="none" stroke="#E8EAF6" stroke-width="8"></circle>
+    <circle cx="47" cy="47" r="38" fill="none" stroke="url(#gC62828)" stroke-width="8" stroke-linecap="round" stroke-dasharray="57.3 238.8" transform="rotate(-90 47 47)"></circle>
+  </svg>
+        <div class="p1-gs" style="color:#B71C1C;">24<span class="gu">/100</span></div>
+      </div>
+      <div class="rank-pill rk-D">ランク D</div>
+      <div class="rl">低い類似</div>
+    </div>
+  </div>
+  </div>
+      <div class="p1-col p1-col-b" id="p1-col-b">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13em;font-family:Impact,'Arial Black','Arial',sans-serif;font-weight:900;color:#1A237E;opacity:0.12;pointer-events:none;user-select:none;line-height:1;z-index:0;">B</div>
+  <div style="position:relative;z-index:1;">
+  <div class="song-title">みあげてごらん（ミアゲテゴラン）</div>
+  <div class="smr"><span class="sl">アーティスト</span><span class="sv">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+  <div class="smr"><span class="sl">作詞 / 作曲</span><span class="sv">晴一郎 / suno.ai</span></div>
+  <div class="smr"><span class="sl">キー</span><span class="sv">Ebm</span></div>
+  <div class="smr"><span class="sl">テンポ</span><span class="sv">84 BPM</span></div>
+  <div class="smr"><span class="sl">リリース</span><span class="sv">2026/09/04</span></div>
+  <div class="smr"><span class="sl">ISRC</span><span class="sv" style="font-size:.88em;">QT66J2530985</span></div>
+  <div class="smr"><span class="sl">JASRAC</span><span class="sv"><span class="badge b-j">32824441</span></span></div>
+  <div class="smr"><span class="sl">AI生成確率</span><span class="sv"><span class="badge b-med">70%</span></span></div>
+  <div class="smr"><span class="sl">著作権リスク</span><span class="sv"><span class="badge b-low">Low</span></span></div>
+  <div style="margin-top:10px;font-size:.72em;font-style:italic;color:#283593;padding:6px 8px;background:#E8EAF6;border-radius:5px;line-height:1.6;">心に寄り添い、希望の光を指し示す、魂のバラード。</div>
+  </div>
+  </div>
+    </div>
+    <div class="p1-score-sec">
+      <div class="p1-score-title">📋 総合評価</div>
+      <div class="ft-grid" id="p1-cards">
+    <div class="fc">
+      <div class="fc-t">🎯 総合類似度</div>
+      <div class="fc-v"><span style="font-size:1.5em;font-weight:800;color:#CE93D8;">43</span>/100<br>
+      <span style="color:#B39DDB;">ランクC—部分的な類似</span></div>
+    </div>
+    <div class="fc">
+      <div class="fc-t" style="color:#FF8A80;">⚖️ 著作物類似度</div>
+      <div class="fc-v"><span style="font-size:1.5em;font-weight:800;color:#FF8A80;">24</span>/100<br>
+      <span style="color:#FFCDD2;">ランクD—低い類似</span></div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">🎵 音楽構造</div>
+      <div class="fc-v">A: B♭ / 99BPM<br>B: Ebm / 84BPM</div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">📋 自己申請（制作実態）</div>
+      <div class="fc-v" style="font-size:.82em;line-height:1.65;">
+        <span style="color:#B39DDB;font-weight:700;">▶ A</span><br>
+        <span>作詞:人間創作 　作曲:AI利用あり</span><br>
+        <span>編曲:未記入 　歌唱:AI自律生成</span>
+        <span style="color:#B39DDB;font-weight:700;display:block;margin-top:5px;">▶ B</span>
+        <span>作詞:人間創作 　作曲:AI利用あり</span><br>
+        <span>編曲:未記入 　歌唱:AI自律生成</span>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">🤖 AI生成またはDAW確率<br><span style="font-size:.82em;opacity:.7;font-weight:400;">（FeatherTune判定）</span></div>
+      <div class="fc-v">A: 70%<br>B: 70%</div>
+    </div>
+  </div>
+    </div>
+    <div class="p1-verdict-sec" id="p1-disclaimer">
+  <div class="disclaimer">
+    <strong>⚠️ 免責事項</strong>　本レポートは音楽分析データに基づく参考情報であり、<strong>いかなる法的保証も行いません</strong>。著作権の成否・侵害の有無等の最終判断は必ず専門家（弁護士・弁理士等）にご確認ください。本判定結果は訴訟・契約等の法的根拠として単独では使用できません。AI技術・著作権法制の変化により判定基準は将来的に見直される可能性があります。
+  </div>
+  </div>
+  </div><div class="page-wrap" id="page2" style="display: block;">
+    <div class="p2-subhd">
+      <span class="p2-t">🎵 楽曲類似度判定　詳細分析レポート</span>
+      <span class="p2-m" id="p2-meta">さあいまこそ愛を語ろう（さあいまこそあいをかたろう） vs みあげてごらん（ミアゲテゴラン） — 2026/5/27</span>
+    </div>
+    <div class="three-col">
+      <div class="col col-a">
+        <div class="col-hd">🎵 分析対象 A<span class="sub" id="title-a">さあいまこそ愛を語ろう（さあいまこそあいをかたろう）</span></div>
+        <div id="col-a-content">
+  <div class="ds">
+    <div class="ds-title">基本情報</div>
+    <div class="dr"><span class="lbl">アーティスト</span><span class="val" style="font-size:.85em;">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+    <div class="dr"><span class="lbl">キー</span><span class="val">B♭</span></div>
+    <div class="dr"><span class="lbl">テンポ</span><span class="val">99 BPM</span></div>
+    
+  </div>
+  <div class="ds">
+    <div class="ds-title">主要コード進行</div>
+    <div class="chord-blk">B♭ | F | Gm7 | E♭M7</div>
+  </div>
+  <div class="ds">
+    <div class="ds-title">特徴フレーズ（歌詞）</div>
+    <div class="lyr-blk"><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・愛を語るのにあなた以外何にも要らない</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・持ってないものなんてかき集める必要なんてない</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・今まで生きてきた中で沢山感じた愛の想い出を語るんだ</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・幸せに満ちた想い出を語るんだ</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・胸をくすぐった想い出を語るんだ</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・心はずんだ想い出を語るんだ</div></div>
+  </div>
+  
+  <div class="ds">
+    <div class="ds-title">一言評価</div>
+    <div style="font-size:.7em;font-style:italic;color:#283593;padding:5px 7px;background:#E8EAF6;border-radius:5px;line-height:1.6;">愛の全ての側面を力強く歌い上げた、心揺さぶる感動的なメッセージソング。</div>
+  </div>
+  </div>
+      </div>
+      <div class="col col-ctr">
+        <div class="col-hd">⚖️ 類似度スコア詳細<span class="sub">各指標別評価</span></div>
+        <div id="col-ctr-content">
+  <div class="ds">
+    <div class="ds-title">📊 総合類似スコア</div>
+    <div class="bi"><span class="bi-lbl">制作属性</span><div class="bi-bar-w"><div class="bi-bar bar-h" style="width:95%"></div></div><span class="bi-pct">95%</span></div><div class="bi"><span class="bi-lbl">歌詞テーマ</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:0%"></div></div><span class="bi-pct">0%</span></div><div class="bi"><span class="bi-lbl">歌詞フレーズ</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:0%"></div></div><span class="bi-pct">0%</span></div><div class="bi"><span class="bi-lbl">歌詞語彙</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:20%"></div></div><span class="bi-pct">20%</span></div><div class="bi"><span class="bi-lbl">調性・モード</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:30%"></div></div><span class="bi-pct">30%</span></div><div class="bi"><span class="bi-lbl">コード進行</span><div class="bi-bar-w"><div class="bi-bar bar-h" style="width:85%"></div></div><span class="bi-pct">85%</span></div><div class="bi"><span class="bi-lbl">テンポ</span><div class="bi-bar-w"><div class="bi-bar bar-h" style="width:75%"></div></div><span class="bi-pct">75%</span></div><div class="bi"><span class="bi-lbl">AI生成確率</span><div class="bi-bar-w"><div class="bi-bar bar-h" style="width:75%"></div></div><span class="bi-pct">75%</span></div><div class="bi"><span class="bi-lbl">曲想・雰囲気</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:12%"></div></div><span class="bi-pct">12%</span></div>
+  </div>
+  <div class="ds">
+    <div class="ds-title" style="color:#B71C1C;">⚖️ 著作物類似スコア</div>
+    <div class="bi"><span class="bi-lbl">歌詞フレーズ重複</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:0%"></div></div><span class="bi-pct">0%</span></div><div class="bi"><span class="bi-lbl">独自表現の共通性</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:10%"></div></div><span class="bi-pct">10%</span></div><div class="bi"><span class="bi-lbl">繰り返し表現共通</span><div class="bi-bar-w"><div class="bi-bar bar-l" style="width:0%"></div></div><span class="bi-pct">0%</span></div><div class="bi"><span class="bi-lbl">コード進行パターン</span><div class="bi-bar-w"><div class="bi-bar bar-h" style="width:85%"></div></div><span class="bi-pct">85%</span></div><div class="bi"><span class="bi-lbl">調性・音楽構造</span><div class="bi-bar-w"><div class="bi-bar bar-m" style="width:53%"></div></div><span class="bi-pct">53%</span></div>
+  </div>
+  </div>
+      </div>
+      <div class="col col-b">
+        <div class="col-hd">🎵 分析対象 B<span class="sub" id="title-b">みあげてごらん（ミアゲテゴラン）</span></div>
+        <div id="col-b-content">
+  <div class="ds">
+    <div class="ds-title">基本情報</div>
+    <div class="dr"><span class="lbl">アーティスト</span><span class="val" style="font-size:.85em;">kindlyfeatherWORKS（カインドリーフェザーワークス）</span></div>
+    <div class="dr"><span class="lbl">キー</span><span class="val">Ebm</span></div>
+    <div class="dr"><span class="lbl">テンポ</span><span class="val">84 BPM</span></div>
+    
+  </div>
+  <div class="ds">
+    <div class="ds-title">主要コード進行</div>
+    <div class="chord-blk">B♭ | E♭m7 | A♭m7 | D♭</div>
+  </div>
+  <div class="ds">
+    <div class="ds-title">特徴フレーズ（歌詞）</div>
+    <div class="lyr-blk"><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・不安な心は 可能性の裏返し</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・同じ数だけ希望があると思えば</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・たくさんの道しるべ</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・自分の好きな道を選べると思えば</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・なりたい自分を咲かせる種</div><div style="font-size:.7em;line-height:1.6;color:#1a237e;">・うらやむ様な素敵な人と出会えたと思えば</div></div>
+  </div>
+  
+  <div class="ds">
+    <div class="ds-title">一言評価</div>
+    <div style="font-size:.7em;font-style:italic;color:#283593;padding:5px 7px;background:#E8EAF6;border-radius:5px;line-height:1.6;">心に寄り添い、希望の光を指し示す、魂のバラード。</div>
+  </div>
+  </div>
+      </div>
+    </div>
+    <div class="p2-tags-row" id="p2-tags">
+  <div class="p2-tc">
+    <div class="p2-tc-title">✅ 共通点</div>
+    <div class="tag-list">
+      
+      <span class="tag tag-ok">✅ 同AI作曲（suno）</span>
+      <span class="tag tag-ok">✅ 同アーティスト</span>
+    </div>
+  </div>
+  <div class="p2-tc">
+    <div class="p2-tc-title">⚡ 相違点</div>
+    <div class="tag-list">
+      <span class="tag tag-diff">⚡ キー：B♭ vs Ebm</span>
+    </div>
+  </div>
+  </div>
+    <div class="p2-comment-row" id="p2-comment">
+      <div class="p2-comment-title">💬 評価コメント</div>
+      <div class="p2-comment-text">同一アーティストによる楽曲であり、制作スタイルと大テーマが共鳴する。 著作物として保護される要素（歌詞フレーズ・独自表現・音楽構造）の重複は低く、<strong>著作権侵害リスクは現時点で低いと判定</strong>する。 キーの相違（B♭ vs Ebm）も音楽的独立性の証左となる。</div></div>
+    <div class="p1-verdict-sec" id="p1-verdict">
+  <div class="verdict">
+    <strong>【最終判定】</strong>
+    総合類似度 <strong style="color:#CE93D8;">43点（ランクC）</strong> ／
+    著作物類似度 <strong style="color:#FF8A80;">24点（ランクD）</strong>　—　同一アーティストによる楽曲であり、制作スタイルと大テーマが共鳴する。 著作物として保護される要素（歌詞フレーズ・独自表現・音楽構造）の重複は低く、<strong>著作権侵害リスクは現時点で低いと判定</strong>する。 キーの相違（B♭ vs Ebm）も音楽的独立性の証左となる。
+    <br><span style="color:#B39DDB;font-size:.82em;">※ 本レポートはいかなる法的保証も行いません。最終的な判断は法律の専門家にご相談ください。</span>
+  </div>
+  </div>
+  </div><div class="page-wrap" id="page3" style="display: block;">
+    <div class="ph">
+      <div>
+        <div class="ph h1" style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">🎤 歌詞表現構造分析 比較レポート</div>
+        <div class="ph-sub">LYRIC EXPRESSION PROFILE COMPARISON</div>
+      </div>
+      <div class="ph-meta" id="ph3-meta">さあいまこそ愛を語ろう（さあいまこそあいをかたろう） vs みあげてごらん（ミアゲテゴラン）<br>作成日：2026/5/27</div>
+    </div>
+    <div class="p3-main">
+      <div class="p3-col p3-col-a col-a">
+        <div class="col-hd">🎤 分析対象 A<span class="sub" id="p3-title-a">さあいまこそ愛を語ろう（さあいまこそあいをかたろう）</span></div>
+        <div id="p3-col-a">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12em;font-family:Impact,'Arial Black',sans-serif;font-weight:900;color:#1A237E;opacity:0.08;pointer-events:none;user-select:none;line-height:1;z-index:0;">A</div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+  <div style="flex:1;">
+  <div class="p3-score-badge p3-sb-A">ランク A　55/70点（79%）</div>
+  <div class="p3-lbl">表現称号</div>
+  <div class="p3-val">リズム主導型（リズム型 × 構造型）</div>
+  <div class="p3-lbl">個性ラベル</div>
+  <div class="p3-tags"><span class="p3-tag">リズム駆動型</span><span class="p3-tag">反復構造型</span><span class="p3-tag">リズムパターン型</span></div>
+  <div class="p3-lbl">作風特性</div>
+  <div class="p3-val">内面志向型 / 概念駆動型</div>
+  <div class="p3-lbl">n-gram特徴 / 表現傾向</div>
+  <div class="p3-val">反復構造型 / リズムパターン型 / キーワード駆動型 / 抽象寄り</div>
+  <div class="p3-lbl">抽象性・具体性バランス（7/10）</div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+    <div class="p3-absbar" style="flex:1;">
+      <div class="p3-abs-a" style="width:92%"></div>
+      <div class="p3-abs-b" style="width:8%"></div>
+    </div>
+    <span style="font-size:.6em;color:#5C6BC0;">抽象92%／具体8%</span>
+  </div>
+  <div class="p3-lbl">突出項目</div><div class="p3-tags"><span class="p3-tag" style="background:#FFF3E0;color:#E65100;">文体リズムの自然さ</span><span class="p3-tag" style="background:#FFF3E0;color:#E65100;">表現構造の一貫性</span></div>
+  </div>
+  <div style="margin-top:10px;display:flex;justify-content:center;"><svg width="116" height="116" viewBox="0 0 116 116" xmlns="http://www.w3.org/2000/svg">
+    <rect width="116" height="116" fill="#12122A" rx="6"></rect>
+    <polygon points="58,49.2 63.88897274573418,52.6 63.88897274573418,59.4 58,62.8 52.11102725426582,59.400000000000006 52.111027254265814,52.6" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,42.4 69.77794549146836,49.2 69.77794549146836,62.8 58,69.6 46.222054508531635,62.800000000000004 46.22205450853163,49.20000000000001" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,35.6 75.66691823720254,45.8 75.66691823720255,66.19999999999999 58,76.4 40.333081762797455,66.2 40.33308176279745,45.80000000000001" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,28.8 81.55589098293673,42.4 81.55589098293673,69.6 58,83.2 34.44410901706327,69.60000000000001 34.444109017063255,42.40000000000002" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,22 87.44486372867091,39 87.44486372867092,73 58,90 28.55513627132909,73.00000000000001 28.555136271329072,39.00000000000002" fill="none" stroke="#334" stroke-width="1.2"></polygon><line x1="58" y1="56" x2="58" y2="22" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="87.44486372867091" y2="39" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="87.44486372867092" y2="73" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="58" y2="90" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="28.55513627132909" y2="73.00000000000001" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="28.555136271329072" y2="39.00000000000002" stroke="#445" stroke-width="0.8"></line>
+    <polygon points="58,35.6 69.77794549146836,49.2 78.61140461006964,67.89999999999999 58,90 40.333081762797455,66.2 28.555136271329072,39.00000000000002" fill="#9575CD" fill-opacity="0.25" stroke="#9575CD" stroke-width="1.5"></polygon>
+    <circle cx="58" cy="35.6" r="2.2" fill="#9575CD"></circle><circle cx="69.77794549146836" cy="49.2" r="2.2" fill="#9575CD"></circle><circle cx="78.61140461006964" cy="67.89999999999999" r="2.2" fill="#9575CD"></circle><circle cx="58" cy="90" r="2.2" fill="#9575CD"></circle><circle cx="40.333081762797455" cy="66.2" r="2.2" fill="#9575CD"></circle><circle cx="28.555136271329072" cy="39.00000000000002" r="2.2" fill="#9575CD"></circle><text x="58" y="30.6" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">6</text><text x="74.10807251039056" y="46.7" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">4</text><text x="82.94153162899184" y="70.39999999999999" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">7</text><text x="58" y="95" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">10</text><text x="36.002954743875264" y="68.7" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">6</text><text x="24.225009252406878" y="36.50000000000003" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">10</text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="58" dy="-4">比喩</tspan><tspan x="58" dy="8">独自性</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="98.70319397786861" dy="-4">情景</tspan><tspan x="98.70319397786861" dy="8">描写力</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="98.70319397786862" dy="-4">感情</tspan><tspan x="98.70319397786862" dy="8">ダイナミクス</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="58" dy="-4">文体</tspan><tspan x="58" dy="8">リズム</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="17.296806022131392" dy="-4">既視感</tspan><tspan x="17.296806022131392" dy="8">の少なさ</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="17.296806022131364" dy="-4">表現</tspan><tspan x="17.296806022131364" dy="8">構造</tspan></text><text x="58" y="110" text-anchor="middle" font-size="6" fill="#9575CD" font-weight="700">A</text>
+  </svg></div>
+  </div></div>
+      </div>
+      <div class="p3-col p3-col-ctr col-ctr">
+        <div class="col-hd">📊 6軸スコア比較<span class="sub">各軸 /10点</span></div>
+        <div id="p3-col-ctr">
+  <div style="font-size:.62em;color:#7C83C8;margin-bottom:6px;text-align:center;">
+    <span style="color:#9575CD;">■ A</span>／<span style="color:#4DB6AC;">■ B</span>
+  </div>
+  <div class="p3-mitem">
+      <div class="p3-mlbl-ctr">抽象性・具体性バランス</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">7</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:41%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:59%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">10</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">比喩独自性</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">6</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:50%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:50%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">6</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">情景描写力</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">4</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:40%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:60%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">6</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">感情ダイナミクス</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">7</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:54%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:46%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">6</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">文体リズムの自然さ</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">10</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:50%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:50%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">10</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">既視感の少なさ</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">6</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:55%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:45%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">5</span>
+      </div>
+    </div><div class="p3-mitem">
+      <div class="p3-mlbl-ctr">表現構造の一貫性</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">10</span>
+        <div class="p3-mbars"><div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:50%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:50%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div></div>
+        <span class="p3-mnum p3-mnum-b">10</span>
+      </div>
+    </div>
+  
+    <div class="p3-sim-block" style="margin-top:10px;padding:8px 10px;border-radius:7px;background:rgba(102,187,106,0.12);border:1px solid #1B5E2030;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:.56em;font-weight:700;color:#9FA8DA;letter-spacing:.05em;">📊 類似フレーズ度</span>
+        <span style="font-size:1.1em;font-weight:900;color:#66BB6A;letter-spacing:.02em;">0%</span>
+        <span style="font-size:.7em;">✅</span>
+      </div>
+      <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;background:#1A237E;margin-bottom:5px;">
+        <div style="width:0%;background:linear-gradient(90deg,#66BB6A,#43A047);transition:width .3s;"></div>
+      </div>
+      <div style="font-size:.58em;color:#90A4AE;line-height:1.55;">類似フレーズは総フレーズ数の0%であり、構造的な近似があっても表現上の独立性は保たれています。</div>
+      <div style="font-size:.52em;color:#546E7A;margin-top:3px;">対象フレーズ：A 95件 ／ B 84件 ／ 一致 0件</div>
+    </div>
+  <div class="p3-cmt-block" style="margin-top:8px;padding:9px 10px;background:linear-gradient(135deg,#1A1A2E,#1A237E);border-radius:8px;">
+    <div style="font-size:.56em;font-weight:700;color:#9FA8DA;letter-spacing:.06em;margin-bottom:5px;border-bottom:1px solid #283593;padding-bottom:3px;">✍️ 比較考察　—　作詞家の視点から</div>
+    <div style="font-size:.62em;color:#C5CAE9;line-height:1.65;font-style:italic;">フレーズ類似度は0%に留まり、語彙・構文の面では両作品の表現的独立性が確認される。構造的な近似があったとしても、それは同時代の詩的共鳴の範疇と捉えられよう。Aは概念と象徴を好む抽象的詩法を纏うのに対し、Bは具体の言葉で聴き手の感覚に直接触れる。この差は美学の相違であり、優劣ではなく志向の違いだ。六軸スコアの近似も加味すれば、両作品の表現構造には相応の類似性が存在すると判断せざるを得ない。</div>
+  </div></div>
+      </div>
+      <div class="p3-col p3-col-b col-b">
+        <div class="col-hd">🎤 分析対象 B<span class="sub" id="p3-title-b">みあげてごらん（ミアゲテゴラン）</span></div>
+        <div id="p3-col-b">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12em;font-family:Impact,'Arial Black',sans-serif;font-weight:900;color:#1A237E;opacity:0.08;pointer-events:none;user-select:none;line-height:1;z-index:0;">B</div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+  <div style="flex:1;">
+  <div class="p3-score-badge p3-sb-A">ランク A　59/70点（84%）</div>
+  <div class="p3-lbl">表現称号</div>
+  <div class="p3-val">詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）</div>
+  <div class="p3-lbl">個性ラベル</div>
+  <div class="p3-tags"><span class="p3-tag">リズム駆動型</span><span class="p3-tag">反復構造型</span><span class="p3-tag">リズムパターン型</span></div>
+  <div class="p3-lbl">作風特性</div>
+  <div class="p3-val">構造活用型</div>
+  <div class="p3-lbl">n-gram特徴 / 表現傾向</div>
+  <div class="p3-val">反復構造型 / リズムパターン型 / 内省対話型 / バランス型</div>
+  <div class="p3-lbl">抽象性・具体性バランス（10/10）</div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+    <div class="p3-absbar" style="flex:1;">
+      <div class="p3-abs-a" style="width:52%"></div>
+      <div class="p3-abs-b" style="width:48%"></div>
+    </div>
+    <span style="font-size:.6em;color:#5C6BC0;">抽象52%／具体48%</span>
+  </div>
+  <div class="p3-lbl">突出項目</div><div class="p3-tags"><span class="p3-tag" style="background:#FFF3E0;color:#E65100;">抽象性・具体性バランス</span><span class="p3-tag" style="background:#FFF3E0;color:#E65100;">文体リズムの自然さ</span><span class="p3-tag" style="background:#FFF3E0;color:#E65100;">表現構造の一貫性</span></div>
+  </div>
+  <div style="margin-top:10px;display:flex;justify-content:center;"><svg width="116" height="116" viewBox="0 0 116 116" xmlns="http://www.w3.org/2000/svg">
+    <rect width="116" height="116" fill="#12122A" rx="6"></rect>
+    <polygon points="58,49.2 63.88897274573418,52.6 63.88897274573418,59.4 58,62.8 52.11102725426582,59.400000000000006 52.111027254265814,52.6" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,42.4 69.77794549146836,49.2 69.77794549146836,62.8 58,69.6 46.222054508531635,62.800000000000004 46.22205450853163,49.20000000000001" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,35.6 75.66691823720254,45.8 75.66691823720255,66.19999999999999 58,76.4 40.333081762797455,66.2 40.33308176279745,45.80000000000001" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,28.8 81.55589098293673,42.4 81.55589098293673,69.6 58,83.2 34.44410901706327,69.60000000000001 34.444109017063255,42.40000000000002" fill="none" stroke="#334" stroke-width="0.6"></polygon><polygon points="58,22 87.44486372867091,39 87.44486372867092,73 58,90 28.55513627132909,73.00000000000001 28.555136271329072,39.00000000000002" fill="none" stroke="#334" stroke-width="1.2"></polygon><line x1="58" y1="56" x2="58" y2="22" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="87.44486372867091" y2="39" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="87.44486372867092" y2="73" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="58" y2="90" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="28.55513627132909" y2="73.00000000000001" stroke="#445" stroke-width="0.8"></line><line x1="58" y1="56" x2="28.555136271329072" y2="39.00000000000002" stroke="#445" stroke-width="0.8"></line>
+    <polygon points="58,35.6 75.66691823720254,45.8 75.66691823720255,66.19999999999999 58,90 43.277568135664545,64.5 28.555136271329072,39.00000000000002" fill="#4DB6AC" fill-opacity="0.25" stroke="#4DB6AC" stroke-width="1.5"></polygon>
+    <circle cx="58" cy="35.6" r="2.2" fill="#4DB6AC"></circle><circle cx="75.66691823720254" cy="45.8" r="2.2" fill="#4DB6AC"></circle><circle cx="75.66691823720255" cy="66.19999999999999" r="2.2" fill="#4DB6AC"></circle><circle cx="58" cy="90" r="2.2" fill="#4DB6AC"></circle><circle cx="43.277568135664545" cy="64.5" r="2.2" fill="#4DB6AC"></circle><circle cx="28.555136271329072" cy="39.00000000000002" r="2.2" fill="#4DB6AC"></circle><text x="58" y="30.6" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">6</text><text x="79.99704525612474" y="43.3" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">6</text><text x="79.99704525612475" y="68.69999999999999" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">6</text><text x="58" y="95" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">10</text><text x="38.947441116742354" y="67" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">5</text><text x="24.225009252406878" y="36.50000000000003" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">10</text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="58" dy="-4">比喩</tspan><tspan x="58" dy="8">独自性</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="98.70319397786861" dy="-4">情景</tspan><tspan x="98.70319397786861" dy="8">描写力</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="98.70319397786862" dy="-4">感情</tspan><tspan x="98.70319397786862" dy="8">ダイナミクス</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="58" dy="-4">文体</tspan><tspan x="58" dy="8">リズム</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="17.296806022131392" dy="-4">既視感</tspan><tspan x="17.296806022131392" dy="8">の少なさ</tspan></text><text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB"><tspan x="17.296806022131364" dy="-4">表現</tspan><tspan x="17.296806022131364" dy="8">構造</tspan></text><text x="58" y="110" text-anchor="middle" font-size="6" fill="#4DB6AC" font-weight="700">B</text>
+  </svg></div>
+  </div></div>
+      </div>
+    </div>
+    <div id="p3-bottom">
+  <div class="p3-bottom">
+    <div>
+      <div class="p3-bt-title">🎵 A — さあいまこそ愛を語ろう（さあいまこそあいをかたろう） ／ スコア：55/70点（79%）</div>
+      <div class="p3-bt-val">表現称号：リズム主導型（リズム型 × 構造型）　／　表現傾向：抽象寄り　／　作風：内面志向型 / 概念駆動型</div>
+    </div>
+    <div>
+      <div class="p3-bt-title">🎵 B — みあげてごらん（ミアゲテゴラン） ／ スコア：59/70点（84%）</div>
+      <div class="p3-bt-val">表現称号：詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）　／　表現傾向：バランス型　／　作風：構造活用型</div>
+    </div>
+  </div></div>
+  </div></body></html>

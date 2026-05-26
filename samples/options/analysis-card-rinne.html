@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0628">
+<title>輪廻命魂死生観 / kindlyfeatherWORKS — FeatherTune</title>
+<meta property="og:title" content="輪廻命魂死生観 — kindlyfeatherWORKS">
+<meta property="og:description" content="魂に語りかける、輪廻の賛歌。">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+body{margin:0;background:#050218}
+.card-stage{max-width:440px;margin:0 auto}
+.ft-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);
+  background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:999px;
+  font-size:12.5px;letter-spacing:.06em;z-index:99;opacity:0;
+  transition:opacity .25s, transform .25s;
+  border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px)}
+.ft-toast.show{opacity:1;transform:translate(-50%,0)}
+
+  :root{
+    --bg-0:#050218; --bg-1:#0d0735; --bg-2:#1a0b4e;
+    --ink:#f6f3ff; --ink-mute:rgba(246,243,255,.72); --ink-faint:rgba(246,243,255,.5);
+    --line:rgba(255,255,255,.14);
+    --accent-gold:#f6d27a; --accent-gold-2:#ffb86b;
+    --accent-cyan:#7ee8ff; --accent-pink:#ff7ad9;
+    --panel:rgba(255,255,255,.05);
+    --panel-strong:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg-0);color:var(--ink);
+    font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic',system-ui,-apple-system,'Segoe UI',sans-serif;
+    min-height:100vh;-webkit-font-smoothing:antialiased}
+  body{
+    background:
+      radial-gradient(120% 70% at 50% -10%, #4b1e9b 0%, transparent 55%),
+      radial-gradient(90% 60% at 90% 15%, #ff7ad910 0%, transparent 60%),
+      radial-gradient(80% 60% at 0% 80%, #7ee8ff14 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 40%, var(--bg-2) 100%);
+    background-attachment:fixed;
+  }
+
+  /* ===== App Shell ===== */
+  .app{max-width:1180px;margin:0 auto;padding:22px 18px 80px}
+  .app-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .app-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;letter-spacing:.06em}
+  .app-title .logo{
+    width:30px;height:30px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#fff,var(--accent-gold) 55%,#a86b2c 100%);
+    box-shadow:0 0 18px rgba(246,210,122,.6);
+  }
+  .app-title small{display:block;font-weight:400;font-size:11px;color:var(--ink-mute);letter-spacing:.18em;margin-top:2px}
+  .app-head a.lp-mini{
+    font-size:11px;color:var(--accent-cyan);letter-spacing:.12em;text-decoration:none;
+    border:1px solid rgba(126,232,255,.4);padding:6px 12px;border-radius:999px;
+  }
+  .app-head a.lp-mini:hover{background:rgba(126,232,255,.08)}
+
+  /* ===== Drop Zone ===== */
+  .drop{
+    position:relative;display:block;width:100%;
+    border:2px dashed rgba(255,255,255,.25);border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+    padding:28px 24px;text-align:center;cursor:pointer;
+    transition:border-color .2s, background .2s, transform .15s;
+    margin-bottom:18px;
+  }
+  .drop:hover{border-color:rgba(126,232,255,.55);background:rgba(126,232,255,.05)}
+  .drop.drag{border-color:var(--accent-cyan);background:rgba(126,232,255,.10);transform:scale(1.01)}
+  .drop .ico{font-size:38px;line-height:1;margin-bottom:10px;display:block}
+  .drop .ttl{font-size:15px;font-weight:700;letter-spacing:.04em;display:block}
+  .drop .sub{font-size:12px;color:var(--ink-mute);margin-top:6px;letter-spacing:.04em;display:block}
+  .drop .pick-btn{
+    display:inline-block;margin-top:14px;padding:8px 18px;border-radius:999px;
+    background:rgba(126,232,255,.12);border:1px solid rgba(126,232,255,.45);color:var(--accent-cyan);
+    font-size:12px;letter-spacing:.08em;font-weight:700;
+  }
+  /* visually hidden file input — Safariでも表示崩れしない */
+  .visually-hidden{
+    position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  /* 読込後インジケーター */
+  .loaded-pill{
+    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    padding:4px 12px;border-radius:999px;font-size:11px;letter-spacing:.06em;
+    background:rgba(94,234,160,.14);border:1px solid rgba(94,234,160,.4);color:#a8f5c8;
+  }
+
+  /* ===== Layout ===== */
+  .layout{display:grid;grid-template-columns:1.05fr 480px;gap:22px;align-items:start}
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;gap:18px}
+    .preview-wrap{position:relative;top:auto}
+  }
+
+  /* ===== Editor ===== */
+  .editor{
+    border-radius:18px;background:var(--panel);border:1px solid var(--line);
+    padding:18px 18px 16px;
+  }
+  .editor h3{
+    font-size:11px;letter-spacing:.22em;color:var(--accent-cyan);
+    margin:0 0 12px;font-weight:700;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .editor h3::before{content:"";width:14px;height:1.5px;background:var(--accent-cyan)}
+  .editor h3:not(:first-of-type){margin-top:22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+  .field label{font-size:10.5px;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .field input, .field textarea{
+    appearance:none;background:rgba(0,0,0,.28);border:1px solid var(--line);
+    color:var(--ink);border-radius:10px;padding:10px 12px;font-size:13.5px;
+    font-family:inherit;outline:none;transition:border-color .15s, background .15s;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--accent-cyan);background:rgba(0,0,0,.4)}
+  .field textarea{min-height:62px;resize:vertical;line-height:1.5}
+  .charm-edit{display:grid;gap:10px}
+  .charm-edit .item{
+    padding:10px 12px;border-radius:12px;
+    background:rgba(0,0,0,.22);border:1px solid var(--line);
+  }
+  .charm-edit .row1{display:grid;grid-template-columns:48px 1fr;gap:8px;margin-bottom:6px}
+  .charm-edit .row1 input{padding:8px 10px;font-size:13px;text-align:center}
+  .charm-edit textarea{width:100%;min-height:50px}
+
+  /* ===== Preview ===== */
+  .preview-wrap{position:sticky;top:14px}
+  .preview-frame{
+    border-radius:24px;overflow:hidden;
+    background:#000;border:1px solid var(--line);
+    box-shadow:0 30px 60px -30px rgba(80,40,180,.7);
+    max-height:calc(100vh - 40px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent;
+  }
+  .preview-frame::-webkit-scrollbar{width:6px}
+  .preview-frame::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+
+  /* ===== Action Bar ===== */
+  .actions{
+    margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  }
+  .actions.row5{grid-template-columns:repeat(5,1fr)}
+  .abtn{
+    appearance:none;border:0;cursor:pointer;
+    padding:11px 6px;border-radius:12px;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:.04em;
+    background:rgba(255,255,255,.07);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    transition:transform .15s, background .2s;
+    text-decoration:none;text-align:center;
+  }
+  .abtn:active{transform:scale(.96)}
+  .abtn:hover{background:rgba(255,255,255,.12)}
+  .abtn svg{width:18px;height:18px;display:block}
+  .abtn.primary{background:linear-gradient(135deg,var(--accent-gold),var(--accent-gold-2));color:#1a0a35}
+  .abtn.x{background:#000;border-color:#333}
+  .abtn.line{background:linear-gradient(135deg,#06c755,#04a847)}
+  .abtn.ig{background:linear-gradient(135deg,#feda77,#f58529 30%,#dd2a7b 60%,#8134af 90%,#515bd4)}
+
+  /* ===== Card (Preview & Export shared) — must mirror standalone HTML ===== */
+  .card-stage{
+    --c-ink:#f6f3ff; --c-ink-mute:rgba(246,243,255,.72); --c-ink-faint:rgba(246,243,255,.5);
+    --c-line:rgba(255,255,255,.14); --c-gold:#f6d27a; --c-gold-2:#ffb86b;
+    --c-cyan:#7ee8ff;
+    background:
+      radial-gradient(120% 70% at 50% -10%, #4b1e9b 0%, transparent 55%),
+      radial-gradient(90% 60% at 90% 15%, #ff7ad910 0%, transparent 60%),
+      radial-gradient(80% 60% at 0% 80%, #7ee8ff14 0%, transparent 60%),
+      linear-gradient(180deg, #050218 0%, #0d0735 40%, #1a0b4e 100%);
+    color:var(--c-ink);
+    font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic',system-ui,-apple-system,sans-serif;
+    padding:18px 18px 28px;position:relative;
+  }
+  .card-stage::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, #fff 99%, transparent 100%),
+      radial-gradient(1px 1px at 80% 18%, #fff 99%, transparent 100%),
+      radial-gradient(1.2px 1.2px at 35% 60%, #cfe9ff 99%, transparent 100%),
+      radial-gradient(1px 1px at 70% 78%, #fff 99%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 12%, #ffd9a8 99%, transparent 100%),
+      radial-gradient(1px 1px at 12% 85%, #fff 99%, transparent 100%),
+      radial-gradient(1px 1px at 90% 50%, #fff 99%, transparent 100%);
+    opacity:.55;
+  }
+  .card-stage > *{position:relative;z-index:1}
+  .c-brand{display:flex;align-items:center;justify-content:space-between;
+    font-size:11px;letter-spacing:.18em;color:var(--c-ink-faint);
+    text-transform:uppercase;margin-bottom:14px}
+  .c-brand .c-logo{display:flex;align-items:center;gap:6px;color:var(--c-gold);font-weight:700}
+  .c-brand .c-logo::before{content:"";width:14px;height:14px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#fff,var(--c-gold) 55%,#a86b2c 100%);
+    box-shadow:0 0 12px var(--c-gold)}
+  .c-brand .c-rank{color:#0b0628;background:linear-gradient(135deg,var(--c-gold),var(--c-gold-2));
+    padding:3px 9px;border-radius:999px;font-weight:800;letter-spacing:.12em}
+  .c-hero{position:relative;border-radius:24px;overflow:hidden;padding:26px 22px 22px;
+    background:linear-gradient(160deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.02) 60%),
+               linear-gradient(140deg,#2a0f6e 0%, #46139e 45%, #7a1faa 100%);
+    box-shadow:0 20px 60px -20px rgba(80,40,180,.55), inset 0 1px 0 rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.10)}
+  .c-hero::after{content:"";position:absolute;inset:-40% -10% auto auto;width:80%;height:80%;
+    background:radial-gradient(circle, rgba(255,200,120,.35) 0%, transparent 60%);filter:blur(10px);pointer-events:none}
+  .c-hero > *{position:relative;z-index:1}
+  .c-kicker{font-size:10px;letter-spacing:.32em;color:var(--c-cyan);
+    text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .c-title{font-size:32px;line-height:1.15;margin:0 0 6px;letter-spacing:.05em;font-weight:800;
+    background:linear-gradient(180deg,#ffffff 0%,#e8d6ff 60%,#c7a6ff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 2px 20px rgba(180,140,255,.35);word-break:break-word}
+  .c-artist{font-size:13px;color:var(--c-ink-mute);letter-spacing:.08em}
+  .c-summary{margin-top:14px;padding:12px 14px;border-radius:14px;
+    background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.10);
+    font-size:13.5px;line-height:1.65;color:#f3eaff}
+  .c-summary b{color:var(--c-gold)}
+  .c-scores{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:14px}
+  .c-score{text-align:center;padding:10px 6px;border-radius:12px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14)}
+  .c-score.main{background:radial-gradient(circle at 50% 0%, rgba(126,232,255,.35), rgba(255,255,255,.05) 60%);
+    border-color:rgba(126,232,255,.55);box-shadow:0 0 22px rgba(126,232,255,.25)}
+  .c-score .l{font-size:9.5px;letter-spacing:.18em;color:var(--c-ink-faint);font-weight:700}
+  .c-score .n{font-size:24px;font-weight:800;line-height:1.05;margin-top:4px;letter-spacing:.02em}
+  .c-score.main .n{font-size:30px;color:#fff;text-shadow:0 0 14px rgba(126,232,255,.55)}
+  .c-score .s{font-size:9.5px;color:var(--c-ink-faint);margin-top:2px;letter-spacing:.06em}
+  .c-sec{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.24em;
+    color:var(--c-cyan);text-transform:uppercase;font-weight:700;margin:22px 4px 10px}
+  .c-sec::before{content:"";width:18px;height:1.5px;background:linear-gradient(90deg,var(--c-cyan),transparent)}
+  .c-charm{display:grid;gap:10px}
+  .c-charm .r{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border-radius:14px;
+    background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    border:1px solid var(--c-line)}
+  .c-charm .i{flex:0 0 36px;height:36px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+    background:linear-gradient(135deg, rgba(126,232,255,.20), rgba(255,122,217,.18));
+    border:1px solid rgba(255,255,255,.12)}
+  .c-charm .t{font-size:13.5px;font-weight:700;margin:0 0 3px;color:#fff}
+  .c-charm .d{font-size:12px;color:var(--c-ink-mute);line-height:1.55;margin:0}
+  .c-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .c-spec{padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--c-line)}
+  .c-spec .k{font-size:9.5px;letter-spacing:.16em;color:var(--c-ink-faint);font-weight:700;text-transform:uppercase}
+  .c-spec .v{font-size:14px;font-weight:700;color:#fff;margin-top:3px;letter-spacing:.03em}
+  .c-spec .v small{display:block;font-size:10px;color:var(--c-ink-mute);font-weight:500;margin-top:2px;letter-spacing:.04em}
+  .c-lyric{position:relative;margin-top:14px;padding:18px 18px 16px;border-radius:16px;
+    background:radial-gradient(120% 90% at 100% 0%, rgba(255,184,107,.18), transparent 60%),
+               linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid rgba(246,210,122,.28)}
+  .c-lyric::before{content:"❝";position:absolute;top:-2px;left:10px;
+    font-size:48px;color:var(--c-gold);opacity:.5;line-height:1;font-family:Georgia,serif}
+  .c-lyric .p{font-size:16px;line-height:1.7;font-weight:600;color:#fff8e7;
+    padding-left:18px;letter-spacing:.04em;white-space:pre-wrap}
+  .c-lyric .src{margin-top:8px;padding-left:18px;font-size:10.5px;color:var(--c-ink-faint);letter-spacing:.14em}
+  .c-share{margin-top:18px;padding:16px;border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border:1px solid var(--c-line)}
+  .c-share .hd{font-size:11px;letter-spacing:.22em;color:var(--c-ink-mute);
+    text-transform:uppercase;font-weight:700;margin-bottom:10px;text-align:center}
+  .c-share .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .c-sbtn{display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:11px 4px;border-radius:12px;color:#fff;font-size:10.5px;font-weight:600;
+    background:rgba(255,255,255,.06);border:1px solid var(--c-line);text-decoration:none;cursor:pointer}
+  .c-sbtn svg{width:22px;height:22px;display:block}
+  .c-sbtn.x{background:linear-gradient(135deg,#000,#1a1a1a);border-color:#333}
+  .c-sbtn.ig{background:linear-gradient(135deg,#feda77,#f58529 30%,#dd2a7b 60%,#8134af 90%,#515bd4)}
+  .c-sbtn.line{background:linear-gradient(135deg,#06c755,#04a847)}
+  .c-sbtn.copy{background:linear-gradient(135deg,#3a3a8a,#1f2050)}
+  .c-cta{display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-top:16px;padding:16px 18px;border-radius:16px;
+    background:linear-gradient(135deg,var(--c-gold) 0%, var(--c-gold-2) 100%);
+    color:#1a0a35;font-weight:800;font-size:15px;letter-spacing:.06em;text-decoration:none;
+    box-shadow:0 14px 30px -10px rgba(246,210,122,.55), inset 0 1px 0 rgba(255,255,255,.6)}
+  .c-cta-sub{text-align:center;font-size:10.5px;color:var(--c-ink-faint);letter-spacing:.16em;margin-top:8px}
+  .c-foot{margin-top:20px;text-align:center;font-size:10px;color:var(--c-ink-faint);letter-spacing:.14em;line-height:1.6}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);
+    background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:999px;
+    font-size:12.5px;letter-spacing:.06em;z-index:99;opacity:0;
+    transition:opacity .25s, transform .25s;
+    border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+</style>
+</head><body>
+<div class="card-stage" id="card">
+  <div class="c-brand">
+    <div class="c-logo">FeatherTune</div>
+    <div class="c-rank">CRS RANK C</div>
+  </div>
+  <section class="c-hero">
+    <div class="c-kicker">FT-599433e7 / Origin Edition</div>
+    <h1 class="c-title">輪廻命魂死生観</h1>
+    <div class="c-artist">kindlyfeatherWORKS　|　F#m · 77 BPM</div>
+    <div class="c-summary">魂に語りかける、輪廻の賛歌。</div>
+    <div class="c-scores">
+      <div class="c-score main"><div class="l">CRS</div><div class="n">64</div><div class="s">Rank C</div></div>
+      <div class="c-score"><div class="l">MUSIC</div><div class="n">38</div><div class="s">/ 100</div></div>
+      <div class="c-score"><div class="l">LYRICS</div><div class="n">89</div><div class="s">/ 100</div></div>
+    </div>
+  </section>
+
+  <div class="c-sec">この曲の魅力</div>
+  <div class="c-charm">
+    
+      <div class="r" style="">
+        <div class="i">🌌</div>
+        <div>
+          <div class="t">深いテーマ性と哲学的な歌詞</div>
+          <p class="d">「輪廻命魂死生観」という壮大なテーマを真正面から扱い、生命の循環や存在の意味を問いかける歌詞は、聴き手に深い考察を促し、楽曲に普遍的な価値を与えています。</p>
+        </div>
+      </div>
+      <div class="r" style="">
+        <div class="i">🕊️</div>
+        <div>
+          <div class="t">情感豊かなボーカルパフォーマンス</div>
+          <p class="d">女性ボーカルが歌詞の世界観を完璧に表現しており、囁くような繊細さから、魂を揺さぶるような力強さまで、幅広い表現力で楽曲の感情を豊かに彩っています。</p>
+        </div>
+      </div>
+      <div class="r" style="">
+        <div class="i">✨</div>
+        <div>
+          <div class="t">壮大なサウンドスケープ</div>
+          <p class="d">ピアノ、ストリングス、ドラム、コーラスが一体となったオーケストレーションは、楽曲に圧倒的なスケール感と奥行きを与え、聴き手を楽曲の世界観へと引き込みます。</p>
+        </div>
+      </div>
+      <div class="r" style="">
+        <div class="i">✨</div>
+        <div>
+          <div class="t">循環を表現する和声進行</div>
+          <p class="d">F#mを基調とした「i-VI-VII-i」というコード進行が、生命の「輪廻」というテーマを音楽的に象徴しており、楽曲全体に統一感と説得力をもたらしています。</p>
+        </div>
+      </div>
+  </div>
+
+  <div class="c-sec">楽曲スペック</div>
+  <div class="c-specs">
+    <div class="c-spec"><div class="k">Key</div><div class="v">F#m<small></small></div></div>
+    <div class="c-spec"><div class="k">Tempo</div><div class="v">77 BPM<small></small></div></div>
+    <div class="c-spec"><div class="k">Main Progression</div><div class="v">F#m | D | E | F#m</div></div>
+    <div class="c-spec"><div class="k">Genre</div><div class="v">芸術的深遠型エモーショナル・バラード</div></div>
+  </div>
+
+  <div class="c-sec">象徴フレーズ</div>
+  <div class="c-lyric">
+    <div class="p">流れる星の　如く生き<br><span style="color:#f6d27a;font-weight:800">命煌めき　瞬いて</span></div>
+    <div class="src">— 輪廻命魂死生観 / kindlyfeatherWORKS</div>
+  </div>
+
+  <div class="c-share">
+    <div class="hd">この感動をシェア</div>
+    <div class="g">
+      <a class="c-sbtn x" id="card-x" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25h6.918l4.713 6.231 5.36-6.231Z"/></svg>X</a>
+      <a class="c-sbtn line" id="card-line" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.477 3 2 6.57 2 10.97c0 3.94 3.51 7.24 8.25 7.87.32.07.76.21.87.49.1.25.06.64.03.9l-.14.84c-.04.25-.2.97.85.53 1.05-.44 5.66-3.33 7.72-5.7C20.91 14.34 22 12.78 22 10.97 22 6.57 17.523 3 12 3Z"/></svg>LINE</a>
+      <a class="c-sbtn ig" id="card-ig" href="#" data-action="ig"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2.2c3.2 0 3.58 0 4.85.07 1.17.05 1.8.25 2.23.42.56.22.96.48 1.38.9.42.42.68.82.9 1.38.17.43.37 1.06.42 2.23.07 1.27.07 1.65.07 4.85s0 3.58-.07 4.85c-.05 1.17-.25 1.8-.42 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.17-1.06.37-2.23.42-1.27.07-1.65.07-4.85.07s-3.58 0-4.85-.07c-1.17-.05-1.8-.25-2.23-.42-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.17-.43-.37-1.06-.42-2.23C2.2 15.58 2.2 15.2 2.2 12s0-3.58.07-4.85c.05-1.17.25-1.8.42-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.17 1.06-.37 2.23-.42C8.42 2.2 8.8 2.2 12 2.2Zm0 5.05a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5Zm0 1.8a2.95 2.95 0 1 1 0 5.9 2.95 2.95 0 0 1 0-5.9Zm5.6-2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z"/></svg>IG</a>
+      <a class="c-sbtn copy" id="card-copy" href="#" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPY</a>
+    </div>
+  </div>
+
+  <a class="c-cta" href="https://feathertune.com" target="_blank" rel="noopener">
+    <span>FeatherTune を体験する</span><span>→</span>
+  </a>
+  <div class="c-cta-sub">FEATHERTUNE.COM · 音楽解析システム</div>
+
+  <div class="c-foot">
+    Report ID: FT-599433e7 · 2026-05-12<br>
+    &copy; kindlyfeatherWORKS / Powered by FeatherTune
+  </div>
+  </div>
+<div class="ft-toast" id="ftToast"></div>
+<script>
+(function(){
+  var DATA = {"title":"輪廻命魂死生観","artist":"kindlyfeatherWORKS","summary":"魂に語りかける、輪廻の賛歌。","crs":64,"music":38,"lyrics":89,"rank":"C","key":"F#m","keySub":"","tempo":"77","tempoSub":"","prog":"F#m | D | E | F#m","genre":"芸術的深遠型エモーショナル・バラード","reportId":"FT-599433e7","reportDate":"2026-05-12","charm":[{"icon":"🌌","title":"深いテーマ性と哲学的な歌詞","desc":"「輪廻命魂死生観」という壮大なテーマを真正面から扱い、生命の循環や存在の意味を問いかける歌詞は、聴き手に深い考察を促し、楽曲に普遍的な価値を与えています。"},{"icon":"🕊️","title":"情感豊かなボーカルパフォーマンス","desc":"女性ボーカルが歌詞の世界観を完璧に表現しており、囁くような繊細さから、魂を揺さぶるような力強さまで、幅広い表現力で楽曲の感情を豊かに彩っています。"},{"icon":"✨","title":"壮大なサウンドスケープ","desc":"ピアノ、ストリングス、ドラム、コーラスが一体となったオーケストレーションは、楽曲に圧倒的なスケール感と奥行きを与え、聴き手を楽曲の世界観へと引き込みます。"},{"icon":"✨","title":"循環を表現する和声進行","desc":"F#mを基調とした「i-VI-VII-i」というコード進行が、生命の「輪廻」というテーマを音楽的に象徴しており、楽曲全体に統一感と説得力をもたらしています。"}],"lyric":"流れる星の　如く生き\n命煌めき　瞬いて","_loaded":true};
+  var text = "🌌 輪廻命魂死生観 — kindlyfeatherWORKS\n魂に語りかける、輪廻の賛歌。\nCRS 64 / Rank C · Music 38 · Lyrics 89\n#輪廻命魂死生観 #kindlyfeatherWORKS #FeatherTune";
+  function getShareUrl(){
+    var p = location.protocol;
+    if (p === 'file:' || /^localhost|^127\./.test(location.host)) return 'https://feathertune.com';
+    return location.href;
+  }
+  var toastTimer;
+  function toast(msg){
+    var t = document.getElementById('ftToast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  }
+  function safeName(){
+    return (DATA.title||'card').replace(/[\\\/:*?"<>|]/g,'_').replace(/\s+/g,'_');
+  }
+  async function genPng(){
+    if (!window.html2canvas) throw new Error('html2canvas未読込');
+    var node = document.getElementById('card');
+    var clone = node.cloneNode(true);
+    clone.style.width = '440px'; clone.style.maxWidth = '440px';
+    var sandbox = document.createElement('div');
+    sandbox.style.cssText = 'position:fixed;left:-9999px;top:0;width:440px;z-index:-1';
+    sandbox.appendChild(clone); document.body.appendChild(sandbox);
+    try {
+      var canvas = await html2canvas(clone, { backgroundColor:'#050218', scale:2, useCORS:true, logging:false });
+      return await new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
+    } finally { document.body.removeChild(sandbox); }
+  }
+  function dlPng(blob){
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'FT_card_' + safeName() + '.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+  }
+  async function share(platform){
+    var url = getShareUrl();
+    toast('画像を生成中…');
+    var pngFile = null;
+    try {
+      var blob = await genPng();
+      pngFile = new File([blob], 'FT_card_' + safeName() + '.png', {type:'image/png'});
+    } catch(e){ console.error(e); }
+    if (pngFile && navigator.canShare && navigator.canShare({files:[pngFile]})){
+      try { await navigator.share({files:[pngFile], text:text, title:DATA.title||'FeatherTune Card', url:url}); toast('✓ 共有しました'); return; }
+      catch(e){ if (e.name==='AbortError') return; }
+    }
+    if (pngFile) dlPng(pngFile);
+    if (platform === 'x'){
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text + '\n' + url), '_blank', 'noopener');
+      toast(pngFile ? '✓ 画像をDLしました。Xで添付してください' : 'Xを開きました');
+    } else if (platform === 'line'){
+      window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text), '_blank', 'noopener');
+      toast(pngFile ? '✓ 画像をDLしました。LINEで添付してください' : 'LINEを開きました');
+    } else if (platform === 'ig'){
+      try { await navigator.clipboard.writeText(text + '\n' + url); } catch(e){}
+      setTimeout(function(){ window.location.href = 'instagram://app'; }, 600);
+      toast(pngFile ? '✓ 画像をDLしました。Instagramで添付してください' : 'Instagramを起動します');
+    }
+  }
+  document.getElementById('card').addEventListener('click', function(e){
+    var t = e.target.closest('a, [data-action]'); if (!t) return;
+    if (t.id === 'card-x'){ e.preventDefault(); share('x'); }
+    else if (t.id === 'card-line'){ e.preventDefault(); share('line'); }
+    else if (t.id === 'card-ig'){ e.preventDefault(); share('ig'); }
+    else if (t.id === 'card-copy'){
+      e.preventDefault();
+      navigator.clipboard.writeText(text + '\n' + getShareUrl()).then(function(){ toast('✓ テキストをコピーしました'); });
+    }
+  });
+})();
+</script>
+</body></html>
