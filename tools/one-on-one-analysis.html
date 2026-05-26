@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeatherTune 楽曲類似度判定システム</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --indigo:#1A237E;--purple:#4527A0;--teal:#00695C;--teal2:#00897B;
+  --grey:#6B7280;--border:#E0E6F0;--shadow:0 4px 20px rgba(0,0,0,.10);
+}
+body{font-family:'Hiragino Sans','Yu Gothic','Meiryo',sans-serif;background:#EEF2FF;color:#1A1A2E;min-height:100vh;}
+
+/* ===== UPLOAD SCREEN ===== */
+#screen-upload{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;}
+.app-logo{text-align:center;margin-bottom:32px;}
+.app-logo h1{font-size:1.6em;font-weight:800;background:linear-gradient(135deg,var(--indigo),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.06em;}
+.app-logo p{font-size:.82em;color:var(--grey);margin-top:6px;}
+.upload-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;width:100%;max-width:860px;align-items:center;}
+.upload-card{background:#fff;border:2px dashed var(--border);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+.upload-card:hover{border-color:var(--purple);box-shadow:var(--shadow);}
+.upload-card.loaded{border-color:var(--teal2);border-style:solid;}
+.upload-card input[type="file"]{display:none;}
+.upload-card .uc-icon{font-size:2.2em;margin-bottom:10px;display:block;}
+.upload-card .uc-label{font-size:.88em;font-weight:700;color:var(--indigo);display:block;margin-bottom:6px;}
+.upload-card .uc-hint{font-size:.74em;color:var(--grey);line-height:1.5;}
+.upload-card .uc-filename{margin-top:10px;font-size:.75em;color:var(--teal);font-weight:600;word-break:break-all;display:none;}
+.upload-card.loaded .uc-filename{display:block;}
+.vs-badge{width:48px;height:48px;background:linear-gradient(135deg,var(--indigo),var(--purple));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75em;font-weight:800;flex-shrink:0;}
+.btn-analyze{margin-top:28px;padding:14px 48px;background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;font-size:1em;font-weight:700;border:none;border-radius:30px;cursor:pointer;letter-spacing:.06em;box-shadow:0 4px 16px rgba(69,39,160,.35);transition:opacity .2s,transform .1s;display:block;}
+.btn-analyze:disabled{opacity:.4;cursor:not-allowed;}
+.btn-analyze:not(:disabled):hover{opacity:.9;transform:translateY(-1px);}
+
+/* ===== ACTION BAR ===== */
+#screen-result{display:none;}
+.action-bar{width:100%;max-width:1180px;margin:0 auto 12px;display:flex;gap:10px;padding:12px 0;align-items:center;}
+.btn-back,.btn-print,.btn-dl{padding:9px 22px;border-radius:20px;border:none;font-size:.82em;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:opacity .2s;}
+.btn-back{background:#E8EAF6;color:var(--indigo);}
+.btn-print{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;}
+.btn-dl{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;}
+.btn-back:hover,.btn-print:hover,.btn-dl:hover{opacity:.85;}
+.action-bar .spacer{flex:1;}
+
+/* ===== PAGE WRAPPERS (screen) ===== */
+.page-wrap{width:100%;max-width:1180px;margin:0 auto 24px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+
+/* ===== SHARED: PAGE HEADER ===== */
+.ph{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;}
+.ph h1{font-size:1.08em;font-weight:800;letter-spacing:.06em;}
+.ph .ph-sub{font-size:.68em;opacity:.82;margin-top:2px;}
+.ph-meta{font-size:.72em;opacity:.88;text-align:right;line-height:1.7;}
+
+/* ===== PAGE 1: MAIN 3-COL ===== */
+.p1-main{display:grid;grid-template-columns:1fr 0.9fr 1fr;border-bottom:1px solid var(--border);}
+.p1-col{padding:18px 16px;}
+.p1-col-a{border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.p1-col-b{border-left:1px solid var(--border);position:relative;overflow:hidden;}
+.p1-col-ctr{background:#f7f8ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+
+.song-title{font-size:1.05em;font-weight:800;color:var(--indigo);margin-bottom:10px;line-height:1.3;}
+.smr{display:flex;justify-content:space-between;padding:4px 0;font-size:.78em;border-bottom:1px dotted #EEF0F8;gap:6px;}
+.smr .sl{color:var(--grey);flex-shrink:0;}
+.smr .sv{font-weight:600;text-align:right;word-break:break-all;}
+
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.7em;font-weight:700;}
+.b-ai{background:#FFF3E0;color:#E65100;}
+.b-j{background:#E8F5E9;color:#2E7D32;}
+.b-low{background:#E8F5E9;color:#1B5E20;}
+.b-med{background:#FFF8E1;color:#F57F17;}
+.b-high{background:#FFEBEE;color:#B71C1C;}
+
+/* P1 Center gauges */
+.p1-dual{display:flex;gap:16px;justify-content:center;}
+.p1-gu{text-align:center;}
+.p1-gu .gl{font-size:.65em;font-weight:700;letter-spacing:.04em;margin-bottom:5px;}
+.p1-gw{position:relative;width:96px;height:96px;margin:0 auto;}
+.p1-gw svg{width:100%;height:100%;}
+.p1-gs{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.55em;font-weight:800;line-height:1;}
+.p1-gs .gu{font-size:.35em;font-weight:400;color:var(--grey);display:block;margin-top:1px;}
+.rank-pill{display:inline-block;padding:3px 12px;border-radius:14px;font-size:.72em;font-weight:800;margin-top:4px;color:#fff;}
+.rk-A{background:linear-gradient(135deg,#1565C0,#1976D2);}
+.rk-B{background:linear-gradient(135deg,#7E57C2,#5C6BC0);}
+.rk-C{background:linear-gradient(135deg,#FB8C00,#FFA726);}
+.rk-D{background:linear-gradient(135deg,#E53935,#EF5350);}
+.p1-gu .rl{font-size:.6em;color:var(--grey);margin-top:2px;}
+
+/* P1 vs line */
+.p1-vs{font-size:.85em;font-weight:800;color:#9FA8DA;letter-spacing:.08em;}
+
+/* P1 Score section (dark bg) */
+.p1-score-sec{background:linear-gradient(135deg,#1A1A2E,#1A237E);color:#fff;padding:14px 22px;}
+.p1-score-title{font-size:.78em;font-weight:700;color:#B39DDB;letter-spacing:.07em;margin-bottom:10px;}
+.ft-grid{display:grid;grid-template-columns:0.85fr 0.85fr 0.8fr 1.7fr 0.8fr;gap:10px;margin-bottom:0;}
+.fc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:9px 11px;}
+.fc .fc-t{font-size:.62em;color:#B39DDB;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.fc .fc-v{font-size:.75em;color:#E8EAF6;line-height:1.55;}
+
+/* P1 Verdict */
+.p1-verdict-sec{background:linear-gradient(135deg,#1A1A2E,#1A237E);color:#fff;padding:0 22px 14px;}
+.verdict{background:rgba(179,157,219,.13);border:1px solid rgba(179,157,219,.35);border-radius:8px;padding:9px 14px;font-size:.78em;color:#E8EAF6;line-height:1.7;}
+.verdict strong{color:#CE93D8;}
+.disclaimer{background:rgba(255,80,80,.10);border:1px solid rgba(255,120,120,.35);border-radius:8px;padding:8px 12px;font-size:.68em;color:#FFCDD2;line-height:1.6;margin-bottom:10px;}
+.disclaimer strong{color:#FF8A80;}
+
+/* ===== PAGE 2 ===== */
+.p2-subhd{background:linear-gradient(135deg,#283593,#4527A0);color:#fff;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;}
+.p2-subhd .p2-t{font-size:.9em;font-weight:700;letter-spacing:.05em;}
+.p2-subhd .p2-m{font-size:.68em;opacity:.85;}
+
+.three-col{display:grid;grid-template-columns:1fr 1.08fr 1fr;}
+.col{padding:14px 13px;border-right:1px solid var(--border);}
+.col:last-child{border-right:none;}
+.col-hd{text-align:center;padding:8px 7px 10px;border-radius:7px;font-weight:800;font-size:.88em;letter-spacing:.03em;margin-bottom:12px;color:#fff;}
+.col-hd .sub{font-size:.7em;font-weight:400;opacity:.9;display:block;margin-top:2px;word-break:break-all;}
+.col-a .col-hd{background:linear-gradient(135deg,#1565C0,#1976D2);}
+.col-ctr .col-hd{background:linear-gradient(135deg,#4527A0,#6A1B9A);}
+.col-b .col-hd{background:linear-gradient(135deg,#00695C,#00897B);}
+
+.ds{margin-bottom:11px;}
+.ds-title{font-size:.63em;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#5C6BC0;border-bottom:1.5px solid #E8EAF6;padding-bottom:3px;margin-bottom:6px;}
+.dr{display:flex;justify-content:space-between;align-items:flex-start;padding:3px 0;font-size:.73em;border-bottom:1px dotted #EEF0F8;gap:5px;}
+.dr .lbl{color:var(--grey);flex-shrink:0;min-width:60px;font-size:.88em;}
+.dr .val{font-weight:600;color:#1A1A2E;text-align:right;word-break:break-all;}
+.chord-blk{background:#F5F6FF;border:1px solid #C5CAE9;border-radius:5px;padding:5px 7px;font-family:'Courier New',monospace;font-size:.66em;color:#283593;word-break:break-all;line-height:1.6;margin-top:3px;}
+.lyr-blk{background:#FAFAFA;border-left:3px solid #9FA8DA;padding:5px 8px;font-size:.68em;color:#374151;line-height:1.8;border-radius:0 4px 4px 0;margin-top:3px;}
+
+/* P2 center bars */
+.bi{display:flex;align-items:center;padding:3px 0;font-size:.7em;border-bottom:1px dotted #EDE7F6;gap:4px;}
+.bi .bi-lbl{color:var(--grey);flex-shrink:0;font-size:.88em;min-width:54px;}
+.bi .bi-bar-w{flex:1;height:5px;background:#E8EAF6;border-radius:3px;overflow:hidden;}
+.bi .bi-bar{height:100%;border-radius:3px;}
+.bar-h{background:linear-gradient(90deg,#43A047,#66BB6A);}
+.bar-m{background:linear-gradient(90deg,#FB8C00,#FFA726);}
+.bar-l{background:linear-gradient(90deg,#E53935,#EF5350);}
+.bi .bi-pct{font-weight:700;color:#4527A0;font-size:.88em;min-width:26px;text-align:right;}
+
+/* P2 tags row */
+.p2-tags-row{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--border);}
+.p2-tc{padding:9px 14px;border-right:1px solid var(--border);}
+.p2-tc:last-child{border-right:none;}
+.p2-tc-title{font-size:.63em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#5C6BC0;margin-bottom:5px;}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.66em;font-weight:600;}
+.tag-ok{background:#E8F5E9;color:#1B5E20;}
+.tag-diff{background:#FFF3E0;color:#E65100;}
+
+/* P2 comment row */
+.p2-comment-row{padding:10px 16px;background:linear-gradient(135deg,#EDE7F6,#E8EAF6);border-top:2px solid #B39DDB;}
+.p2-comment-title{font-size:.63em;font-weight:700;color:#4527A0;margin-bottom:4px;letter-spacing:.04em;}
+.p2-comment-text{font-size:.76em;color:#311B92;line-height:1.65;}
+
+/* ===== PAGE 3 ===== */
+.p3-main{display:grid;grid-template-columns:1fr 1.2fr 1fr;border-bottom:1px solid var(--border);}
+.p3-col{padding:14px 13px;}
+.p3-col-a{border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.p3-col-b{border-left:1px solid var(--border);position:relative;overflow:hidden;}
+.p3-col-ctr{background:#f7f8ff;}
+.p3-score-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;font-size:.85em;font-weight:800;margin-bottom:10px;color:#fff;}
+.p3-sb-A{background:linear-gradient(135deg,#1565C0,#1976D2);}
+.p3-sb-B{background:linear-gradient(135deg,#7E57C2,#5C6BC0);}
+.p3-sb-C{background:linear-gradient(135deg,#FB8C00,#FFA726);}
+.p3-sb-D{background:linear-gradient(135deg,#E53935,#EF5350);}
+.p3-lbl{font-size:.6em;font-weight:700;color:#5C6BC0;text-transform:uppercase;letter-spacing:.07em;border-bottom:1.5px solid #E8EAF6;padding-bottom:2px;margin:7px 0 3px;}
+.p3-val{font-size:.72em;color:#1A1A2E;margin-bottom:3px;line-height:1.5;}
+.p3-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px;}
+.p3-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.62em;font-weight:600;background:#E8EAF6;color:#4527A0;}
+.p3-absbar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:3px;}
+.p3-abs-a{background:#7E57C2;}
+.p3-abs-b{background:#81A83D;}
+/* P3 center bars (new layout) */
+.p3-mitem{margin-bottom:4px;padding-bottom:3px;border-bottom:1px dotted #D8DCF0;}
+.p3-mlbl-ctr{text-align:center;font-size:.58em;color:#5C6BC0;font-weight:600;letter-spacing:.03em;margin-bottom:2px;}
+.p3-mrow2{display:flex;align-items:center;gap:3px;}
+.p3-mbars{flex:1;display:flex;flex-direction:column;gap:2px;}
+.p3-mba{height:5px;border-radius:2px;background:linear-gradient(90deg,#7E57C2,#B39DDB);}
+.p3-mbb{height:5px;border-radius:2px;background:linear-gradient(90deg,#26A69A,#80CBC4);}
+.p3-mnum{min-width:18px;font-weight:800;font-size:.68em;}
+.p3-mnum-a{color:#7E57C2;text-align:right;}
+.p3-mnum-b{color:#26A69A;text-align:left;}
+/* P3 radar */
+.p3-radar-wrap{display:flex;gap:6px;justify-content:center;margin-top:8px;padding:6px 4px;background:linear-gradient(135deg,#1A1A2E,#1A237E);border-radius:8px;}
+/* P3 bottom */
+.p3-bottom{padding:8px 16px;background:linear-gradient(135deg,#EDE7F6,#E8EAF6);border-top:2px solid #B39DDB;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.p3-bt-title{font-size:.6em;font-weight:700;color:#4527A0;margin-bottom:3px;letter-spacing:.04em;}
+.p3-bt-val{font-size:.7em;color:#311B92;line-height:1.6;font-style:italic;}
+/* P3 print */
+@media print{
+  .p3-col{padding:4px 6px;}
+  .p3-lbl{font-size:.49em;margin:2px 0 1px;}
+  .p3-val{font-size:.57em;line-height:1.3;}
+  .p3-score-badge{font-size:.62em;padding:2px 7px;margin-bottom:4px;}
+  .p3-tags{gap:2px;margin-bottom:2px;}
+  .p3-tag{font-size:.48em;padding:1px 4px;}
+  .p3-absbar{height:5px;}
+  .p3-mitem{margin-bottom:1px;padding-bottom:1px;}
+  .p3-mlbl-ctr{font-size:.46em;margin-bottom:0px;}
+  .p3-mrow2{gap:2px;}
+  .p3-mnum{font-size:.50em;min-width:11px;}
+  .p3-bar-single{height:5px !important;}
+  .p3-bottom{padding:3px 10px;}
+  .p3-bt-title{font-size:.49em;margin-bottom:1px;}
+  .p3-bt-val{font-size:.55em;line-height:1.35;}
+  .p3-radar-wrap{padding:2px 2px;margin-top:4px;}
+  #p3-col-a svg,#p3-col-b svg{width:84px !important;height:84px !important;}
+  .p3-sim-block{padding:4px 7px !important;margin-top:5px !important;}
+  .p3-sim-block div{font-size:.50em !important;line-height:1.4;}
+  .p3-cmt-block{padding:5px 7px !important;margin-top:4px !important;}
+  .p3-cmt-block div{font-size:.53em !important;line-height:1.5;}
+  .col-hd{padding:4px 5px 4px;font-size:.70em;margin-bottom:5px;}
+}
+
+/* ===== MODE SELECTOR ===== */
+.mode-selector{display:flex;gap:10px;margin-bottom:24px;justify-content:center;flex-wrap:wrap;}
+.mode-btn{padding:10px 22px;border-radius:24px;border:2px solid var(--border);background:#fff;font-size:.85em;font-weight:700;cursor:pointer;letter-spacing:.03em;color:var(--grey);transition:all .2s;}
+.mode-btn.active{border-color:var(--purple);background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;box-shadow:0 4px 14px rgba(69,39,160,.3);}
+.mode-btn:hover:not(.active){border-color:var(--purple);color:var(--indigo);}
+
+/* ===== FRIEND PAGE ===== */
+.friend-ph{background:linear-gradient(135deg,#880E4F,#E91E63);color:#fff;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;}
+.friend-ph .ph-sub{font-size:.68em;opacity:.82;margin-top:2px;}
+.friend-3col{display:grid;grid-template-columns:1fr 1.15fr 1fr;border-bottom:1px solid #F8BBD0;}
+.friend-col{padding:16px 14px;}
+.friend-col-ctr{background:linear-gradient(180deg,#FFF0F3,#FFF8FB);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px 12px;}
+.friend-col-a{border-right:1px solid #F8BBD0;}
+.friend-col-b{border-left:1px solid #F8BBD0;}
+.fg-wrap{position:relative;width:110px;height:110px;margin:0 auto 8px;}
+.fg-wrap svg{width:100%;height:100%;}
+.fg-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1;}
+.friend-level{display:inline-block;padding:3px 14px;border-radius:14px;font-size:.75em;font-weight:800;margin-bottom:12px;}
+.fl-high{background:linear-gradient(135deg,#AD1457,#E91E63);color:#fff;}
+.fl-mid{background:linear-gradient(135deg,#E91E63,#F06292);color:#fff;}
+.fl-low{background:linear-gradient(135deg,#F8BBD0,#FCE4EC);color:#AD1457;border:1px solid #F48FB1;}
+.friend-bar{background:linear-gradient(90deg,#E91E63,#F48FB1) !important;}
+.friend-song-title{font-size:.95em;font-weight:800;color:#880E4F;margin-bottom:8px;line-height:1.3;}
+.friend-smr{display:flex;justify-content:space-between;padding:3px 0;font-size:.75em;border-bottom:1px dotted #FCCFE3;gap:5px;}
+.friend-smr .sl{color:#AD1457;flex-shrink:0;opacity:.8;}
+.friend-smr .sv{font-weight:600;color:#4A0029;text-align:right;word-break:break-all;}
+.friend-foot{padding:11px 18px;background:linear-gradient(135deg,#FCE4EC,#FFF0F3);border-top:2px solid #F48FB1;}
+.friend-foot-title{font-size:.63em;font-weight:700;color:#AD1457;margin-bottom:4px;letter-spacing:.04em;}
+.friend-foot-text{font-size:.76em;color:#880E4F;line-height:1.65;font-style:italic;}
+
+/* ===== RIVAL PAGE ===== */
+.rival-ph{background:linear-gradient(135deg,#7B1FA2,#B71C1C);color:#fff;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;}
+.rival-ph .ph-sub{font-size:.68em;opacity:.82;margin-top:2px;}
+.rival-3col{display:grid;grid-template-columns:1fr 1.15fr 1fr;border-bottom:1px solid #FFCDD2;}
+.rival-col{padding:16px 14px;}
+.rival-col-ctr{background:linear-gradient(180deg,#FFF3E0,#FFF8F5);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px 12px;}
+.rival-col-a{border-right:1px solid #FFCDD2;position:relative;overflow:hidden;}
+.rival-col-b{border-left:1px solid #FFCDD2;position:relative;overflow:hidden;}
+.rg-wrap{position:relative;width:110px;height:110px;margin:0 auto 8px;}
+.rg-wrap svg{width:100%;height:100%;}
+.rg-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1;}
+.rival-level{display:inline-block;padding:3px 14px;border-radius:14px;font-size:.75em;font-weight:800;margin-bottom:12px;}
+.rl-high{background:linear-gradient(135deg,#B71C1C,#E53935);color:#fff;}
+.rl-mid{background:linear-gradient(135deg,#E53935,#EF9A9A);color:#fff;}
+.rl-low{background:linear-gradient(135deg,#FFCDD2,#FFEBEE);color:#B71C1C;border:1px solid #EF9A9A;}
+.rival-bar{background:linear-gradient(90deg,#E53935,#EF9A9A) !important;}
+.rival-song-title{font-size:.95em;font-weight:800;color:#7B1FA2;margin-bottom:8px;line-height:1.3;}
+.rival-smr{display:flex;justify-content:space-between;padding:3px 0;font-size:.75em;border-bottom:1px dotted #FFCDD2;gap:5px;}
+.rival-smr .sl{color:#B71C1C;flex-shrink:0;opacity:.8;}
+.rival-smr .sv{font-weight:600;color:#4A148C;text-align:right;word-break:break-all;}
+.rival-str{margin-top:8px;padding:6px 8px;background:rgba(183,28,28,.07);border-radius:6px;border-left:3px solid #E53935;}
+.rival-str-title{font-size:.6em;font-weight:700;color:#B71C1C;letter-spacing:.05em;margin-bottom:3px;}
+.rival-str-val{font-size:.68em;color:#4A148C;line-height:1.5;}
+.rival-foot{padding:11px 18px;background:linear-gradient(135deg,#FFEBEE,#FFF3E0);border-top:2px solid #EF9A9A;}
+.rival-foot-title{font-size:.63em;font-weight:700;color:#B71C1C;margin-bottom:4px;letter-spacing:.04em;}
+.rival-foot-text{font-size:.76em;color:#7B1FA2;line-height:1.65;font-style:italic;}
+
+/* ===== PRINT ===== */
+@page{size:A4 landscape;margin:7mm;}
+@media print{
+  *{box-sizing:border-box;}
+  body{background:#fff !important;margin:0;padding:0;}
+  #screen-upload{display:none !important;}
+  #screen-result{display:block !important;padding:0 !important;}
+  .action-bar{display:none !important;}
+
+  .page-wrap{
+    width:283mm;max-width:283mm;
+    box-shadow:none;border-radius:0;margin:0;overflow:visible;
+    page-break-after:always;
+  }
+  .page-wrap:last-child{page-break-after:avoid;}
+
+  /* P1 print */
+  .ph{padding:7px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .ph h1{font-size:.92em;}
+  .ph-sub{font-size:.62em;}
+  .ph-meta{font-size:.62em;}
+  .p1-main{border-bottom:1px solid #E0E6F0;}
+  .p1-col{padding:8px 10px;}
+  .song-title{font-size:.88em;margin-bottom:6px;}
+  .smr{font-size:.66em;padding:2px 0;}
+  .p1-gw{width:68px;height:68px;}
+  .p1-gs{font-size:1.15em;}
+  .p1-dual{gap:10px;}
+  .p1-gu .gl{font-size:.6em;margin-bottom:3px;}
+  .rank-pill{font-size:.6em;padding:2px 8px;margin-top:2px;}
+  .p1-gu .rl{font-size:.55em;}
+  .badge{font-size:.6em;}
+  .p1-vs{font-size:.75em;}
+
+  .p1-score-sec{padding:7px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .p1-score-title{font-size:.7em;margin-bottom:6px;}
+  .ft-grid{gap:5px;}
+  .fc{padding:5px 7px;}
+  .fc .fc-t{font-size:.56em;}
+  .fc .fc-v{font-size:.64em;line-height:1.45;}
+
+  .p1-verdict-sec{padding:0 14px 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .verdict{padding:5px 10px;font-size:.66em;line-height:1.5;}
+  .disclaimer{padding:4px 8px;font-size:.6em;margin-bottom:6px;line-height:1.45;}
+
+  /* P2 print */
+  .p2-subhd{padding:5px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .p2-subhd .p2-t{font-size:.82em;}
+  .p2-subhd .p2-m{font-size:.62em;}
+  .three-col{display:grid;grid-template-columns:1fr 1.08fr 1fr;}
+  .col{padding:8px 9px;}
+  .col-hd{padding:5px 5px 6px;font-size:.75em;margin-bottom:7px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .col-hd .sub{font-size:.68em;}
+  .ds{margin-bottom:6px;}
+  .ds-title{font-size:.56em;padding-bottom:2px;margin-bottom:4px;}
+  .dr{font-size:.62em;padding:1px 0;}
+  .dr .lbl{min-width:52px;}
+  .chord-blk{font-size:.58em;padding:3px 5px;line-height:1.5;}
+  .lyr-blk{font-size:.58em;padding:3px 6px;line-height:1.55;}
+  .bi{font-size:.6em;padding:1px 0;}
+  .bi .bi-lbl{min-width:48px;}
+  .bi .bi-bar-w{height:4px;}
+  .bi .bi-pct{min-width:22px;}
+  .p2-tc{padding:5px 10px;}
+  .p2-tc-title{font-size:.56em;margin-bottom:3px;}
+  .tag{font-size:.58em;padding:1px 6px;}
+  .p2-tags-row{border-top:1.5px solid #E0E6F0;}
+  .p2-comment-row{padding:6px 12px;}
+  .p2-comment-title{font-size:.58em;margin-bottom:2px;}
+  .p2-comment-text{font-size:.67em;line-height:1.55;}
+}
+</style>
+</head>
+<body>
+
+<!-- UPLOAD SCREEN -->
+<div id="screen-upload">
+  <div class="app-logo">
+    <h1>🎵 FeatherTune 楽曲分析システム</h1>
+    <p>音楽分析レポート（HTML）を2つアップロードして比較・判定します</p>
+  </div>
+  <div class="mode-selector" id="mode-selector">
+    <button class="mode-btn active" id="mbtn-similarity" onclick="setMode('similarity')">⚖️ 楽曲類似度判定</button>
+    <button class="mode-btn" id="mbtn-friend" onclick="setMode('friend')">💕 仲良し度分析</button>
+    <button class="mode-btn" id="mbtn-rival" onclick="setMode('rival')">⚔️ ライバル度分析</button>
+  </div>
+  <div class="upload-grid">
+    <div class="upload-card" id="card-a" onclick="document.getElementById('file-a').click()">
+      <label>
+        <input type="file" id="file-a" accept=".html,.htm" onchange="loadFile('a',this)">
+        <span class="uc-icon">🎵</span>
+        <span class="uc-label">分析対象 A</span>
+        <span class="uc-hint">FeatherTune HTMLレポートを<br>クリックまたはドロップ</span>
+        <span class="uc-filename" id="fn-a"></span>
+      </label>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="upload-card" id="card-b" onclick="document.getElementById('file-b').click()">
+      <label>
+        <input type="file" id="file-b" accept=".html,.htm" onchange="loadFile('b',this)">
+        <span class="uc-icon">🎵</span>
+        <span class="uc-label">分析対象 B</span>
+        <span class="uc-hint">FeatherTune HTMLレポートを<br>クリックまたはドロップ</span>
+        <span class="uc-filename" id="fn-b"></span>
+      </label>
+    </div>
+  </div>
+  <button class="btn-analyze" id="btn-analyze" disabled onclick="runAnalysis()">⚖️ 楽曲類似度を判定する</button>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result">
+  <div class="action-bar">
+    <button class="btn-back" onclick="goBack()">← 戻る</button>
+    <span class="spacer"></span>
+    <button class="btn-print" onclick="window.print()">🖨 印刷 / PDF保存（A4横3枚）</button>
+    <button class="btn-dl" onclick="downloadHTML()">⬇ HTMLダウンロード</button>
+  </div>
+
+  <!-- ========== PAGE 1: サマリー ========== -->
+  <div class="page-wrap" id="page1">
+    <div class="ph">
+      <div>
+        <div class="ph h1" style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">🎵 FeatherTune 楽曲類似度判定レポート</div>
+        <div class="ph-sub">総合類似度 ＋ 著作物類似度 複合判定 — サマリー</div>
+      </div>
+      <div class="ph-meta" id="ph1-meta"></div>
+    </div>
+    <div class="p1-main">
+      <div class="p1-col p1-col-a" id="p1-col-a"></div>
+      <div class="p1-col p1-col-ctr" id="p1-col-ctr"></div>
+      <div class="p1-col p1-col-b" id="p1-col-b"></div>
+    </div>
+    <div class="p1-score-sec">
+      <div class="p1-score-title">📋 総合評価</div>
+      <div class="ft-grid" id="p1-cards"></div>
+    </div>
+    <div class="p1-verdict-sec" id="p1-disclaimer"></div>
+  </div>
+
+  <!-- ========== PAGE 2: 詳細 ========== -->
+  <div class="page-wrap" id="page2">
+    <div class="p2-subhd">
+      <span class="p2-t">🎵 楽曲類似度判定　詳細分析レポート</span>
+      <span class="p2-m" id="p2-meta"></span>
+    </div>
+    <div class="three-col">
+      <div class="col col-a">
+        <div class="col-hd">🎵 分析対象 A<span class="sub" id="title-a">—</span></div>
+        <div id="col-a-content"></div>
+      </div>
+      <div class="col col-ctr">
+        <div class="col-hd">⚖️ 類似度スコア詳細<span class="sub">各指標別評価</span></div>
+        <div id="col-ctr-content"></div>
+      </div>
+      <div class="col col-b">
+        <div class="col-hd">🎵 分析対象 B<span class="sub" id="title-b">—</span></div>
+        <div id="col-b-content"></div>
+      </div>
+    </div>
+    <div class="p2-tags-row" id="p2-tags"></div>
+    <div class="p2-comment-row" id="p2-comment"></div>
+    <div class="p1-verdict-sec" id="p1-verdict"></div>
+  </div>
+
+  <!-- ========== PAGE 3: 歌詞表現構造分析 ========== -->
+  <div class="page-wrap" id="page3" style="display:none;">
+    <div class="ph">
+      <div>
+        <div class="ph h1" style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">🎤 歌詞表現構造分析 比較レポート</div>
+        <div class="ph-sub">LYRIC EXPRESSION PROFILE COMPARISON</div>
+      </div>
+      <div class="ph-meta" id="ph3-meta"></div>
+    </div>
+    <div class="p3-main">
+      <div class="p3-col p3-col-a col-a">
+        <div class="col-hd">🎤 分析対象 A<span class="sub" id="p3-title-a">—</span></div>
+        <div id="p3-col-a"></div>
+      </div>
+      <div class="p3-col p3-col-ctr col-ctr">
+        <div class="col-hd">📊 6軸スコア比較<span class="sub">各軸 /10点</span></div>
+        <div id="p3-col-ctr"></div>
+      </div>
+      <div class="p3-col p3-col-b col-b">
+        <div class="col-hd">🎤 分析対象 B<span class="sub" id="p3-title-b">—</span></div>
+        <div id="p3-col-b"></div>
+      </div>
+    </div>
+    <div id="p3-bottom"></div>
+  </div>
+
+  <!-- ========== PAGE 4: 仲良し度分析 ========== -->
+  <div class="page-wrap" id="page4" style="display:none;">
+    <div class="friend-ph">
+      <div>
+        <div style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">💕 仲良し度分析レポート</div>
+        <div class="ph-sub">COMPATIBILITY ANALYSIS — 2曲の相性・共鳴度判定</div>
+      </div>
+      <div class="ph-meta" id="ph4-meta"></div>
+    </div>
+    <div id="page4-content"></div>
+  </div>
+
+  <!-- ========== PAGE 5: ライバル度分析 ========== -->
+  <div class="page-wrap" id="page5" style="display:none;">
+    <div class="rival-ph">
+      <div>
+        <div style="font-size:1.08em;font-weight:800;letter-spacing:.06em;">⚔️ ライバル度分析レポート</div>
+        <div class="ph-sub">RIVALRY ANALYSIS — 2曲の競合・対決度判定</div>
+      </div>
+      <div class="ph-meta" id="ph5-meta"></div>
+    </div>
+    <div id="page5-content"></div>
+  </div>
+</div>
+
+<script>
+/* ===== FILE LOADING ===== */
+const reports={a:null,b:null,am_a:null,am_b:null};
+function loadFile(side,input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  const fnId=side.replace('_','-');
+  const cardId='card-'+side.replace('_','-');
+  reader.onload=e=>{
+    reports[side]={filename:file.name,raw:e.target.result};
+    document.getElementById('fn-'+fnId).textContent='✅ '+file.name;
+    const card=document.getElementById(cardId);
+    if(card)card.classList.add('loaded');
+    checkReady();
+  };
+  reader.readAsText(file,'UTF-8');
+}
+function checkReady(){document.getElementById('btn-analyze').disabled=!(reports.a&&reports.b);}
+
+/* ===== PARSER ===== */
+function extractText(html){
+  const div=document.createElement('div');
+  div.innerHTML=html.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'');
+  return (div.textContent||div.innerText||'').replace(/\s+/g,' ').trim();
+}
+function grab(text,patterns){
+  for(const p of patterns){const m=text.match(p);if(m&&m[1])return m[1].trim();}
+  return '—';
+}
+function grabAll(text,pattern){
+  const r=[]; let m; const re=new RegExp(pattern,'g');
+  while((m=re.exec(text))!==null){if(m[1])r.push(m[1].trim());}
+  return r;
+}
+function parseReport(raw){
+  const t=extractText(raw); const d={};
+  d.title    =grab(t,[/楽曲タイトル\s+([^\s]+(?:（[^）]+）)?)/,/楽曲タイトル\s+(\S[^\n\r]*)/]);
+  d.artist   =grab(t,[/アーティスト名\s+(\S[^作詞者]+)/]);
+  d.lyricist =grab(t,[/作詞者\s+(\S+)/]);
+  d.composer =grab(t,[/作曲者\s+(\S+)/]);
+  d.release  =grab(t,[/リリース日\s+(\d{4}\/\d{2}\/\d{2})/]);
+  d.isrc     =grab(t,[/ISRC[:\s]+([A-Z0-9]{12})/]);
+  d.key      =grab(t,[/キー（調）\s+(\S+)/,/キー\s+(\S+)/]);
+  d.tempo    =grab(t,[/テンポ\s+(\d+)/,/(\d+)\s*BPM/]);
+  d.chordMain=grab(t,[/主要コード進行\s+([\S ]+?)(?=進行パターン|全文|楽曲)/]);
+  d.aiPct    =grab(t,[/フルトラックAI確率\s+(\d+%)/,/AI生成確率[：:\s]+(\d+%)/]);
+  d.jasrac   =grab(t,[/JASRAC登録状況[：:\s]+登録あり（作品コード[：:\s]+([^）]+)）/,/JASRAC[：:\s]+登録あり（作品コード[：:\s]+([^）\s]+)/]);
+  d.jasracRaw=t.includes('JASRAC登録状況：登録あり')||t.includes('JASRAC: 登録あり')?'登録あり':'未登録';
+  d.riskLevel=grab(t,[/総合判定[：:\s]+(High|Medium|Low)/]);
+  d.evalWord =grab(t,[/■ 一言評価\s+([^。]{1,150}。)/,/■ 一言評価\s+([^■📋]{1,120})/]);
+
+  const lyricsMatch=t.match(/歌詞全文（入力データ）】([\s\S]{50,800}?)(?=提供歌詞|📋|$)/);
+  d.lyrics=lyricsMatch?lyricsMatch[1].trim().slice(0,400):'';
+  const phrases=grabAll(t,/長いフレーズ（10文字以上）\]\s+([^\[]+)/);
+  d.phrases=phrases.slice(0,8);
+  const unique=grabAll(t,/特徴的表現（独自性が高い）[：:\s]+([\s\S]{5,200}?)(?=要確認|【|$)/);
+  d.uniqueExpr=unique.join(' ');
+  const repeated=grabAll(t,/繰り返し表現\]\s+([^\[]+)/);
+  d.repeated=repeated.slice(0,8);
+  d.structure=grab(t,[/楽曲は大きく(二つ|三つ|[0-9つ]+)のセクション/,/(全編サビ|二部構成|三部構成)/]);
+
+  const declMatch=t.match(/制作実態申告\s*作詞[：:](.+?)作曲[：:](.+?)編曲[：:](.+?)歌唱[：:](\S+)/);
+  if(declMatch){
+    d.declLyric  =declMatch[1].trim();
+    d.declCompose=declMatch[2].trim();
+    d.declArrange=declMatch[3].trim();
+    d.declVocal  =declMatch[4].trim();
+  }else{d.declLyric='—';d.declCompose='—';d.declArrange='—';d.declVocal='—';}
+
+  /* ===== 歌詞表現構造分析 ===== */
+  const lyrScoreM=t.match(/最終総合点[：:]\s*(\d+)\s*\/\s*(\d+)\s*総合ランク[：:]\s*([A-Z][\+\-]?)/);
+  if(lyrScoreM){
+    d.lyrScore=lyrScoreM[1]; d.lyrMax=lyrScoreM[2]; d.lyrRank=lyrScoreM[3];
+    d.lyrPct=Math.round(parseInt(lyrScoreM[1])/parseInt(lyrScoreM[2])*100)+'';
+  }else{d.lyrScore='—';d.lyrMax='70';d.lyrRank='—';d.lyrPct='—';}
+  d.lyrTitle=grab(t,[/表現称号[：:]\s*(.+?)(?=\s*※\s*n-gram|個性ラベル)/]);
+  d.lyrLabelRaw=grab(t,[/個性ラベル[^：:]*[：:]\s*(.+?)(?=作風特性)/]);
+  d.lyrLabels=d.lyrLabelRaw!=='—'?d.lyrLabelRaw.split(/\s*\/\s*/).map(s=>s.trim()).filter(Boolean):[];
+  d.lyrStyle=grab(t,[/作風特性[^：:]*[：:]\s*(.+?)(?=n-gram|表現傾向)/]);
+  d.lyrNgram=grab(t,[/n-gram特徴[：:]\s*(.+?)(?=表現傾向|突出)/]);
+  d.lyrTend=grab(t,[/表現傾向[：:]\s*(\S+)/]);
+  d.lyrOutstanding=grab(t,[/突出項目[：:]\s*(.+?)(?=分析軸|短評)/]);
+  const absM=t.match(/抽象性(\d+)%\s*\/\s*具体性(\d+)%/);
+  if(absM){d.lyrAbs=absM[1];d.lyrCon=absM[2];}else{d.lyrAbs='—';d.lyrCon='—';}
+  const balM=t.match(/抽象性・具体性バランス[^\d]*(\d+)\/10/);
+  d.lyrBal=balM?balM[1]:'—';
+  const axisNames=['抽象性・具体性バランス','比喩独自性','情景描写力','感情ダイナミクス','文体リズムの自然さ','既視感の少なさ','表現構造の一貫性'];
+  d.lyrAxes={};
+  axisNames.forEach(ax=>{
+    const axM=t.match(new RegExp(ax.replace(/・/g,'[・]')+'(?:高|中|低)(\\d+)\\/10'));
+    if(axM)d.lyrAxes[ax]=parseInt(axM[1]);
+  });
+  d.lyrPhrases=extractLyrPhrases(t);
+  // === CRS スコア（新フォーマット）===
+  const crsM=t.match(/Lyrics Score\s*(\d+)\s*\/\s*100[\s\S]*?Music Score\s*(\d+)\s*\/\s*100[\s\S]*?CRS\s*(\d+)\s*\/\s*100[\s\S]*?Rank\s*([A-Z])/);
+  if(crsM){d.crsLyrics=crsM[1];d.crsMusic=crsM[2];d.crsTotal=crsM[3];d.crsRank=crsM[4];}
+  else{d.crsLyrics='—';d.crsMusic='—';d.crsTotal='—';d.crsRank='—';}
+  // SUMMARY（新フォーマット）※extractTextではスペースが入らない場合あり
+  d.summary=grab(t,[/SUMMARY\s*(.{10,120}?)(?=Key|MAIN PROGRESSION|📋|メロディ|ACR)/]);
+  // Chord Structure スコア（新フォーマット）
+  d.chordScore=grab(t,[/Chord Structure\s*(\d+)\s*\/\s*50/]);
+  // ACRCloud類似度（新フォーマット）
+  d.acrSim=grab(t,[/ACRCloud\s*\/\s*Similarity\s*([\d.]+%)/,/ACRCloud照合結果[^:：]*[：:]\s*([\d.]+%)/]);
+  return d;
+}
+
+/* ===== フレーズ抽出ユーティリティ ===== */
+function normPhrase(s){return s.replace(/[\s　]+/g,'').replace(/[。、・]/g,'');}
+function extractLyrPhrases(t){
+  const set=new Set();
+  const add=s=>{const n=normPhrase(s);if(n.length>=3)set.add(n);};
+  // 【特徴フレーズ抽出】
+  const fM=t.match(/【特徴フレーズ抽出】([\s\S]*?)(?=【n-gram|$)/);
+  if(fM){
+    fM[1].replace(/\[[^\]]+\]/g,'\n').split('\n')
+      .map(s=>s.trim()).filter(s=>s.length>=3).forEach(add);
+  }
+  // 【n-gram分析による特徴パターン（2〜4語/文字）】
+  const nM=t.match(/【n-gram分析による特徴パターン[^】]*】([\s\S]*?)(?=【表現分類|$)/);
+  if(nM){
+    nM[1].split(/[\s　\n]+/).map(s=>s.trim()).filter(s=>s.length>=2).forEach(add);
+  }
+  // 【表現分類結果】（一般的表現 / やや特徴的 / 特徴的 / 要確認）
+  const cM=t.match(/【表現分類結果】([\s\S]*?)(?=【Gemini|【重要|$)/);
+  if(cM){
+    cM[1]
+      .replace(/一般的表現[：:]\s*/g,'').replace(/やや特徴的[：:]\s*/g,'')
+      .replace(/特徴的表現（独自性が高い）[：:]\s*/g,'').replace(/要確認表現[^：:]*[：:]\s*/g,'')
+      .split(/[、。\n]/).map(s=>s.trim()).filter(s=>s.length>=2).forEach(add);
+  }
+  return set;
+}
+
+function calcPhraseSimScore(dA,dB){
+  const pA=dA.lyrPhrases,pB=dB.lyrPhrases;
+  if(!pA||!pB||pA.size===0||pB.size===0)return null;
+  let matched=0;
+  for(const pa of pA){
+    for(const pb of pB){
+      if(pa===pb||(pa.length>=4&&pb.includes(pa))||(pb.length>=4&&pa.includes(pb))){
+        matched++;break;
+      }
+    }
+  }
+  const avg=(pA.size+pB.size)/2;
+  const pct=Math.round(matched/avg*100);
+  return{matched,totalA:pA.size,totalB:pB.size,pct};
+}
+
+/* ===== SCORING ===== */
+function scoreColor(p){return p>=75?'bar-h':p>=45?'bar-m':'bar-l';}
+function rankFromScore(s){
+  if(s>=80)return{rank:'A',label:'非常に高い類似',cls:'rk-A'};
+  if(s>=60)return{rank:'B',label:'中程度の類似',cls:'rk-B'};
+  if(s>=40)return{rank:'C',label:'部分的な類似',cls:'rk-C'};
+  return{rank:'D',label:'低い類似',cls:'rk-D'};
+}
+function keyDistance(k1,k2){
+  if(!k1||!k2||k1==='—'||k2==='—')return 0.3;
+  const n=s=>s.toLowerCase().replace(/[^a-z♭#♯]/g,'');
+  if(n(k1)===n(k2))return 1.0;
+  const bm=(k1.match(/m$/i)||k1.includes('マイナー'))&&(k2.match(/m$/i)||k2.includes('マイナー'));
+  return bm?0.65:0.3;
+}
+function tempoDist(t1,t2){
+  const a=parseInt(t1)||0,b=parseInt(t2)||0; if(!a||!b)return 0.3;
+  const d=Math.abs(a-b);
+  return d<=5?1.0:d<=15?.75:d<=30?.45:d<=50?.2:.05;
+}
+function phraseOverlap(ph1,ph2){
+  if(!ph1.length||!ph2.length)return 0;
+  const s1=new Set(ph1.map(p=>p.replace(/\s/g,''))),s2=new Set(ph2.map(p=>p.replace(/\s/g,'')));
+  let ex=0; s1.forEach(p=>{if(s2.has(p))ex++;});
+  let pa=0; s1.forEach(p1=>{s2.forEach(p2=>{
+    const sh=p1.length<p2.length?p1:p2,lo=p1.length<p2.length?p2:p1;
+    for(let i=0;i<sh.length-3;i++){if(lo.includes(sh.slice(i,i+4))){pa++;break;}}
+  });});
+  return Math.min(1.0,(ex*2+pa*.5)/Math.max(s1.size,s2.size));
+}
+function lyricsOverlap(l1,l2){
+  if(!l1||!l2)return 0.2;
+  const w1=new Set(l1.match(/[一-龥぀-ゟ゠-ヿ]{2,}/g)||[]),w2=new Set(l2.match(/[一-龥぀-ゟ゠-ヿ]{2,}/g)||[]);
+  let c=0; w1.forEach(w=>{if(w2.has(w))c++;});
+  return Math.min(1.0,c/Math.max(w1.size,w2.size,1)*1.5);
+}
+function chordSim(c1,c2){
+  if(!c1||!c2)return 0.3;
+  const hm=s=>/Am|Em|Dm|Bm|E♭m|B♭m|Fm|Gm|Cm/i.test(s);
+  const hM7=s=>/M7|maj7/i.test(s),h7=s=>/[A-G][♭♯]?7\b/.test(s);
+  let sc=0.2;
+  if(hm(c1)&&hm(c2))sc+=.3; if(hM7(c1)&&hM7(c2))sc+=.2; if(h7(c1)&&h7(c2))sc+=.15;
+  const rt=s=>{const m=s.match(/^([A-G][♭♯]?)/);return m?m[1]:'';};
+  if(rt(c1)===rt(c2)&&rt(c1))sc+=.15;
+  return Math.min(1.0,sc);
+}
+function themeOverlap(l1,l2){
+  const th=['自己肯定','人生','道','希望','未来','空','光','愛','感情','宇宙','生きた証','夢','道しるべ'];
+  let c=0; th.forEach(t=>{if(l1.includes(t)&&l2.includes(t))c++;});
+  return Math.min(1.0,c/5);
+}
+function computeScores(a,b){
+  const sa=a.artist&&b.artist&&a.artist.replace(/（.*/,'')=== b.artist.replace(/（.*/,'')?1.0:0.3;
+  const sp=(a.composer&&b.composer&&a.composer.includes('suno')&&b.composer.includes('suno'))?.9:.5;
+  const ks=keyDistance(a.key,b.key),ts=tempoDist(a.tempo,b.tempo);
+  const ps=phraseOverlap(a.phrases,b.phrases),ls=lyricsOverlap(a.lyrics,b.lyrics);
+  const cs=chordSim(a.chordMain,b.chordMain),as2=(Math.abs((parseInt(a.aiPct)||50)-(parseInt(b.aiPct)||50))<=15?.75:.4);
+  const th=themeOverlap(a.lyrics+' '+a.phrases.join(' '),b.lyrics+' '+b.phrases.join(' '));
+  const oi=[
+    {label:'制作属性',score:sa*.5+sp*.5,weight:.15},
+    {label:'歌詞テーマ',score:th,weight:.15},
+    {label:'歌詞フレーズ',score:ps,weight:.15},
+    {label:'歌詞語彙',score:ls,weight:.10},
+    {label:'調性・モード',score:ks,weight:.12},
+    {label:'コード進行',score:cs,weight:.12},
+    {label:'テンポ',score:ts,weight:.10},
+    {label:'AI生成確率',score:as2,weight:.06},
+    {label:'曲想・雰囲気',score:th*.6+ks*.4,weight:.05},
+  ];
+  const overall=Math.round(oi.reduce((s,i)=>s+i.score*i.weight,0)*100);
+  const uo=(()=>{
+    const u1=a.uniqueExpr||'',u2=b.uniqueExpr||''; if(!u1||!u2)return 0.1;
+    const w1=new Set(u1.match(/[一-龥぀-ゟ゠-ヿ]{2,}/g)||[]),w2=new Set(u2.match(/[一-龥぀-ゟ゠-ヿ]{2,}/g)||[]);
+    let c=0; w1.forEach(w=>{if(w2.has(w))c++;}); return Math.min(1.0,c/Math.max(w1.size,1)*2);
+  })();
+  const ro=phraseOverlap(a.repeated,b.repeated);
+  const ci=[
+    {label:'歌詞フレーズ重複',score:ps,weight:.32},
+    {label:'独自表現の共通性',score:uo,weight:.22},
+    {label:'繰り返し表現共通',score:ro,weight:.15},
+    {label:'コード進行パターン',score:cs,weight:.18},
+    {label:'調性・音楽構造',score:ks*.5+ts*.5,weight:.13},
+  ];
+  const copyright=Math.round(ci.reduce((s,i)=>s+i.score*i.weight,0)*100);
+  return{overall,copyright,oi,ci};
+}
+
+/* ===== HELPERS ===== */
+function esc(str){
+  if(!str||str==='—')return str||'—';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function badge(txt,cls){return `<span class="badge ${cls}">${txt}</span>`;}
+
+function svgGauge(score,c1,c2){
+  const r=38,cx=47,cy=47,circ=2*Math.PI*r,dash=(score/100)*circ;
+  const id='g'+c1.replace('#','');
+  return `<svg viewBox="0 0 94 94" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:${c1}"/><stop offset="100%" style="stop-color:${c2}"/>
+    </linearGradient></defs>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8EAF6" stroke-width="8"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${id})"
+      stroke-width="8" stroke-linecap="round"
+      stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+      transform="rotate(-90 ${cx} ${cy})"/>
+  </svg>`;
+}
+
+/* ===== PAGE 1 RENDERS ===== */
+function renderP1Col(d,side){
+  const aiCls=parseInt(d.aiPct)>=85?'b-high':parseInt(d.aiPct)>=60?'b-med':'b-ai';
+  const riskCls={High:'b-high',Medium:'b-med',Low:'b-low'}[d.riskLevel]||'b-med';
+  const letter=side==='a'?'A':'B';
+  return `
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13em;font-family:Impact,'Arial Black','Arial',sans-serif;font-weight:900;color:#1A237E;opacity:0.12;pointer-events:none;user-select:none;line-height:1;z-index:0;">${letter}</div>
+  <div style="position:relative;z-index:1;">
+  <div class="song-title">${esc(d.title)}</div>
+  <div class="smr"><span class="sl">アーティスト</span><span class="sv">${esc(d.artist)}</span></div>
+  <div class="smr"><span class="sl">作詞 / 作曲</span><span class="sv">${esc(d.lyricist)} / ${esc(d.composer)}</span></div>
+  <div class="smr"><span class="sl">キー</span><span class="sv">${esc(d.key)}</span></div>
+  <div class="smr"><span class="sl">テンポ</span><span class="sv">${esc(d.tempo)} BPM</span></div>
+  <div class="smr"><span class="sl">リリース</span><span class="sv">${esc(d.release)}</span></div>
+  ${d.isrc&&d.isrc!=='—'?`<div class="smr"><span class="sl">ISRC</span><span class="sv" style="font-size:.88em;">${esc(d.isrc)}</span></div>`:''}
+  <div class="smr"><span class="sl">JASRAC</span><span class="sv">${badge(esc(d.jasrac!=='—'?d.jasrac:d.jasracRaw),'b-j')}</span></div>
+  <div class="smr"><span class="sl">AI生成確率</span><span class="sv">${badge(esc(d.aiPct),aiCls)}</span></div>
+  <div class="smr"><span class="sl">著作権リスク</span><span class="sv">${badge(esc(d.riskLevel),riskCls)}</span></div>
+  ${d.evalWord&&d.evalWord!=='—'?`<div style="margin-top:10px;font-size:.72em;font-style:italic;color:#283593;padding:6px 8px;background:#E8EAF6;border-radius:5px;line-height:1.6;">${esc(d.evalWord)}</div>`:''}
+  </div>
+  `;
+}
+
+function renderP1Center(a,b,scores){
+  const{overall,copyright}=scores;
+  const ork=rankFromScore(overall),crk=rankFromScore(copyright);
+  return `
+  <div class="p1-vs">A &nbsp;vs&nbsp; B</div>
+  <div class="p1-dual">
+    <div class="p1-gu">
+      <div class="gl" style="color:#5C6BC0;">総合類似度</div>
+      <div class="p1-gw">
+        ${svgGauge(overall,'#7E57C2','#5C6BC0')}
+        <div class="p1-gs" style="color:#4527A0;">${overall}<span class="gu">/100</span></div>
+      </div>
+      <div class="rank-pill ${ork.cls}">ランク ${ork.rank}</div>
+      <div class="rl">${ork.label}</div>
+    </div>
+    <div class="p1-gu">
+      <div class="gl" style="color:#B71C1C;">著作物類似度</div>
+      <div class="p1-gw">
+        ${svgGauge(copyright,'#C62828','#E53935')}
+        <div class="p1-gs" style="color:#B71C1C;">${copyright}<span class="gu">/100</span></div>
+      </div>
+      <div class="rank-pill ${crk.cls}">ランク ${crk.rank}</div>
+      <div class="rl">${crk.label}</div>
+    </div>
+  </div>
+  `;
+}
+
+function renderP1Cards(a,b,scores){
+  const{overall,copyright}=scores;
+  const ork=rankFromScore(overall),crk=rankFromScore(copyright);
+  const t1=parseInt(a.tempo)||0,t2=parseInt(b.tempo)||0;
+  return `
+    <div class="fc">
+      <div class="fc-t">🎯 総合類似度</div>
+      <div class="fc-v"><span style="font-size:1.5em;font-weight:800;color:#CE93D8;">${overall}</span>/100<br>
+      <span style="color:#B39DDB;">ランク${ork.rank}—${ork.label}</span></div>
+    </div>
+    <div class="fc">
+      <div class="fc-t" style="color:#FF8A80;">⚖️ 著作物類似度</div>
+      <div class="fc-v"><span style="font-size:1.5em;font-weight:800;color:#FF8A80;">${copyright}</span>/100<br>
+      <span style="color:#FFCDD2;">ランク${crk.rank}—${crk.label}</span></div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">🎵 音楽構造</div>
+      <div class="fc-v">A: ${esc(a.key)} / ${esc(a.tempo)}BPM<br>B: ${esc(b.key)} / ${esc(b.tempo)}BPM</div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">📋 自己申請（制作実態）</div>
+      <div class="fc-v" style="font-size:.82em;line-height:1.65;">
+        <span style="color:#B39DDB;font-weight:700;">▶ A</span><br>
+        <span>作詞:${esc(a.declLyric)} 　作曲:${esc(a.declCompose)}</span><br>
+        <span>編曲:${esc(a.declArrange)} 　歌唱:${esc(a.declVocal)}</span>
+        <span style="color:#B39DDB;font-weight:700;display:block;margin-top:5px;">▶ B</span>
+        <span>作詞:${esc(b.declLyric)} 　作曲:${esc(b.declCompose)}</span><br>
+        <span>編曲:${esc(b.declArrange)} 　歌唱:${esc(b.declVocal)}</span>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fc-t">🤖 AI生成またはDAW確率<br><span style="font-size:.82em;opacity:.7;font-weight:400;">（FeatherTune判定）</span></div>
+      <div class="fc-v">A: ${esc(a.aiPct)}<br>B: ${esc(b.aiPct)}</div>
+    </div>
+  `;
+}
+
+function generateComment(a,b,ov,cr){
+  const same=a.artist&&b.artist&&a.artist.replace(/（.*/,'')=== b.artist.replace(/（.*/,'');
+  const td=Math.abs((parseInt(a.tempo)||0)-(parseInt(b.tempo)||0));
+  let m='';
+  if(same)m+=`同一アーティストによる楽曲であり、制作スタイルと大テーマが共鳴する。`;
+  if(ov>=70)m+=` 総合的な楽曲の世界観・制作文脈に高い共通性が認められる。`;
+  if(cr<=35)m+=` 著作物として保護される要素（歌詞フレーズ・独自表現・音楽構造）の重複は低く、<strong>著作権侵害リスクは現時点で低いと判定</strong>する。`;
+  else if(cr<=55)m+=` 著作物として保護される要素において中程度の類似が認められ、<strong>具体的な表現の差別化を確認することが推奨</strong>される。`;
+  else m+=` 著作物として保護される要素において相当程度の類似が認められる。<strong>専門家への確認を強く推奨</strong>する。`;
+  if(td>30)m+=` テンポの差異（${td}BPM差）は曲調の独立性を示す。`;
+  if(a.key&&b.key&&a.key!==b.key)m+=` キーの相違（${esc(a.key)} vs ${esc(b.key)}）も音楽的独立性の証左となる。`;
+  return m||'分析データが不十分なため詳細コメントを生成できません。';
+}
+
+function renderDisclaimer(){
+  return `
+  <div class="disclaimer">
+    <strong>⚠️ 免責事項</strong>　本レポートは音楽分析データに基づく参考情報であり、<strong>いかなる法的保証も行いません</strong>。著作権の成否・侵害の有無等の最終判断は必ず専門家（弁護士・弁理士等）にご確認ください。本判定結果は訴訟・契約等の法的根拠として単独では使用できません。AI技術・著作権法制の変化により判定基準は将来的に見直される可能性があります。
+  </div>
+  `;
+}
+
+function renderVerdict(a,b,scores){
+  const{overall,copyright}=scores;
+  const ork=rankFromScore(overall),crk=rankFromScore(copyright);
+  return `
+  <div class="verdict">
+    <strong>【最終判定】</strong>
+    総合類似度 <strong style="color:#CE93D8;">${overall}点（ランク${ork.rank}）</strong> ／
+    著作物類似度 <strong style="color:#FF8A80;">${copyright}点（ランク${crk.rank}）</strong>　—　${generateComment(a,b,overall,copyright)}
+    <br><span style="color:#B39DDB;font-size:.82em;">※ 本レポートはいかなる法的保証も行いません。最終的な判断は法律の専門家にご相談ください。</span>
+  </div>
+  `;
+}
+
+/* ===== PAGE 2 RENDERS ===== */
+function renderP2Col(d){
+  const phraseHtml=d.phrases.slice(0,6).map(p=>`<div style="font-size:.7em;line-height:1.6;color:#1a237e;">・${esc(p)}</div>`).join('');
+  return `
+  <div class="ds">
+    <div class="ds-title">基本情報</div>
+    <div class="dr"><span class="lbl">アーティスト</span><span class="val" style="font-size:.85em;">${esc(d.artist)}</span></div>
+    <div class="dr"><span class="lbl">キー</span><span class="val">${esc(d.key)}</span></div>
+    <div class="dr"><span class="lbl">テンポ</span><span class="val">${esc(d.tempo)} BPM</span></div>
+    ${d.structure&&d.structure!=='—'?`<div class="dr"><span class="lbl">構成</span><span class="val">${esc(d.structure)}</span></div>`:''}
+  </div>
+  <div class="ds">
+    <div class="ds-title">主要コード進行</div>
+    <div class="chord-blk">${esc(d.chordMain)}</div>
+  </div>
+  <div class="ds">
+    <div class="ds-title">特徴フレーズ（歌詞）</div>
+    <div class="lyr-blk">${phraseHtml||'—'}</div>
+  </div>
+  ${d.evalWord&&d.evalWord!=='—'?`
+  <div class="ds">
+    <div class="ds-title">一言評価</div>
+    <div style="font-size:.7em;font-style:italic;color:#283593;padding:5px 7px;background:#E8EAF6;border-radius:5px;line-height:1.6;">${esc(d.evalWord)}</div>
+  </div>`:''}
+  `;
+}
+
+function renderP2Center(a,b,scores){
+  const{oi,ci}=scores;
+  const obars=oi.map(i=>{const p=Math.round(i.score*100);return`<div class="bi"><span class="bi-lbl">${i.label}</span><div class="bi-bar-w"><div class="bi-bar ${scoreColor(p)}" style="width:${p}%"></div></div><span class="bi-pct">${p}%</span></div>`;}).join('');
+  const cbars=ci.map(i=>{const p=Math.round(i.score*100);return`<div class="bi"><span class="bi-lbl">${i.label}</span><div class="bi-bar-w"><div class="bi-bar ${scoreColor(p)}" style="width:${p}%"></div></div><span class="bi-pct">${p}%</span></div>`;}).join('');
+  return `
+  <div class="ds">
+    <div class="ds-title">📊 総合類似スコア</div>
+    ${obars}
+  </div>
+  <div class="ds">
+    <div class="ds-title" style="color:#B71C1C;">⚖️ 著作物類似スコア</div>
+    ${cbars}
+  </div>
+  `;
+}
+
+function renderP2Tags(a,b,scores){
+  const cA=(a.lyrics+' '+a.phrases.join(' ')).replace(/\s/g,'');
+  const cB=(b.lyrics+' '+b.phrases.join(' ')).replace(/\s/g,'');
+  const common=['生きた証','自己肯定','道しるべ','未来','希望','空','光','愛','感情','道'].filter(k=>cA.includes(k)&&cB.includes(k));
+  const sameProd=a.composer&&b.composer&&a.composer.includes('suno')&&b.composer.includes('suno');
+  const t1=parseInt(a.tempo)||0,t2=parseInt(b.tempo)||0;
+  const diffs=[];
+  if(Math.abs(t1-t2)>20)diffs.push(`テンポ：${a.tempo} vs ${b.tempo} BPM`);
+  if(a.key!==b.key)diffs.push(`キー：${esc(a.key)} vs ${esc(b.key)}`);
+  if(parseInt(a.aiPct)!==parseInt(b.aiPct))diffs.push(`AI確率：${a.aiPct} vs ${b.aiPct}`);
+  return `
+  <div class="p2-tc">
+    <div class="p2-tc-title">✅ 共通点</div>
+    <div class="tag-list">
+      ${common.map(k=>`<span class="tag tag-ok">✅ ${esc(k)}</span>`).join('')}
+      ${sameProd?'<span class="tag tag-ok">✅ 同AI作曲（suno）</span>':''}
+      ${a.artist&&b.artist&&a.artist.replace(/（.*/,'')=== b.artist.replace(/（.*/,'')?'<span class="tag tag-ok">✅ 同アーティスト</span>':''}
+    </div>
+  </div>
+  <div class="p2-tc">
+    <div class="p2-tc-title">⚡ 相違点</div>
+    <div class="tag-list">
+      ${diffs.map(d=>`<span class="tag tag-diff">⚡ ${esc(d)}</span>`).join('')}
+    </div>
+  </div>
+  `;
+}
+
+/* ===== MAGIC REPORT PARSER ===== */
+function parseMagicReport(raw){
+  if(!raw)return null;
+  const t=extractText(raw);
+  const d={};
+  // Score & rank
+  const lm=t.match(/LYRIC EXPRESSION PROFILE\s+([A-Z][\+\-]?)\s+(\d+)\s*\/\s*(\d+)\s+(\d+)%/);
+  if(lm){d.lyrRank=lm[1];d.lyrScore=lm[2];d.lyrMax=lm[3];d.lyrPct=lm[4];}
+  else{d.lyrRank='—';d.lyrScore='—';d.lyrMax='70';d.lyrPct='—';}
+  // 表現称号 (before 個性ラベル keywords)
+  d.lyrTitle=grab(t,[/表現称号\s+(.+?)(?=\s*(?:リズム駆動型|作風特性|n-gram))/]);
+  // 個性ラベル (concatenated, split by known labels)
+  const knownLabels=['リズム駆動型','反復構造型','独自語感型','キーワード駆動型','感情駆動型','場面描写型','概念駆動型','具体描写型'];
+  const rawLm=t.match(/((?:リズム駆動型|反復構造型|独自語感型|キーワード駆動型|感情駆動型|場面描写型|概念駆動型|具体描写型){1,4})/);
+  d.lyrLabels=[];
+  if(rawLm){let rem=rawLm[1];knownLabels.forEach(l=>{if(rem.includes(l)){d.lyrLabels.push(l);rem=rem.replace(l,'');}});}
+  // 作風特性
+  d.lyrStyle=grab(t,[/作風特性(.+?)(?=表現傾向|n-gram)/]);
+  // 表現傾向
+  d.lyrTend=grab(t,[/表現傾向(.+?)(?=n-gram|抽象性)/]);
+  // n-gram
+  d.lyrNgram=grab(t,[/n-gram(.+?)(?=★|\s*抽象性・)/]);
+  const starM=t.match(/★\s*\+(\d+)/);
+  d.lyrStar=starM?starM[1]:'';
+  // 抽象性・具体性バランス
+  const balM=t.match(/抽象性・具体性バランス\s*高\s*(\d+)\/10/);
+  d.lyrBal=balM?balM[1]:'—';
+  const absM=t.match(/抽象性\s+(\d+)%\s*具体性\s+(\d+)%/);
+  if(absM){d.lyrAbs=absM[1];d.lyrCon=absM[2];}else{d.lyrAbs='—';d.lyrCon='—';}
+  // 8 metrics
+  const metricKeys=['メロディキャッチー度','情感表現力','構成の巧妙さ','和声の豊かさ','アレンジの完成度','普遍性・親しみやすさ','独自性','メッセージ性'];
+  d.metrics={};
+  metricKeys.forEach(k=>{const m=t.match(new RegExp(k+'\\s+(\\d+)'));if(m)d.metrics[k]=parseInt(m[1]);});
+  // 評価タイプ
+  d.lyrType=grab(t,[/EVALUATION TYPE\s+(.+?)(?=「|$)/]);
+  d.lyrPhrases=extractLyrPhrases(t);
+  return d;
+}
+
+/* ===== PAGE 3 RENDERS ===== */
+function generateLyrComment(dA,dB,sim){
+  const axisKeys=['比喩独自性','情景描写力','感情ダイナミクス','文体リズムの自然さ','既視感の少なさ','表現構造の一貫性'];
+  const alias={'比喩独自性':'比喩の独自性','情景描写力':'情景描写力','感情ダイナミクス':'感情のダイナミクス','文体リズムの自然さ':'文体リズム','既視感の少なさ':'既視感の希薄さ','表現構造の一貫性':'表現構造の一貫性'};
+  const diffs=axisKeys.map(k=>{
+    const va=(dA.lyrAxes&&dA.lyrAxes[k])||0;
+    const vb=(dB.lyrAxes&&dB.lyrAxes[k])||0;
+    return{k,va,vb,d:va-vb};
+  });
+  const aStrong=diffs.filter(x=>x.d>=2).sort((a,b)=>b.d-a.d);
+  const bStrong=diffs.filter(x=>x.d<=-2).sort((a,b)=>a.d-b.d);
+  const near=diffs.filter(x=>Math.abs(x.d)<=1);
+  const absA=parseInt(dA.lyrAbs)||50;
+  const absB=parseInt(dB.lyrAbs)||50;
+  const absDiff=absA-absB;
+  let s=[];
+  // 1. フレーズ類似度に基づく冒頭評価
+  if(sim&&sim.pct>=20){
+    s.push(`フレーズレベルの類似度が${sim.pct}%に達しており、表現の根底に共通する語彙・構文の選択が認められる。これは詩的影響関係の可能性を示す数値であり、表現の独自性を担保するためのさらなる精査を強く勧める。`);
+  }else if(sim){
+    s.push(`フレーズ類似度は${sim.pct}%に留まり、語彙・構文の面では両作品の表現的独立性が確認される。構造的な近似があったとしても、それは同時代の詩的共鳴の範疇と捉えられよう。`);
+  }else{
+    // フレーズデータなし：軸スコアで判断
+    if(near.length>=5){
+      s.push(`両作品は六軸のいずれにおいても拮抗しており、異なる詩的文脈から同質の表現水準へと到達した稀な例と言えよう。`);
+    }else if(aStrong.length>bStrong.length){
+      s.push(`Aは${alias[aStrong[0].k]}において際立った優位を持ち、その表現の彫琢には作者の内的必然を感じる。`);
+    }else if(bStrong.length>aStrong.length){
+      s.push(`Bは${alias[bStrong[0].k]}において明確な強みを示し、言葉の選択に確固たる詩的論理が宿っている。`);
+    }else{
+      s.push(`両作品は異なる軸で互いの強みを補い合うように拮抗し、それぞれが固有の詩的宇宙を形成している。`);
+    }
+  }
+  // 2. 抽象・具体の対比
+  if(Math.abs(absDiff)>=15){
+    s.push(absDiff>0
+      ?`Aは概念と象徴を好む抽象的詩法を纏うのに対し、Bは具体の言葉で聴き手の感覚に直接触れる。この差は美学の相違であり、優劣ではなく志向の違いだ。`
+      :`Bは余白と多義性に詩的本質を見出す一方、Aは言葉の具象性によって聴き手との距離を縮める。どちらも正統な詩的戦略だ。`);
+  }else{
+    s.push(`抽象と具体のバランスに共通した感性が見られ、表現の根底に同質の美意識が流れている。`);
+  }
+  // 3. 軸スコアによる総評（フレーズデータあり時は補足として）
+  if(sim){
+    if(near.length>=4){
+      s.push(`六軸スコアの近似も加味すれば、両作品の表現構造には相応の類似性が存在すると判断せざるを得ない。`);
+    }else{
+      s.push(`六軸スコアの差異は両者が異なる詩的個性を持つことを示しており、フレーズ類似の範囲内での独自性は維持されていると見る。`);
+    }
+  }
+  return s.join('');
+}
+
+function renderP3Col(d,side){
+  const letter=side==='a'?'A':'B';
+  const color=side==='a'?'#9575CD':'#4DB6AC';
+  if(d.lyrRank==='—')return`<div style="color:#9FA8DA;font-size:.8em;padding:30px 16px;text-align:center;line-height:1.8;">このレポートには<br>歌詞表現構造分析データが<br>含まれていません</div>`;
+  const clsMap={A:'p3-sb-A',B:'p3-sb-B',C:'p3-sb-C',D:'p3-sb-D'};
+  const rankCls=clsMap[d.lyrRank]||'p3-sb-B';
+  const absW=parseInt(d.lyrAbs)||50;
+  const labelHtml=(d.lyrLabels||[]).map(l=>`<span class="p3-tag">${esc(l)}</span>`).join('');
+  const outHtml=(d.lyrOutstanding&&d.lyrOutstanding!=='—')
+    ?d.lyrOutstanding.split(/\s*\/\s*/).map(s=>`<span class="p3-tag" style="background:#FFF3E0;color:#E65100;">${esc(s.trim())}</span>`).join(''):'';
+  const radar=svgRadar6(d,color,letter);
+  return`
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12em;font-family:Impact,'Arial Black',sans-serif;font-weight:900;color:#1A237E;opacity:0.08;pointer-events:none;user-select:none;line-height:1;z-index:0;">${letter}</div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;height:100%;">
+  <div style="flex:1;">
+  <div class="p3-score-badge ${rankCls}">ランク ${esc(d.lyrRank)}　${esc(d.lyrScore)}/${esc(d.lyrMax)}点（${esc(d.lyrPct)}%）</div>
+  <div class="p3-lbl">表現称号</div>
+  <div class="p3-val">${esc(d.lyrTitle)}</div>
+  <div class="p3-lbl">個性ラベル</div>
+  <div class="p3-tags">${labelHtml||'—'}</div>
+  <div class="p3-lbl">作風特性</div>
+  <div class="p3-val">${esc(d.lyrStyle)}</div>
+  <div class="p3-lbl">n-gram特徴 / 表現傾向</div>
+  <div class="p3-val">${esc(d.lyrNgram)} / ${esc(d.lyrTend)}</div>
+  <div class="p3-lbl">抽象性・具体性バランス（${esc(d.lyrBal)}/10）</div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+    <div class="p3-absbar" style="flex:1;">
+      <div class="p3-abs-a" style="width:${absW}%"></div>
+      <div class="p3-abs-b" style="width:${100-absW}%"></div>
+    </div>
+    <span style="font-size:.6em;color:#5C6BC0;">抽象${esc(d.lyrAbs)}%／具体${esc(d.lyrCon)}%</span>
+  </div>
+  ${outHtml?`<div class="p3-lbl">突出項目</div><div class="p3-tags">${outHtml}</div>`:''}
+  </div>
+  <div style="margin-top:10px;display:flex;justify-content:center;">${radar}</div>
+  </div>`;
+}
+
+function svgRadar6(d,color,label){
+  const axisKeys=['比喩独自性','情景描写力','感情ダイナミクス','文体リズムの自然さ','既視感の少なさ','表現構造の一貫性'];
+  const shortLbls=['比喩\n独自性','情景\n描写力','感情\nダイナミクス','文体\nリズム','既視感\nの少なさ','表現\n構造'];
+  const n=6,cx=58,cy=56,R=34;
+  const ang=Array.from({length:n},(_,i)=>-Math.PI/2+2*Math.PI/n*i);
+  const vals=axisKeys.map(k=>(d&&d.lyrAxes&&d.lyrAxes[k])||0);
+  // grid rings
+  let grids='';
+  [2,4,6,8,10].forEach(lv=>{
+    const r=R*lv/10;
+    const pts=ang.map(a=>`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`).join(' ');
+    grids+=`<polygon points="${pts}" fill="none" stroke="#334" stroke-width="${lv===10?1.2:0.6}"/>`;
+  });
+  // axis lines
+  const axLines=ang.map(a=>`<line x1="${cx}" y1="${cy}" x2="${cx+R*Math.cos(a)}" y2="${cy+R*Math.sin(a)}" stroke="#445" stroke-width="0.8"/>`).join('');
+  // data polygon
+  const dataPts=vals.map((v,i)=>{const r=R*v/10;return`${cx+r*Math.cos(ang[i])},${cy+r*Math.sin(ang[i])}`}).join(' ');
+  // dots
+  const dots=vals.map((v,i)=>{const r=R*v/10;return`<circle cx="${cx+r*Math.cos(ang[i])}" cy="${cy+r*Math.sin(ang[i])}" r="2.2" fill="${color}"/>`}).join('');
+  // value labels
+  const vlbls=vals.map((v,i)=>{
+    const r=R*v/10+5;
+    return`<text x="${cx+r*Math.cos(ang[i])}" y="${cy+r*Math.sin(ang[i])}" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#FFD" font-weight="700">${v||''}</text>`;
+  }).join('');
+  // axis labels (multi-line)
+  const axLbls=shortLbls.map((lbl,i)=>{
+    const r=R+13;
+    const bx=cx+r*Math.cos(ang[i]),by=cy+r*Math.sin(ang[i]);
+    const lines=lbl.split('\n');
+    const tspans=lines.map((ln,li)=>`<tspan x="${bx}" dy="${li===0?-(lines.length-1)*4:8}">${ln}</tspan>`).join('');
+    return`<text text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="#AAB">${tspans}</text>`;
+  }).join('');
+  // title label
+  const titleLbl=`<text x="${cx}" y="110" text-anchor="middle" font-size="6" fill="${color}" font-weight="700">${label}</text>`;
+  const fillColor=color;
+  return`<svg width="116" height="116" viewBox="0 0 116 116" xmlns="http://www.w3.org/2000/svg">
+    <rect width="116" height="116" fill="#12122A" rx="6"/>
+    ${grids}${axLines}
+    <polygon points="${dataPts}" fill="${fillColor}" fill-opacity="0.25" stroke="${fillColor}" stroke-width="1.5"/>
+    ${dots}${vlbls}${axLbls}${titleLbl}
+  </svg>`;
+}
+
+function renderP3Center(dA,dB){
+  const axisNames=['抽象性・具体性バランス','比喩独自性','情景描写力','感情ダイナミクス','文体リズムの自然さ','既視感の少なさ','表現構造の一貫性'];
+  const rows=axisNames.map((ax)=>{
+    let scoreA,scoreB;
+    if(ax==='抽象性・具体性バランス'){
+      scoreA=dA.lyrBal!=='—'?parseInt(dA.lyrBal)||0:((dA.lyrAxes&&dA.lyrAxes[ax])||0);
+      scoreB=dB.lyrBal!=='—'?parseInt(dB.lyrBal)||0:((dB.lyrAxes&&dB.lyrAxes[ax])||0);
+    }else{
+      scoreA=(dA.lyrAxes&&dA.lyrAxes[ax])||0;
+      scoreB=(dB.lyrAxes&&dB.lyrAxes[ax])||0;
+    }
+    const total=scoreA+scoreB;
+    const pctA=total>0?Math.round(scoreA/total*100):50;
+    const pctB=100-pctA;
+    // single combined bar: left=A(purple), right=B(teal)
+    const barHtml=`<div class="p3-bar-single" style="display:flex;height:7px;border-radius:3px;overflow:hidden;">
+      <div style="width:${pctA}%;background:linear-gradient(90deg,#7E57C2,#9575CD);"></div>
+      <div style="width:${pctB}%;background:linear-gradient(90deg,#4DB6AC,#26A69A);"></div>
+    </div>`;
+    return`<div class="p3-mitem">
+      <div class="p3-mlbl-ctr">${ax}</div>
+      <div class="p3-mrow2">
+        <span class="p3-mnum p3-mnum-a">${scoreA||'—'}</span>
+        <div class="p3-mbars">${barHtml}</div>
+        <span class="p3-mnum p3-mnum-b">${scoreB||'—'}</span>
+      </div>
+    </div>`;
+  }).join('');
+  const sim=calcPhraseSimScore(dA,dB);
+  const comment=generateLyrComment(dA,dB,sim);
+
+  // 類似フレーズ度ブロック
+  let simBlock='';
+  if(sim){
+    const warn=sim.pct>=20;
+    const pctColor=warn?'#FF7043':'#66BB6A';
+    const pctBg=warn?'rgba(255,112,67,0.12)':'rgba(102,187,106,0.12)';
+    const pctBorder=warn?'#BF360C':'#1B5E20';
+    const icon=warn?'⚠️':'✅';
+    const verdict=warn
+      ?`類似フレーズが総フレーズ数の${sim.pct}%に達しています。表現の独自性について慎重な検討が必要です。`
+      :`類似フレーズは総フレーズ数の${sim.pct}%であり、構造的な近似があっても表現上の独立性は保たれています。`;
+    simBlock=`
+    <div class="p3-sim-block" style="margin-top:10px;padding:8px 10px;border-radius:7px;background:${pctBg};border:1px solid ${pctBorder}30;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:.56em;font-weight:700;color:#9FA8DA;letter-spacing:.05em;">📊 類似フレーズ度</span>
+        <span style="font-size:1.1em;font-weight:900;color:${pctColor};letter-spacing:.02em;">${sim.pct}%</span>
+        <span style="font-size:.7em;">${icon}</span>
+      </div>
+      <div style="display:flex;height:6px;border-radius:3px;overflow:hidden;background:#1A237E;margin-bottom:5px;">
+        <div style="width:${Math.min(sim.pct,100)}%;background:${warn?'linear-gradient(90deg,#FF7043,#FF5722)':'linear-gradient(90deg,#66BB6A,#43A047)'};transition:width .3s;"></div>
+      </div>
+      <div style="font-size:.58em;color:#90A4AE;line-height:1.55;">${verdict}</div>
+      <div style="font-size:.52em;color:#546E7A;margin-top:3px;">対象フレーズ：A ${sim.totalA}件 ／ B ${sim.totalB}件 ／ 一致 ${sim.matched}件</div>
+    </div>`;
+  }
+
+  return`
+  <div style="font-size:.62em;color:#7C83C8;margin-bottom:6px;text-align:center;">
+    <span style="color:#9575CD;">■ A</span>／<span style="color:#4DB6AC;">■ B</span>
+  </div>
+  ${rows}
+  ${simBlock}
+  <div class="p3-cmt-block" style="margin-top:8px;padding:9px 10px;background:linear-gradient(135deg,#1A1A2E,#1A237E);border-radius:8px;">
+    <div style="font-size:.56em;font-weight:700;color:#9FA8DA;letter-spacing:.06em;margin-bottom:5px;border-bottom:1px solid #283593;padding-bottom:3px;">✍️ 比較考察　—　作詞家の視点から</div>
+    <div style="font-size:.62em;color:#C5CAE9;line-height:1.65;font-style:italic;">${esc(comment)}</div>
+  </div>`;
+}
+
+function renderP3Bottom(dA,dB){
+  const sA=dA.lyrScore!=='—'?`${dA.lyrScore}/${dA.lyrMax}点（${dA.lyrPct}%）`:'—';
+  const sB=dB.lyrScore!=='—'?`${dB.lyrScore}/${dB.lyrMax}点（${dB.lyrPct}%）`:'—';
+  const tendA=dA.lyrTend&&dA.lyrTend!=='—'?dA.lyrTend:'—';
+  const tendB=dB.lyrTend&&dB.lyrTend!=='—'?dB.lyrTend:'—';
+  return`
+  <div class="p3-bottom">
+    <div>
+      <div class="p3-bt-title">🎵 A — ${esc(dA.title||'分析対象A')} ／ スコア：${sA}</div>
+      <div class="p3-bt-val">表現称号：${esc(dA.lyrTitle)}　／　表現傾向：${esc(tendA)}　／　作風：${esc(dA.lyrStyle)}</div>
+    </div>
+    <div>
+      <div class="p3-bt-title">🎵 B — ${esc(dB.title||'分析対象B')} ／ スコア：${sB}</div>
+      <div class="p3-bt-val">表現称号：${esc(dB.lyrTitle)}　／　表現傾向：${esc(tendB)}　／　作風：${esc(dB.lyrStyle)}</div>
+    </div>
+  </div>`;
+}
+
+/* ===== MAIN ===== */
+function runAnalysis(){
+  const dA=parseReport(reports.a.raw);
+  const dB=parseReport(reports.b.raw);
+  const dateStr=new Date().toLocaleDateString('ja-JP');
+  const metaStr=`${esc(dA.title||'A')} vs ${esc(dB.title||'B')}`;
+
+  // 全ページ非表示リセット
+  ['page1','page2','page3','page4','page5'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+
+  if(analysisMode==='friend'){
+    const fs=computeFriendScore(dA,dB);
+    document.getElementById('ph4-meta').innerHTML=`${metaStr}<br>作成日：${dateStr} ／ 仲良し度分析`;
+    document.getElementById('page4-content').innerHTML=renderFriendPage(dA,dB,fs);
+    document.getElementById('page4').style.display='block';
+
+  }else if(analysisMode==='rival'){
+    const rv=computeRivalScore(dA,dB);
+    document.getElementById('ph5-meta').innerHTML=`${metaStr}<br>作成日：${dateStr} ／ ライバル度分析`;
+    document.getElementById('page5-content').innerHTML=renderRivalPage(dA,dB,rv);
+    document.getElementById('page5').style.display='block';
+
+  }else{
+    // 類似度判定モード（従来）
+    const scores=computeScores(dA,dB);
+
+    // Page 1
+    document.getElementById('ph1-meta').innerHTML=
+      `分析対象：${metaStr}<br>作成日：${dateStr} ／ FeatherTune 類似度判定システム`;
+    document.getElementById('p1-col-a').innerHTML=renderP1Col(dA,'a');
+    document.getElementById('p1-col-ctr').innerHTML=renderP1Center(dA,dB,scores);
+    document.getElementById('p1-col-b').innerHTML=renderP1Col(dB,'b');
+    document.getElementById('p1-cards').innerHTML=renderP1Cards(dA,dB,scores);
+    document.getElementById('p1-disclaimer').innerHTML=renderDisclaimer();
+    document.getElementById('p1-verdict').innerHTML=renderVerdict(dA,dB,scores);
+    document.getElementById('page1').style.display='block';
+
+    // Page 2
+    document.getElementById('p2-meta').textContent=`${metaStr} — ${dateStr}`;
+    document.getElementById('title-a').textContent=dA.title||reports.a.filename;
+    document.getElementById('title-b').textContent=dB.title||reports.b.filename;
+    document.getElementById('col-a-content').innerHTML=renderP2Col(dA);
+    document.getElementById('col-ctr-content').innerHTML=renderP2Center(dA,dB,scores);
+    document.getElementById('col-b-content').innerHTML=renderP2Col(dB);
+    document.getElementById('p2-tags').innerHTML=renderP2Tags(dA,dB,scores);
+    document.getElementById('p2-comment').innerHTML=`
+      <div class="p2-comment-title">💬 評価コメント</div>
+      <div class="p2-comment-text">${generateComment(dA,dB,scores.overall,scores.copyright)}</div>`;
+    document.getElementById('page2').style.display='block';
+
+    // Page 3
+    const amA=reports.am_a?parseMagicReport(reports.am_a.raw):null;
+    const amB=reports.am_b?parseMagicReport(reports.am_b.raw):null;
+    const hasLyr=dA.lyrRank!=='—'||dB.lyrRank!=='—'||amA||amB;
+    const p3A=amA||dA;const p3B=amB||dB;
+    if(hasLyr){
+      document.getElementById('ph3-meta').innerHTML=`${metaStr}<br>作成日：${dateStr}`;
+      document.getElementById('p3-title-a').textContent=dA.title||reports.a.filename;
+      document.getElementById('p3-title-b').textContent=dB.title||reports.b.filename;
+      document.getElementById('p3-col-a').innerHTML=renderP3Col(p3A,'a');
+      document.getElementById('p3-col-ctr').innerHTML=renderP3Center(p3A,p3B);
+      document.getElementById('p3-col-b').innerHTML=renderP3Col(p3B,'b');
+      document.getElementById('p3-bottom').innerHTML=renderP3Bottom(p3A,p3B);
+      document.getElementById('page3').style.display='block';
+    }
+  }
+
+  document.getElementById('screen-upload').style.display='none';
+  document.getElementById('screen-result').style.display='block';
+}
+
+function goBack(){
+  document.getElementById('screen-result').style.display='none';
+  document.getElementById('screen-upload').style.display='flex';
+}
+
+/* ===== MODE MANAGEMENT ===== */
+let analysisMode='similarity';
+function setMode(m){
+  analysisMode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mbtn-'+m).classList.add('active');
+  const labels={similarity:'⚖️ 楽曲類似度を判定する',friend:'💕 仲良し度を分析する',rival:'⚔️ ライバル度を分析する'};
+  document.getElementById('btn-analyze').textContent=labels[m];
+}
+
+/* ===== 仲良し度スコア ===== */
+function keyFriendScore(k1,k2){
+  if(!k1||!k2||k1==='—'||k2==='—')return 0.4;
+  const n=s=>s.toLowerCase().replace(/[^a-z♭#♯]/g,'');
+  if(n(k1)===n(k2))return 0.95;
+  // マイナー同士 or メジャー同士
+  const m1=k1.includes('マイナー')||/m$/i.test(k1);
+  const m2=k2.includes('マイナー')||/m$/i.test(k2);
+  if(m1===m2)return 0.70;
+  // 平行調（相対調）は相性良い
+  return 0.55;
+}
+function computeFriendScore(a,b){
+  const t1=parseInt(a.tempo)||120,t2=parseInt(b.tempo)||120,td=Math.abs(t1-t2);
+  const absA=parseInt(a.lyrAbs)||50,absB=parseInt(b.lyrAbs)||50;
+  const axA=a.lyrAxes||{},axB=b.lyrAxes||{};
+  const lyA=(a.lyrics||'')+' '+(a.phrases||[]).join(' ');
+  const lyB=(b.lyrics||'')+' '+(b.phrases||[]).join(' ');
+  const th=themeOverlap(lyA,lyB);
+  const ps=phraseOverlap(a.phrases||[],b.phrases||[]);
+  const sameArt=a.artist&&b.artist&&a.artist.replace(/（.*/,'')=== b.artist.replace(/（.*/,'')?1.0:0.3;
+
+  // 1. 💫 魂の共鳴度 ── テーマ・フレーズ・アーティスト文脈の深い共鳴
+  const soul=Math.min(1,th*0.45+ps*0.30+sameArt*0.25);
+
+  // 2. ☕ カフェ同席指数 ── 同じ空間で流れても違和感ない？ テンポ差が鍵
+  const cafe=td<=10?0.95:td<=25?0.80:td<=45?0.60:td<=65?0.40:0.22;
+
+  // 3. 🌙 深夜3時の相性 ── 孤独な夜に2曲並べると…？ 抽象度×スロー感
+  const nightVibeA=absA/100*0.55+(t1<110?0.45:t1<130?0.30:0.10);
+  const nightVibeB=absB/100*0.55+(t2<110?0.45:t2<130?0.30:0.10);
+  const night3am=Math.min(1,(nightVibeA+nightVibeB)/2*1.18);
+
+  // 4. 🎨 色彩シンクロ率 ── 同じカラーパレットを纏うか（キー・モード相性）
+  const colorSync=keyFriendScore(a.key,b.key);
+
+  // 5. 💘 言霊シンクロ率 ── 魔法の言葉が重なるほど縁が深い
+  const spiritWords=['光','宙','空','道','世界','宇宙','命','魂','心','愛','夢','星','虹','時','風','海','花','永'];
+  const shared5=spiritWords.filter(w=>lyA.includes(w)&&lyB.includes(w)).length;
+  const kotodama=Math.min(1.0,shared5/4.5);
+
+  // 6. 🫀 心拍シンクロ ── 2曲のBPMが同じ「心拍ゾーン」に宿るか
+  const hrZone=t=>t<72?'zen':t<105?'calm':t<135?'active':'power';
+  const heartbeat=hrZone(t1)===hrZone(t2)?0.94:0.28;
+
+  // 7. 🌈 感情スペクトル重複 ── 同じ感情の虹を持っているか
+  const emoWords=['愛','涙','笑','喜','悲','希望','夢','光','闇','温','切','恋','怒','楽'];
+  const sharedEmo=emoWords.filter(w=>lyA.includes(w)&&lyB.includes(w)).length;
+  const emoSpec=Math.min(1.0,sharedEmo/4+th*0.25);
+
+  // 8. 🌸 抱擁指数 ── 抱きしめたくなる温もりが両曲に宿るか
+  const hugA=(axA['感情ダイナミクス']||5)/10;
+  const hugB=(axB['感情ダイナミクス']||5)/10;
+  const hug=Math.min(1,(hugA+hugB)/2*0.75+Math.min(hugA,hugB)*0.25);
+
+  // 9. 🚗 ドライブデート相性 ── 夕暮れのドライブに2曲かけたら？ テンポ感×高揚感
+  const drFn=t=>t>=105&&t<=148?0.92:t>=85&&t<105?0.70:t>148&&t<=172?0.68:0.35;
+  const drive=(drFn(t1)+drFn(t2))/2*(1-Math.min(td,70)/140);
+
+  // 10. 🔮 前世縁指数 ── 時空を超えた因縁。言霊×テーマ×フレーズの三位一体
+  const destiny=Math.min(1,(th*0.4+ps*0.3+kotodama*0.3)*1.2);
+
+  const axes=[
+    {emoji:'💫',label:'魂の共鳴度',desc:'テーマ・フレーズ・文脈の深い共鳴',score:soul,weight:0.13},
+    {emoji:'☕',label:'カフェ同席指数',desc:'同じ空間で流れる心地よさ',score:cafe,weight:0.09},
+    {emoji:'🌙',label:'深夜3時の相性',desc:'孤独な夜に寄り添う波長',score:night3am,weight:0.10},
+    {emoji:'🎨',label:'色彩シンクロ率',desc:'キー・モードが紡ぐ色彩の一致',score:colorSync,weight:0.09},
+    {emoji:'💘',label:'言霊シンクロ率',desc:'魔法の言葉が重なる神秘的な縁',score:kotodama,weight:0.12},
+    {emoji:'🫀',label:'心拍シンクロ',desc:'同じ鼓動の速さに宿るか',score:heartbeat,weight:0.10},
+    {emoji:'🌈',label:'感情スペクトル',desc:'虹のように重なる感情の幅',score:emoSpec,weight:0.10},
+    {emoji:'🌸',label:'抱擁指数',desc:'聴くたびに抱きしめたくなる温もり',score:hug,weight:0.10},
+    {emoji:'🚗',label:'ドライブデート相性',desc:'夕暮れドライブで2曲かけたなら',score:drive,weight:0.09},
+    {emoji:'🔮',label:'前世縁指数',desc:'時空を超えた因果の糸',score:destiny,weight:0.08},
+  ];
+  const total=Math.round(axes.reduce((s,i)=>s+i.score*i.weight,0)*100);
+  const type=total>=90?'🌌 宇宙的ソウルメイト':total>=80?'💫 運命の共鳴体':total>=70?'💕 音楽的親友':total>=60?'🌸 心地よいコンビ':total>=50?'☕ プレイリストの友':total>=40?'🌱 個性的な出会い':'🔮 神秘的な異世界感';
+  return{total,axes,type};
+}
+
+function generateFriendComment(a,b,fs){
+  const same=a.artist&&b.artist&&a.artist.replace(/（.*/,'')=== b.artist.replace(/（.*/,'');
+  const t1=parseInt(a.tempo)||0,t2=parseInt(b.tempo)||0;
+  const topAxes=fs.axes.slice().sort((x,y)=>y.score-x.score).slice(0,2);
+  let s=[];
+  if(fs.total>=85){
+    s.push(same
+      ?`同一アーティストの手による2曲は、まるで前世で約束した「魂の対」のようだ。${topAxes[0].emoji}${topAxes[0].label}と${topAxes[1].emoji}${topAxes[1].label}が際立って高く、連続再生すると聴き手は一つの大きな宇宙に包まれる感覚を得るだろう。`
+      :`異なる原点を持ちながら、2曲の間には説明のつかない磁力が宿っている。${topAxes[0].emoji}${topAxes[0].label}が示すように、これは星座でいえば同じエレメントに属する宿命の出会いだ。`);
+  }else if(fs.total>=70){
+    s.push(`${esc(a.title||'A')}と${esc(b.title||'B')}は、${topAxes[0].emoji}${topAxes[0].label}を核に互いの個性を高め合う、理想的な「音楽の親友」関係にある。同じプレイリストに並ぶと、聴き手の感情はゆるやかな物語を描く。`);
+  }else if(fs.total>=50){
+    s.push(`2曲はそれぞれ異なる色を持ちながら、並べると意外なほど心地よいコントラストを生む。${topAxes[0].emoji}${topAxes[0].label}だけは確かに響き合っており、それがこの2曲の隠れた縁となっている。`);
+  }else{
+    s.push(`対照的な世界観を持つ2曲は、並べることで互いの独自性が際立つ。${fs.type}——それは不思議な引力を持つ「異世界の出会い」だ。コントラストを活かした演出は、むしろ聴き手に新鮮な驚きを与えるかもしれない。`);
+  }
+  if(Math.abs(t1-t2)<=12&&t1>0)s.push(` テンポの近さ（${t1}／${t2} BPM）が、連続再生での心地よいグルーヴを自然に約束している。`);
+  return s.join('');
+}
+
+function svgGaugeFR(score,c1,c2,size){
+  const r=size*0.38,cx=size/2,cy=size/2,circ=2*Math.PI*r;
+  const dash=(score/100)*circ;
+  const id='fg'+Math.round(score)+c1.replace('#','');
+  return`<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:${c1}"/><stop offset="100%" style="stop-color:${c2}"/>
+    </linearGradient></defs>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#F8BBD030" stroke-width="${size*0.085}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${id})"
+      stroke-width="${size*0.085}" stroke-linecap="round"
+      stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+      transform="rotate(-90 ${cx} ${cy})"/>
+  </svg>`;
+}
+
+/* ===== ミニチャート用ヘルパー ===== */
+function svgRadar6Mini(d,color,bgColor,size){
+  const axisKeys=['比喩独自性','情景描写力','感情ダイナミクス','文体リズムの自然さ','既視感の少なさ','表現構造の一貫性'];
+  const shortLbls=['比喩','情景','感情','リズム','既視感','構造'];
+  const n=6,cx=size/2,cy=size*0.49,R=size*0.30;
+  const ang=Array.from({length:n},(_,i)=>-Math.PI/2+2*Math.PI/n*i);
+  const vals=axisKeys.map(k=>(d&&d.lyrAxes&&d.lyrAxes[k])||0);
+  const hasData=vals.some(v=>v>0);
+  let grids='';
+  [4,7,10].forEach(lv=>{
+    const r=R*lv/10;
+    const pts=ang.map(a=>`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`).join(' ');
+    grids+=`<polygon points="${pts}" fill="none" stroke="${color}28" stroke-width="0.9"/>`;
+  });
+  const axLines=ang.map(a=>`<line x1="${cx}" y1="${cy}" x2="${cx+R*Math.cos(a)}" y2="${cy+R*Math.sin(a)}" stroke="${color}38" stroke-width="0.8"/>`).join('');
+  const dataPts=vals.map((v,i)=>{const r=R*(v||0)/10;return`${cx+r*Math.cos(ang[i])},${cy+r*Math.sin(ang[i])}`}).join(' ');
+  const dots=vals.map((v,i)=>{const r=R*(v||0)/10;return v?`<circle cx="${cx+r*Math.cos(ang[i])}" cy="${cy+r*Math.sin(ang[i])}" r="${(size*0.018).toFixed(1)}" fill="${color}"/>`:''}).join('');
+  const axLbls=shortLbls.map((lbl,i)=>{
+    const r=R+size*0.130,bx=cx+r*Math.cos(ang[i]),by=cy+r*Math.sin(ang[i]);
+    return`<text x="${bx}" y="${by}" text-anchor="middle" dominant-baseline="middle" font-size="${(size*0.058).toFixed(1)}" fill="${color}CC" font-weight="700">${lbl}</text>`;
+  }).join('');
+  const vlbls=vals.map((v,i)=>{
+    if(!v)return'';
+    const r=R*v/10+size*0.048;
+    return`<text x="${cx+r*Math.cos(ang[i])}" y="${cy+r*Math.sin(ang[i])}" text-anchor="middle" dominant-baseline="middle" font-size="${(size*0.062).toFixed(1)}" fill="${color}" font-weight="800">${v}</text>`;
+  }).join('');
+  const placeholder=hasData?'':`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="${color}50">データなし</text>`;
+  return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${size}" height="${size}" fill="${bgColor}" rx="7"/>
+    ${grids}${axLines}
+    ${hasData?`<polygon points="${dataPts}" fill="${color}" fill-opacity="0.22" stroke="${color}" stroke-width="1.3"/>`:''  }
+    ${dots}${vlbls}${axLbls}${placeholder}
+  </svg>`;
+}
+
+function svgScoreBars(d,color,width){
+  const lyrics=parseInt(d.crsLyrics)||0;
+  const music=parseInt(d.crsMusic)||0;
+  const total=parseInt(d.crsTotal)||(d.lyrScore!=='—'?parseInt(d.lyrScore)||0:0);
+  const items=[];
+  if(lyrics)items.push({label:'LYRICS',val:lyrics,note:`${lyrics}/100`});
+  if(music)items.push({label:'MUSIC',val:music,note:`${music}/100`});
+  if(total)items.push({label:'CRS TOTAL',val:total,note:`${total}/100`});
+  if(!items.length){
+    // lyrScoreのみある場合
+    const ls=parseInt(d.lyrScore)||0;
+    if(ls)items.push({label:'LYR SCORE',val:Math.round(ls/0.7),note:`${ls}/70`});
+  }
+  if(!items.length)return'';
+  const barH=8,gap=14,padL=50,padR=30,padTop=6;
+  const bw=width-padL-padR;
+  const bars=items.map((item,i)=>{
+    const y=padTop+i*gap;
+    const fw=Math.max(2,Math.round(bw*Math.min(item.val,100)/100));
+    return`
+      <text x="${padL-3}" y="${y+barH*0.82}" text-anchor="end" font-size="6.5" fill="${color}90" font-weight="700">${item.label}</text>
+      <rect x="${padL}" y="${y}" width="${bw}" height="${barH}" rx="3" fill="${color}15"/>
+      <rect x="${padL}" y="${y}" width="${fw}" height="${barH}" rx="3" fill="${color}" fill-opacity="0.72"/>
+      <text x="${padL+fw+2}" y="${y+barH*0.82}" font-size="6.8" fill="${color}" font-weight="800">${item.note}</text>`;
+  }).join('');
+  const svgH=padTop+(items.length)*gap+3;
+  return`<svg width="${width}" height="${svgH}" viewBox="0 0 ${width} ${svgH}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`;
+}
+
+function renderFriendPage(dA,dB,fs){
+  const gaugeHtml=svgGaugeFR(fs.total,'#E91E63','#F48FB1',110);
+  const comment=generateFriendComment(dA,dB,fs);
+  // 10軸を2列グリッドで表示
+  const axGrid=fs.axes.map(ax=>{
+    const p=Math.round(ax.score*100);
+    const hue=p>=80?'#E91E63':p>=60?'#EC407A':p>=40?'#F06292':'#F48FB1';
+    return`<div style="background:rgba(233,30,99,.06);border-radius:7px;padding:6px 8px;border:1px solid rgba(233,30,99,.15);">
+      <div style="font-size:.58em;font-weight:700;color:#880E4F;margin-bottom:3px;line-height:1.3;">${ax.emoji} ${ax.label}</div>
+      <div style="font-size:.48em;color:#AD1457;opacity:.8;margin-bottom:4px;line-height:1.3;">${ax.desc}</div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div style="flex:1;height:5px;background:rgba(233,30,99,.15);border-radius:3px;overflow:hidden;">
+          <div style="width:${p}%;height:100%;background:linear-gradient(90deg,${hue},#F48FB1);border-radius:3px;"></div>
+        </div>
+        <span style="font-size:.65em;font-weight:900;color:${hue};min-width:26px;text-align:right;">${p}%</span>
+      </div>
+    </div>`;
+  }).join('');
+  function songCard(d,letter,side){
+    const crs=d.crsTotal!=='—'?d.crsTotal:(d.lyrScore!=='—'?d.lyrScore:'—');
+    const rank=d.crsRank!=='—'?d.crsRank:(d.lyrRank!=='—'?d.lyrRank:'—');
+    return`<div class="friend-col friend-col-${side}">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11em;font-family:Impact,sans-serif;font-weight:900;color:#E91E63;opacity:0.055;pointer-events:none;user-select:none;z-index:0;">${letter}</div>
+      <div style="position:relative;z-index:1;">
+      <div class="friend-song-title">♪ ${esc(d.title||'—')}</div>
+      <div class="friend-smr"><span class="sl">アーティスト</span><span class="sv">${esc(d.artist||'—')}</span></div>
+      <div class="friend-smr"><span class="sl">キー / テンポ</span><span class="sv">${esc(d.key||'—')} / ${esc(d.tempo||'—')}BPM</span></div>
+      ${crs!=='—'?`<div class="friend-smr"><span class="sl">CRS / Rank</span><span class="sv">${crs}pt　Rank ${rank}</span></div>`:''}
+      ${d.summary&&d.summary!=='—'?`<div style="margin-top:8px;font-size:.70em;font-style:italic;color:#880E4F;padding:6px 8px;background:rgba(233,30,99,.07);border-radius:5px;line-height:1.65;">${esc(d.summary)}</div>`:''}
+      ${d.lyrTitle&&d.lyrTitle!=='—'?`<div style="margin-top:7px;font-size:.67em;color:#AD1457;">🏷 ${esc(d.lyrTitle)}</div>`:''}
+      ${d.lyrTend&&d.lyrTend!=='—'?`<div style="margin-top:3px;font-size:.63em;color:#880E4F;">表現傾向：${esc(d.lyrTend)}</div>`:''}
+      ${(d.lyrAxes&&Object.keys(d.lyrAxes).length)?`<div style="margin-top:8px;padding:5px 7px;background:rgba(233,30,99,.05);border-radius:5px;">
+        ${Object.entries(d.lyrAxes).filter(([,v])=>v>=8).map(([k,v])=>`<div style="font-size:.60em;color:#AD1457;">⭐ ${k}：${v}/10</div>`).join('')}
+      </div>`:''}
+      <div style="margin-top:12px;padding:12px 10px 10px;background:linear-gradient(135deg,rgba(252,228,236,.45),rgba(255,240,243,.6));border-radius:11px;border:1px solid rgba(233,30,99,.16);">
+        <div style="font-size:.57em;font-weight:700;color:#AD1457;letter-spacing:.07em;margin-bottom:6px;text-align:center;">✨ 魅力レーダー — 歌詞表現プロファイル</div>
+        <div style="display:flex;justify-content:center;">${svgRadar6Mini(d,'#E91E63','rgba(255,240,243,.75)',152)}</div>
+        ${svgScoreBars(d,'#E91E63',148)?`<div style="margin-top:8px;padding:4px 6px 2px;background:rgba(233,30,99,.05);border-radius:7px;">
+          <div style="font-size:.54em;font-weight:700;color:#AD1457;letter-spacing:.05em;margin-bottom:4px;text-align:center;">🏅 CRS スコア内訳</div>
+          <div style="display:flex;justify-content:center;">${svgScoreBars(d,'#E91E63',148)}</div>
+        </div>`:''}
+      </div>
+      </div>
+    </div>`;
+  }
+  return`
+  <div class="friend-3col">
+    ${songCard(dA,'A','a')}
+    <div class="friend-col-ctr">
+      <div style="font-size:.60em;font-weight:700;color:#AD1457;letter-spacing:.08em;margin-bottom:6px;text-align:center;">💕 COMPATIBILITY SCORE</div>
+      <div class="fg-wrap">
+        ${gaugeHtml}
+        <div class="fg-num">
+          <div style="font-size:1.85em;font-weight:900;color:#880E4F;line-height:1;">${fs.total}</div>
+          <div style="font-size:.52em;color:#AD1457;">/100</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-bottom:10px;">
+        <span style="display:inline-block;padding:4px 14px;border-radius:16px;font-size:.78em;font-weight:800;background:linear-gradient(135deg,#AD1457,#E91E63);color:#fff;box-shadow:0 3px 10px rgba(233,30,99,.3);">${fs.type}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%;">${axGrid}</div>
+    </div>
+    ${songCard(dB,'B','b')}
+  </div>
+  <div class="friend-foot">
+    <div class="friend-foot-title">💕 相性診断コメント</div>
+    <div class="friend-foot-text">${esc(comment)}</div>
+  </div>`;
+}
+
+/* ===== ライバル度スコア ===== */
+function computeRivalScore(a,b){
+  const crsA=parseInt(a.crsTotal)||parseInt(a.lyrScore)||55;
+  const crsB=parseInt(b.crsTotal)||parseInt(b.lyrScore)||55;
+  const crsDiff=Math.abs(crsA-crsB);
+  const t1=parseInt(a.tempo)||120,t2=parseInt(b.tempo)||120;
+  const axA=a.lyrAxes||{},axB=b.lyrAxes||{};
+  const absA=parseInt(a.lyrAbs)||50,absB=parseInt(b.lyrAbs)||50;
+  const lyA=(a.lyrics||'')+' '+(a.phrases||[]).join(' ');
+  const lyB=(b.lyrics||'')+' '+(b.phrases||[]).join(' ');
+  const th=themeOverlap(lyA,lyB);
+  const ps=phraseOverlap(a.phrases||[],b.phrases||[]);
+  const emoA=(axA['感情ダイナミクス']||5)/10,emoB=(axB['感情ダイナミクス']||5)/10;
+  const karA=(axA['文体リズムの自然さ']||5)/10,karB=(axB['文体リズムの自然さ']||5)/10;
+  const uA=(axA['既視感の少なさ']||5)/10,uB=(axB['既視感の少なさ']||5)/10;
+  const conA=(axA['表現構造の一貫性']||5)/10,conB=(axB['表現構造の一貫性']||5)/10;
+  const sceneA=((axA['情景描写力']||5)+(axA['感情ダイナミクス']||5))/20;
+  const sceneB=((axB['情景描写力']||5)+(axB['感情ダイナミクス']||5))/20;
+  const metaA=((axA['比喩独自性']||5)+(axA['既視感の少なさ']||5))/20;
+  const metaB=((axB['比喩独自性']||5)+(axB['既視感の少なさ']||5))/20;
+
+  // 各軸のA/Bスコアと「熱戦度」（近いほど対決感大）
+  const rv=score=>{const d=Math.abs(score[0]-score[1]);return Math.min(1,(1-d)*((score[0]+score[1])/2)*1.3);};
+
+  // 1. 👑 主人公オーラ対決 ── どちらが「物語の主役」か
+  const hero=[crsA/100,crsB/100];
+  // 2. 🔥 感情攻撃力 ── 聴き手の心を揺さぶるパワー
+  const emo=[emoA,emoB];
+  // 3. 🎤 カラオケ制圧力 ── 歌いたくなる度
+  const kara=[karA,karB];
+  // 4. 🏆 チャート争奪戦 ── ランキングを争う実力の近さ
+  const chartS=crsDiff<=5?0.98:crsDiff<=12?0.82:crsDiff<=25?0.58:0.28;
+  const chart=[crsA/100,crsB/100];
+  // 5. 💥 ラスボス感 ── 既視感のなさ＝唯一無二の強さ
+  const boss=[uA,uB];
+  // 6. 🌊 リスナー引力 ── 聴き手を引き込む構造の力
+  const grav=[conA,conB];
+  // 7. 🎭 ドラマ主題歌適性 ── 映像×感情の相乗効果
+  const drama=[sceneA,sceneB];
+  // 8. 🕛 深夜0時の覇権 ── 深夜に一人聴きたくなる度
+  const nightA=absA/100*0.6+(t1<120?0.4:0.15);
+  const nightB=absB/100*0.6+(t2<120?0.4:0.15);
+  const night=[Math.min(1,nightA),Math.min(1,nightB)];
+  // 9. 💔 涙腺破壊力 ── 涙をこぼさせる破壊力
+  const tearA=emoA*0.65+(absA/100)*0.35,tearB=emoB*0.65+(absB/100)*0.35;
+  const tear=[tearA,tearB];
+  // 10. 🌟 時代を超える力 ── 10年後も語り継がれるか
+  const timeless=[metaA,metaB];
+
+  const axes=[
+    {emoji:'👑',label:'主人公オーラ対決',scoreA:hero[0],scoreB:hero[1],score:rv(hero),weight:0.12},
+    {emoji:'🔥',label:'感情攻撃力',scoreA:emo[0],scoreB:emo[1],score:rv(emo),weight:0.11},
+    {emoji:'🎤',label:'カラオケ制圧力',scoreA:kara[0],scoreB:kara[1],score:rv(kara),weight:0.09},
+    {emoji:'🏆',label:'チャート争奪戦',scoreA:chart[0],scoreB:chart[1],score:chartS,weight:0.11},
+    {emoji:'💥',label:'ラスボス感',scoreA:boss[0],scoreB:boss[1],score:rv(boss),weight:0.10},
+    {emoji:'🌊',label:'リスナー引力',scoreA:grav[0],scoreB:grav[1],score:rv(grav),weight:0.10},
+    {emoji:'🎭',label:'ドラマ主題歌適性',scoreA:drama[0],scoreB:drama[1],score:rv(drama),weight:0.10},
+    {emoji:'🕛',label:'深夜0時の覇権',scoreA:night[0],scoreB:night[1],score:rv(night),weight:0.09},
+    {emoji:'💔',label:'涙腺破壊力',scoreA:tear[0],scoreB:tear[1],score:rv(tear),weight:0.09},
+    {emoji:'🌟',label:'時代を超える力',scoreA:timeless[0],scoreB:timeless[1],score:rv(timeless),weight:0.09},
+  ];
+  const total=Math.round(axes.reduce((s,i)=>s+i.score*i.weight,0)*100);
+  const type=total>=85?'⚔️ 宿命のライバル':total>=75?'🔥 永遠の好敵手':total>=65?'👑 頂点争奪の刃':total>=55?'🎭 ステージの競演者':total>=45?'🌊 穏やかな競合':'🌟 それぞれの孤高';
+  return{total,axes,type,crsA,crsB};
+}
+
+function generateRivalComment(a,b,rv){
+  const crsA=rv.crsA,crsB=rv.crsB;
+  const topAxes=rv.axes.slice().sort((x,y)=>y.score-x.score).slice(0,2);
+  // 各軸のA/B勝敗カウント
+  const aWins=rv.axes.filter(ax=>ax.scoreA>ax.scoreB+0.05).length;
+  const bWins=rv.axes.filter(ax=>ax.scoreB>ax.scoreA+0.05).length;
+  let s=[];
+  if(rv.total>=80){
+    s.push(`${esc(a.title||'A')}と${esc(b.title||'B')}——この2曲は同じ音楽的頂点を目指す「宿命のライバル」だ。${topAxes[0].emoji}${topAxes[0].label}と${topAxes[1].emoji}${topAxes[1].label}で激突し、聴き手はどちらを選ぶか引き裂かれる。`);
+  }else if(rv.total>=60){
+    s.push(`スタイルは異なるが、ターゲットとする感情の深部は同じ領域だ。${topAxes[0].emoji}${topAxes[0].label}こそが最大の争点——ここで優位に立つ方がリスナーの心を制する。`);
+  }else{
+    s.push(`2曲はそれぞれ固有の音楽宇宙を持ち、直接対決よりも「棲み分けた共存」が現実的だ。${rv.type}——それぞれが輝く場所は異なる。`);
+  }
+  if(Math.abs(crsA-crsB)<=8)s.push(` CRSスコアは${crsA}対${crsB}と互角。実力では決着がつかない真の好敵手だ。`);
+  if(aWins>bWins+2)s.push(` ${10}軸中${aWins}軸でAが優勢——現時点ではAが一歩リード。`);
+  else if(bWins>aWins+2)s.push(` ${10}軸中${bWins}軸でBが優勢——現時点ではBが一歩リード。`);
+  else s.push(` A${aWins}勝 対 B${bWins}勝と僅差——まさに互角の宿命対決だ。`);
+  return s.join('');
+}
+
+function renderRivalPage(dA,dB,rv){
+  const gaugeHtml=svgGaugeFR(rv.total,'#7B1FA2','#E53935',110);
+  const comment=generateRivalComment(dA,dB,rv);
+  // 10軸 A/B対決表示
+  const axList=rv.axes.map(ax=>{
+    const pA=Math.round(ax.scoreA*100),pB=Math.round(ax.scoreB*100);
+    const gap=pA-pB;
+    const winner=gap>5?'A':gap<-5?'B':'引分';
+    const wBg=winner==='A'?'rgba(123,31,162,.15)':winner==='B'?'rgba(229,57,53,.15)':'rgba(84,110,122,.12)';
+    const wCol=winner==='A'?'#7B1FA2':winner==='B'?'#E53935':'#546E7A';
+    const wTxt=winner==='A'?'Ａ優勢':winner==='B'?'Ｂ優勢':'拮抗🤝';
+    return`<div style="padding:4px 0 3px;border-bottom:1px dotted rgba(255,0,0,.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-size:.60em;font-weight:700;color:#4A148C;">${ax.emoji} ${ax.label}</span>
+        <span style="font-size:.56em;font-weight:800;color:${wCol};padding:1px 7px;background:${wBg};border-radius:8px;">${wTxt}</span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <span style="font-size:.50em;color:#7B1FA2;min-width:12px;text-align:right;font-weight:700;">A</span>
+        <div style="flex:1;height:5px;background:rgba(123,31,162,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:${pA}%;height:100%;background:linear-gradient(90deg,#7B1FA2,#CE93D8);border-radius:2px;"></div>
+        </div>
+        <div style="flex:1;height:5px;background:rgba(229,57,53,.12);border-radius:2px;overflow:hidden;">
+          <div style="width:${pB}%;height:100%;background:linear-gradient(90deg,#E53935,#EF9A9A);border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.50em;color:#E53935;min-width:12px;font-weight:700;">B</span>
+      </div>
+    </div>`;
+  }).join('');
+  function rivalCard(d,letter,side,gradFrom,gradTo){
+    const crs=d.crsTotal!=='—'?d.crsTotal:(d.lyrScore!=='—'?d.lyrScore:'—');
+    const rank=d.crsRank!=='—'?d.crsRank:(d.lyrRank!=='—'?d.lyrRank:'—');
+    const axD=d.lyrAxes||{};
+    const topA=Object.entries(axD).filter(([,v])=>v>=8).map(([k,v])=>[k,v]).slice(0,3);
+    const weakA=Object.entries(axD).filter(([,v])=>v<=5).map(([k,v])=>[k,v]).slice(0,2);
+    return`<div class="rival-col rival-col-${side}">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11em;font-family:Impact,sans-serif;font-weight:900;background:linear-gradient(135deg,${gradFrom},${gradTo});-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0.09;pointer-events:none;user-select:none;z-index:0;">${letter}</div>
+      <div style="position:relative;z-index:1;">
+      <div class="rival-song-title" style="background:linear-gradient(135deg,${gradFrom},${gradTo});-webkit-background-clip:text;-webkit-text-fill-color:transparent;">⚔ ${esc(d.title||'—')}</div>
+      <div class="rival-smr"><span class="sl">アーティスト</span><span class="sv">${esc(d.artist||'—')}</span></div>
+      <div class="rival-smr"><span class="sl">キー / テンポ</span><span class="sv">${esc(d.key||'—')} / ${esc(d.tempo||'—')}BPM</span></div>
+      ${crs!=='—'?`<div class="rival-smr"><span class="sl">CRS / Rank</span><span class="sv" style="color:${gradFrom};font-weight:800;">${crs}pt　Rank ${rank}</span></div>`:''}
+      ${topA.length?`<div class="rival-str"><div class="rival-str-title" style="color:${gradFrom};">💪 武器となる強み</div>${topA.map(([k,v])=>`<div class="rival-str-val">● ${k}：${v}/10</div>`).join('')}</div>`:''}
+      ${weakA.length?`<div class="rival-str" style="border-left-color:#9C27B0;background:rgba(156,39,176,.05);"><div class="rival-str-title" style="color:#7B1FA2;">🎯 攻略ポイント</div>${weakA.map(([k,v])=>`<div class="rival-str-val" style="color:#7B1FA2;">△ ${k}：${v}/10</div>`).join('')}</div>`:''}
+      ${d.lyrTitle&&d.lyrTitle!=='—'?`<div style="margin-top:7px;font-size:.65em;color:#7B1FA2;">🏷 ${esc(d.lyrTitle)}</div>`:''}
+      <div style="margin-top:12px;padding:12px 10px 10px;background:linear-gradient(135deg,${gradFrom}14,${gradTo}0A);border-radius:11px;border:1px solid ${gradFrom}28;">
+        <div style="font-size:.57em;font-weight:700;color:${gradFrom};letter-spacing:.07em;margin-bottom:6px;text-align:center;">🎯 表現レーダー — 歌詞表現プロファイル</div>
+        <div style="display:flex;justify-content:center;">${svgRadar6Mini(d,gradFrom,'rgba(255,255,255,.35)',152)}</div>
+        ${svgScoreBars(d,gradFrom,148)?`<div style="margin-top:8px;padding:4px 6px 2px;background:${gradFrom}0D;border-radius:7px;">
+          <div style="font-size:.54em;font-weight:700;color:${gradFrom};letter-spacing:.05em;margin-bottom:4px;text-align:center;">⚡ CRS スコア内訳</div>
+          <div style="display:flex;justify-content:center;">${svgScoreBars(d,gradFrom,148)}</div>
+        </div>`:''}
+      </div>
+      </div>
+    </div>`;
+  }
+  return`
+  <div class="rival-3col">
+    ${rivalCard(dA,'A','a','#7B1FA2','#CE93D8')}
+    <div class="rival-col-ctr">
+      <div style="font-size:.60em;font-weight:700;color:#7B1FA2;letter-spacing:.08em;margin-bottom:6px;text-align:center;">⚔️ RIVALRY SCORE</div>
+      <div class="rg-wrap">
+        ${gaugeHtml}
+        <div class="rg-num">
+          <div style="font-size:1.85em;font-weight:900;background:linear-gradient(135deg,#7B1FA2,#E53935);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;">${rv.total}</div>
+          <div style="font-size:.52em;color:#B71C1C;">/100</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-bottom:8px;">
+        <span style="display:inline-block;padding:4px 14px;border-radius:16px;font-size:.78em;font-weight:800;background:linear-gradient(135deg,#7B1FA2,#B71C1C);color:#fff;box-shadow:0 3px 10px rgba(183,28,28,.3);">${rv.type}</span>
+      </div>
+      <div style="font-size:.50em;text-align:center;color:#9E9E9E;margin-bottom:5px;letter-spacing:.05em;">
+        <span style="color:#7B1FA2;font-weight:700;">■ A</span> &nbsp;vs&nbsp; <span style="color:#E53935;font-weight:700;">■ B</span>　各軸 優劣判定
+      </div>
+      <div style="width:100%;">${axList}</div>
+    </div>
+    ${rivalCard(dB,'B','b','#E53935','#EF9A9A')}
+  </div>
+  <div class="rival-foot">
+    <div class="rival-foot-title">⚔️ ライバル度判定コメント</div>
+    <div class="rival-foot-text">${esc(comment)}</div>
+  </div>`;
+}
+
+/* ===== DOWNLOAD ===== */
+function downloadHTML(){
+  const styles=Array.from(document.styleSheets).filter(s=>!s.href)
+    .map(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText).join('\n');}catch(e){return '';}}).join('\n');
+  const visPages=['page1','page2','page3','page4','page5']
+    .filter(id=>{const el=document.getElementById(id);return el&&el.style.display!=='none';})
+    .map(id=>document.getElementById(id).outerHTML).join('');
+  const modeNames={similarity:'楽曲類似度判定',friend:'仲良し度分析',rival:'ライバル度分析'};
+  const blob=new Blob([`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>FeatherTune ${modeNames[analysisMode]||''}レポート</title>
+<style>${styles}
+body{background:#EEF2FF;padding:16px;}
+.page-wrap{max-width:1180px;margin:0 auto 24px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+@media print{body{background:#fff;padding:0;}.page-wrap{border-radius:0;box-shadow:none;max-width:283mm;page-break-after:always;}.page-wrap:last-child{page-break-after:avoid;}}
+@page{size:A4 landscape;margin:7mm;}
+</style></head><body>${visPages}</body></html>`],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`FeatherTune_${(modeNames[analysisMode]||'Report').replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* ===== DRAG & DROP ===== */
+['a','b','am_a','am_b'].forEach(side=>{
+  const cardId='card-'+side.replace('_','-');
+  const fnId='fn-'+side.replace('_','-');
+  const card=document.getElementById(cardId);
+  if(!card)return;
+  card.addEventListener('dragover',e=>{e.preventDefault();card.style.borderColor='#7E57C2';});
+  card.addEventListener('dragleave',()=>{card.style.borderColor='';});
+  card.addEventListener('drop',e=>{
+    e.preventDefault(); card.style.borderColor='';
+    const file=e.dataTransfer.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      reports[side]={filename:file.name,raw:ev.target.result};
+      document.getElementById(fnId).textContent='✅ '+file.name;
+      card.classList.add('loaded');
+      checkReady();
+    };
+    reader.readAsText(file,'UTF-8');
+  });
+});
+</script>
+</body>
+</html>

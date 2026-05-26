@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>FeatherTune 設問シートエディタ ver1.30</title>
+<style>
+  :root{
+    --bg:#f4f9fc;
+    --card:#ffffff;
+    --line:#dde7ee;
+    --primary:#3aa6c9;
+    --primary-dark:#2b86a3;
+    --accent:#6ab790;
+    --accent-dark:#3f8c66;
+    --text:#223;
+    --muted:#6b7a85;
+    --cat-common:#e3f4ec;
+    --cat-common-fg:#2b7a52;
+    --cat-song:#e8f0fa;
+    --cat-song-fg:#2a5da0;
+    --warn:#a07028;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;
+  }
+  header{
+    background:linear-gradient(120deg,#eaf5fb,#e8f6ef);
+    padding:24px 32px;border-bottom:1px solid var(--line);
+  }
+  header h1{margin:0 0 6px;font-size:22px;color:var(--primary-dark);letter-spacing:.02em}
+  header p{margin:0;color:var(--muted);font-size:13px}
+  main{max-width:1280px;margin:0 auto;padding:24px 20px 80px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media (max-width:1080px){main{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .card.full{grid-column:1/-1}
+  .card h2{
+    margin:0 0 12px;font-size:15px;color:var(--primary-dark);
+    border-left:4px solid var(--primary);padding-left:10px;
+  }
+  .card h3{font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:600}
+  button{
+    background:var(--primary);color:#fff;border:0;border-radius:8px;
+    padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  button:hover{background:var(--primary-dark)}
+  button.secondary{background:#fff;color:var(--primary-dark);border:1px solid var(--primary)}
+  button.secondary:hover{background:#eaf5fb}
+  button.accent{background:var(--accent);color:#fff}
+  button.accent:hover{background:var(--accent-dark)}
+  button.danger{background:#fff;color:#b04040;border:1px solid #d4a0a0}
+  button.danger:hover{background:#faecec}
+  textarea,input[type=text],select{
+    width:100%;font-family:inherit;font-size:13px;line-height:1.55;
+    border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff;
+  }
+  textarea:focus,input:focus,select:focus{outline:2px solid #cfe6f0;border-color:var(--primary)}
+  .preview-box{height:520px;font-family:inherit;font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+  .hint{font-size:12px;color:var(--muted);margin:6px 0 10px}
+  .filename{font-size:12px;color:var(--muted);margin-left:6px}
+  .group{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:12px 0;background:#fbfdff}
+  .group-title{font-size:13px;font-weight:700;color:var(--primary-dark);margin:2px 0 8px}
+  .field{display:grid;grid-template-columns:160px 1fr auto;gap:8px;align-items:start;margin:6px 0}
+  .field label{font-size:12px;color:#445;padding-top:6px}
+  .input-pair{display:flex;gap:6px;align-items:stretch}
+  .input-pair select{flex:0 0 150px;min-width:0}
+  .input-pair input[type=text]{flex:1;min-width:0}
+  .field .cat{font-size:10px;padding:2px 6px;border-radius:10px;align-self:start;margin-top:6px;white-space:nowrap}
+  .cat.common{background:var(--cat-common);color:var(--cat-common-fg)}
+  .cat.per-song{background:var(--cat-song);color:var(--cat-song-fg)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin:4px 0 10px;align-items:center}
+  .legend .cat{padding:2px 8px;border-radius:10px}
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .fetch-row{display:grid;grid-template-columns:160px 1fr auto;gap:8px;margin:0 0 8px;align-items:center}
+  .fetch-row button{padding:5px 10px;font-size:12px}
+  .fetch-status{font-size:11px;color:var(--muted);grid-column:2/4;margin-top:-2px}
+  .fetch-status.ok{color:#2b7a52}
+  .fetch-status.error{color:#b04040}
+  #folderHint{color:var(--warn);font-size:12px;margin:4px 0}
+  .badge-warn{color:var(--warn);font-size:12px}
+  details summary{cursor:pointer;color:var(--muted);font-size:12px;margin-top:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FeatherTune 設問シートエディタ ver1.30</h1>
+  <p>ver1.30形式の設問シートを編集・再利用するためのツールです。共通項目は次の曲に引き継げます。<br>
+     ※項目名・枝番号・順番は固定（FeatherTune本体の取得仕様）</p>
+</header>
+
+<main>
+
+  <!-- 入力 / テンプレ管理 -->
+  <section class="card full">
+    <h2>1. シート操作 / テンプレート管理</h2>
+    <div class="toolbar">
+      <button id="openFileBtn" type="button" hidden>📂 既存シートを開く (.txt)</button>
+      <input type="file" id="fileInput" accept=".txt,.md,text/plain,text/markdown" />
+      <button id="newSongBtn" type="button" class="accent">🆕 新しい曲を始める（共通項目は維持）</button>
+      <button id="clearAllBtn" type="button" class="danger">🗑️ 全てクリア</button>
+    </div>
+    <div class="toolbar">
+      <button id="saveTemplateBtn" type="button" class="secondary">💾 共通項目をテンプレートとして保存（ブラウザ）</button>
+      <button id="loadTemplateBtn" type="button" class="secondary">📥 保存済テンプレートを読み込む</button>
+      <button id="exportTemplateBtn" type="button" class="secondary">📤 テンプレートを .json で書き出し</button>
+      <input type="file" id="importTemplateInput" accept=".json,application/json" style="display:none" />
+      <button id="importTemplateBtn" type="button" class="secondary">📁 .json テンプレートを読み込む</button>
+      <span class="filename" id="templateStatus"></span>
+    </div>
+    <p class="hint">
+      📂 ボタン（Chrome/Edge/Brave 等）から開いた場合、ダウンロード時の保存先が同フォルダになります。<br>
+      共通項目はブラウザに自動保存され、次回起動時に自動復元されます。複数環境で共有するには .json で書き出してください。
+    </p>
+    <p id="folderHint" style="display:none">⚠️ 保存先を入力ファイルと同じフォルダにするには、必ず「📂 既存シートを開く」から読み込んでください。</p>
+  </section>
+
+  <!-- フォーム -->
+  <section class="card">
+    <h2>2. 設問シート編集</h2>
+    <div class="legend">
+      <span class="cat common">共通</span> 次の曲に引き継がれる
+      <span class="cat per-song">曲ごと</span> 「新しい曲」でリセット
+    </div>
+    <div id="formArea"></div>
+  </section>
+
+  <!-- プレビュー -->
+  <section class="card">
+    <h2>3. 出力プレビュー & ダウンロード</h2>
+    <textarea id="preview" class="preview-box" readonly></textarea>
+    <div class="actions">
+      <button id="refreshBtn" type="button">プレビュー更新</button>
+      <button id="downloadBtn" type="button">.txt としてダウンロード</button>
+      <button id="copyBtn" type="button" class="secondary">クリップボードへコピー</button>
+    </div>
+    <details>
+      <summary>ファイル名規則 / 構造の注意</summary>
+      <p class="hint">
+        ファイル名は「<code>{1-1 タイトル}_FeatherTune_設問シート_ver1.30.txt</code>」形式で出力されます。<br>
+        出力構造は FeatherTune 本体（app.py / report_template.py）の取得仕様に合わせて固定です。改変しないでください。
+      </p>
+    </details>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+ * FeatherTune 設問シートエディタ ver1.30
+ * - ver1.30 形式の編集・再利用に特化
+ * - 共通項目は曲を超えて維持 / 曲ごと項目は「新しい曲」でリセット
+ * - 項目名・枝番号・順番は固定（変更不可）
+ * ========================================================= */
+
+/* ---------- ver1.30 固定スキーマ（順序厳守） ---------- */
+const SCHEMA = [
+  { type:"section", title:"【基本情報】" },
+  { type:"field", key:"0-1",  label:"依頼者名" },
+  { type:"field", key:"0-2",  label:"依頼者名読み" },
+  { type:"field", key:"0-3",  label:"依頼者名補足" },
+
+  { type:"section", title:"【質問1】楽曲タイトル・アーティスト名・著作情報" },
+  { type:"field", key:"1-1",  label:"タイトル" },
+  { type:"field", key:"1-2",  label:"タイトル読み" },
+  { type:"field", key:"1-3",  label:"タイトル補足" },
+  { type:"field", key:"1-4",  label:"アーティスト名" },
+  { type:"field", key:"1-5",  label:"アーティスト名読み" },
+  { type:"field", key:"1-6",  label:"アーティスト名補足" },
+  { type:"field", key:"1-7",  label:"リリース日" },
+  { type:"field", key:"1-8",  label:"リリース日補足" },
+  { type:"field", key:"1-9",  label:"作詞者" },
+  { type:"field", key:"1-10", label:"作詞者補足" },
+  { type:"field", key:"1-11", label:"作曲者" },
+  { type:"field", key:"1-12", label:"作曲者補足" },
+  { type:"field", key:"1-13", label:"編曲者" },
+  { type:"field", key:"1-14", label:"編曲者補足" },
+  { type:"field", key:"1-15", label:"作詞著作権情報" },
+  { type:"field", key:"1-16", label:"作詞著作権情報補足" },
+  { type:"field", key:"1-17", label:"作曲著作権情報" },
+  { type:"field", key:"1-18", label:"作曲著作権情報補足" },
+
+  { type:"section", title:"【質問2】この楽曲のAI使用状況・制作実態申告" },
+  { type:"field", key:"2-1",  label:"作詞" },
+  { type:"field", key:"2-2",  label:"作詞補足" },
+  { type:"field", key:"2-3",  label:"作曲" },
+  { type:"field", key:"2-4",  label:"作曲補足" },
+  { type:"field", key:"2-5",  label:"編曲" },
+  { type:"field", key:"2-6",  label:"編曲補足" },
+  { type:"field", key:"2-7",  label:"歌唱" },
+  { type:"field", key:"2-8",  label:"歌唱補足" },
+
+  { type:"section", title:"【質問3】使用したAI技術・ツール名" },
+  { type:"field", key:"3-1",  label:"使用したAI技術・ツール名" },
+  { type:"field", key:"3-2",  label:"使用したAI技術・ツール名補足" },
+  { type:"field", key:"3-3",  label:"使用バージョン" },
+  { type:"field", key:"3-4",  label:"使用バージョン補足" },
+
+  { type:"section", title:"【質問4】人間の創作関与部分" },
+  { type:"field", key:"4-1",  label:"人間の創作関与部分" },
+  { type:"field", key:"4-2",  label:"人間の創作関与部分補足" },
+  { type:"field", key:"4-3",  label:"人間が行った具体的な指示・編集内容" },
+  { type:"field", key:"4-4",  label:"人間が行った具体的な指示・編集内容補足" },
+
+  { type:"section", title:"【質問5】歌詞補足説明" },
+  { type:"field", key:"5-1",  label:"歌詞補足説明" },
+  { type:"field", key:"5-2",  label:"歌詞補足説明補足" },
+
+  { type:"section", title:"【質問6】配信・公開状況" },
+  { type:"field", key:"6-1",  label:"配信プラットホーム" },
+  { type:"field", key:"6-2",  label:"配信プラットホーム補足" },
+  { type:"field", key:"6-3",  label:"公開サイト" },
+  { type:"field", key:"6-4",  label:"公開サイト補足" },
+  { type:"field", key:"6-5",  label:"公開状況" },
+  { type:"field", key:"6-6",  label:"公開状況補足" },
+
+  { type:"section", title:"【質問7】AI使用の公表状況・表記方法" },
+  { type:"field", key:"7-1",  label:"AI公表" },
+  { type:"field", key:"7-2",  label:"AI公表補足" },
+  { type:"field", key:"7-3",  label:"プロフィール" },
+  { type:"field", key:"7-4",  label:"プロフィール補足" },
+  { type:"field", key:"7-5",  label:"アートワーク" },
+  { type:"field", key:"7-6",  label:"アートワーク補足" },
+  { type:"field", key:"7-7",  label:"配信プラットホーム表記" },
+  { type:"field", key:"7-8",  label:"配信プラットホーム表記補足" },
+  { type:"field", key:"7-9",  label:"SNS" },
+  { type:"field", key:"7-10", label:"SNS補足" },
+  { type:"field", key:"7-11", label:"AIマークによる表示" },
+  { type:"field", key:"7-12", label:"AIマークによる表示補足" },
+  { type:"field", key:"7-13", label:"著作権管理団体" },
+  { type:"field", key:"7-14", label:"著作権管理団体補足" },
+
+  { type:"section", title:"【質問8】著作権管理登録状況" },
+  { type:"field", key:"8-1",  label:"JASRAC登録状況" },
+  { type:"field", key:"8-2",  label:"JASRAC作品コード" },
+  { type:"field", key:"8-3",  label:"JASRAC補足" },
+  { type:"field", key:"8-4",  label:"NexTone登録状況" },
+  { type:"field", key:"8-5",  label:"NexTone作品コード" },
+  { type:"field", key:"8-6",  label:"NexTone補足" },
+  { type:"field", key:"8-7",  label:"その他" },
+  { type:"field", key:"8-8",  label:"その他補足" },
+
+  { type:"section", title:"【自由記載欄】" },
+  { type:"field", key:"9-1",  label:"備考" },
+  { type:"field", key:"9-2",  label:"備考補足" },
+];
+
+const EMPTY_PLACEHOLDER = "未記入";
+
+/* ---------- 曲ごとに変わる項目（「新しい曲」でリセット） ---------- */
+const PER_SONG_FIELDS = new Set([
+  "1-1","1-2","1-3",         // タイトル系
+  "1-7","1-8",               // リリース日
+  "2-2","2-4","2-6","2-8",   // AI使用状況の補足（曲ごとに記述）
+  "3-3",                     // 使用バージョン（リリース日連動）
+  "4-1","4-2","4-3","4-4",   // 人間の創作関与
+  "5-1","5-2",               // 歌詞補足説明
+  "6-4","6-6",               // 公開URL等の固有値
+  "8-2","8-3","8-5","8-6",   // JASRAC/NexTone 作品コード
+  "9-1","9-2",               // 備考
+]);
+
+const isPerSong = key => PER_SONG_FIELDS.has(key);
+
+/* ---------- 長文フィールド（textarea） ---------- */
+const LONG_FIELDS = new Set(["4-1","4-3","5-1","9-1"]);
+
+/* ---------- ドロップダウン候補（datalist で自由記載と併用） ----------
+ * 値はあくまで候補。ユーザーは自由入力可能（datalist の仕様）。
+ * ※「補足」フィールドは候補リストを設けず、空欄を既定とする。
+ */
+const FIELD_OPTIONS = {
+  // 質問1 メイン
+  // ※ 1-9 作詞者 / 1-11 作曲者 / 1-13 編曲者 は場面ごとに異なるため自由記載（候補リスト無し）
+  "1-15":["あり","なし","著作権消滅"],
+  "1-17":["あり","なし","著作権消滅"],
+
+  // 質問2 メイン: 人間 / 人間/AI / AI
+  "2-1":["人間","人間/AI","AI"],
+  "2-3":["人間","人間/AI","AI"],
+  "2-5":["人間","人間/AI","AI"],
+  "2-7":["人間","人間/AI","AI"],
+
+  // 質問3 メイン
+  "3-1":["suno","udio","ChatGPT","Claude"],
+  "3-3":["V4.5","V4.5+","V5","V5.5"],
+
+  // 質問6 メイン
+  "6-1":["TuneCoreJapanより各配信サイトへ配信中","BIG UP!","Spotify for Artists"],
+  "6-3":["LinkCore","linktree"],
+  "6-5":["公開中","限定公開","未公開","非公開"],
+
+  // 質問7 メイン: あり / なし
+  "7-1":["あり","なし"],
+  "7-3":["あり","なし"],
+  "7-5":["あり","なし"],
+  "7-7":["あり","なし"],
+  "7-9":["あり","なし"],
+  "7-11":["あり","なし"],
+
+  // 7-13 著作権管理団体
+  "7-13":["JASRAC","NEXTONE","自由記述欄"],
+
+  // 質問8 メイン
+  "8-1":["登録あり","未登録","申請中"],
+  "8-4":["登録あり","未登録","申請中"],
+
+  // ※ 0-3 / 1-3,1-6,1-8,1-10,1-12,1-14,1-16,1-18 /
+  //    2-2,2-4,2-6,2-8 / 3-2,3-4 / 4-2,4-4 / 5-2 /
+  //    6-2,6-4,6-6 / 7-2,7-4,7-6,7-8,7-10,7-12,7-14 /
+  //    8-3,8-6,8-7,8-8 / 9-2 などの「補足」項目は候補リスト無し（空欄）
+};
+
+/* ---------- 初期値（空フォーム用） ----------
+ * ※「補足」フィールドはすべて空欄。
+ *    空欄のまま出力されると buildOutput で「未記入」に変換される。
+ */
+const INITIAL_DEFAULTS = {
+  // 基本情報
+  "0-1":"", "0-2":"", "0-3":"",
+  // 質問1
+  "1-1":"", "1-2":"", "1-3":"",
+  "1-4":"", "1-5":"", "1-6":"",
+  "1-7":"", "1-8":"",
+  "1-9":"晴一郎",      "1-10":"",
+  "1-11":"suno.ai",   "1-12":"",
+  "1-13":"",          "1-14":"",
+  "1-15":"あり",       "1-16":"",
+  "1-17":"著作権消滅", "1-18":"",
+  // 質問2
+  "2-1":"", "2-2":"",
+  "2-3":"", "2-4":"",
+  "2-5":"", "2-6":"",
+  "2-7":"", "2-8":"",
+  // 質問3
+  "3-1":"suno", "3-2":"",
+  "3-3":"",     "3-4":"",
+  // 質問4
+  "4-1":"", "4-2":"",
+  "4-3":"", "4-4":"",
+  // 質問5
+  "5-1":"", "5-2":"",
+  // 質問6
+  "6-1":"", "6-2":"",
+  "6-3":"", "6-4":"",
+  "6-5":"公開中", "6-6":"",
+  // 質問7
+  "7-1":"",  "7-2":"",
+  "7-3":"",  "7-4":"",
+  "7-5":"",  "7-6":"",
+  "7-7":"",  "7-8":"",
+  "7-9":"",  "7-10":"",
+  "7-11":"", "7-12":"",
+  "7-13":"", "7-14":"",
+  // 質問8
+  "8-1":"",      "8-2":"", "8-3":"",
+  "8-4":"未登録", "8-5":"", "8-6":"",
+  "8-7":"",      "8-8":"",
+  // 自由記載欄
+  "9-1":"", "9-2":"",
+};
+
+/* ---------- suno バージョン判定 ----------
+ * 2025-05-01 〜 V4.5
+ * 2025-07-01 〜 V4.5+
+ * 2025-09-25 〜 V5
+ * 2026-03-26 〜 V5.5
+ */
+const SUNO_VERSION_RULES = [
+  { from:"2026-03-26", ver:"V5.5"  },
+  { from:"2025-09-25", ver:"V5"    },
+  { from:"2025-07-01", ver:"V4.5+" },
+  { from:"2025-05-01", ver:"V4.5"  },
+];
+function normalizeDate(s){
+  if (!s) return null;
+  s = String(s).trim();
+  const m = s.match(/(\d{4})[年\/\-\.](\d{1,2})[月\/\-\.](\d{1,2})/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;
+  const iso = s.slice(0,10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  return null;
+}
+function deriveSunoVersion(dateStr){
+  const ymd = normalizeDate(dateStr);
+  if (!ymd) return null;
+  for (const r of SUNO_VERSION_RULES) if (ymd >= r.from) return r.ver;
+  return null;
+}
+
+/* ---------- iTunes Search API でリリース日取得（CORS可） ---------- */
+async function fetchReleaseDate(title, artist){
+  const term = encodeURIComponent(`${artist || ""} ${title || ""}`.trim());
+  if (!term) throw new Error("タイトルとアーティスト名が必要です");
+  const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=10&country=jp&lang=ja_jp`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`iTunes API HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data.results || data.results.length === 0) throw new Error("該当楽曲が見つかりません");
+  const norm = x => (x||"").toLowerCase().replace(/[\s　・·\-_/()（）「」『』【】［］\[\]]/g,"");
+  const tT = norm(title), tA = norm(artist);
+  let best = null;
+  for (const r of data.results) if (norm(r.trackName) === tT && norm(r.artistName) === tA){ best = r; break; }
+  if (!best) for (const r of data.results) if (norm(r.trackName) === tT){ best = r; break; }
+  if (!best) best = data.results[0];
+  return {
+    date: normalizeDate(best.releaseDate),
+    matchedTitle: best.trackName,
+    matchedArtist: best.artistName,
+  };
+}
+
+/* ---------- ver1.30 シート パーサ ----------
+ * 行形式: "<X-Y> <ラベル>：<値>" を吸収。複数行に渡る値も結合。
+ */
+function parseNewSheet(text){
+  const lines = text.replace(/\r\n?/g,"\n").split("\n");
+  // キー一覧
+  const keys = SCHEMA.filter(s=>s.type==="field").map(s=>s.key);
+  const keyRe = new RegExp("^\\s*(" + keys.map(k=>k.replace(/-/g,"\\-")).join("|") + ")\\s+([^：:]+?)\\s*[：:](.*)$");
+  const out = {};
+  let curKey = null;
+  for (const raw of lines){
+    const line = raw.replace(/\s+$/,"");
+    if (/^【.*】/.test(line) || /^[\s\-=]*$/.test(line) || /^FeatherTune/.test(line) || /^\s*-/.test(line)){
+      // セクション見出し・注意書きはキー継続を切るだけ（注意行の "-" もここで切る）
+      if (/^【.*】/.test(line) || /^FeatherTune/.test(line)) curKey = null;
+      if (curKey) {
+        // 注意書きや空行は値継続終了
+        if (line.trim() === "" || /^\s*-/.test(line) || /^FeatherTune/.test(line) || /^【/.test(line)){
+          curKey = null;
+        }
+      }
+      continue;
+    }
+    const m = line.match(keyRe);
+    if (m){
+      const k = m[1];
+      const val = m[3].replace(/^\s+/,""); // 先頭スペース除去（値内部の空白は保持）
+      out[k] = val;
+      curKey = k;
+    } else if (curKey && line.trim() !== ""){
+      out[curKey] = (out[curKey] ? out[curKey] + "\n" : "") + line;
+    } else if (line.trim() === ""){
+      curKey = null;
+    }
+  }
+  return out;
+}
+
+/* ---------- ver1.30 シート ビルダ ---------- */
+function buildOutput(values){
+  const lines = [];
+  lines.push("FeatherTune　音楽解析システム　設問シート　ver1.30");
+  lines.push("");
+
+  let lastSection = null;
+  const groupBreakAfter = new Set([
+    "0-3",
+    "1-3","1-6","1-8","1-10","1-12","1-14","1-16","1-18",
+    "2-2","2-4","2-6","2-8",
+    "3-2","3-4",
+    "4-2","4-4",
+    "5-1","5-2",
+    "6-2","6-4","6-6",
+    "7-2","7-4","7-6","7-8","7-10","7-12","7-14",
+    "8-3","8-6","8-8",
+    "9-2"
+  ]);
+  const pushBlank = ()=>{ if (lines.length>0 && lines[lines.length-1]!=="") lines.push(""); };
+
+  for (const item of SCHEMA){
+    if (item.type === "section"){
+      if (lastSection !== null) pushBlank();
+      lines.push(item.title);
+      lastSection = item.title;
+      continue;
+    }
+    let v = values[item.key];
+    if (v === undefined || v === "") v = EMPTY_PLACEHOLDER;
+    lines.push(`${item.key} ${item.label}：${v}`);
+    if (groupBreakAfter.has(item.key)) pushBlank();
+  }
+  pushBlank();
+  lines.push("【注意】");
+  lines.push("- 本シートは制作実態および作品情報を整理するための入力シートです。");
+  lines.push("- 本シートへの記入内容のみをもって、著作権成立や信託対象性を自動認定するものではありません。");
+  lines.push("- 特にAI作曲部分については、明確な根拠が示されない限り、レポート上で著作権対象として自動的に扱いません。");
+  lines.push("- JASRACおよびNexToneの登録情報は参考情報として扱います。");
+  return lines.join("\n");
+}
+
+/* ---------- フォーム描画 ---------- */
+function renderForm(){
+  const area = document.getElementById("formArea");
+  area.innerHTML = "";
+  let groupEl = null;
+
+  for (const item of SCHEMA){
+    if (item.type === "section"){
+      groupEl = document.createElement("div");
+      groupEl.className = "group";
+      const t = document.createElement("div");
+      t.className = "group-title";
+      t.textContent = item.title;
+      groupEl.appendChild(t);
+      area.appendChild(groupEl);
+      continue;
+    }
+    const row = document.createElement("div");
+    row.className = "field";
+
+    const label = document.createElement("label");
+    label.textContent = `${item.key} ${item.label}`;
+    label.htmlFor = `f_${item.key}`;
+    row.appendChild(label);
+
+    const v = state.values[item.key] ?? "";
+    let input;     // 実際の入力要素（テキスト/textarea）。状態の真実はここに保持
+    let mount;     // row へ追加するノード（input そのもの or select を含むラッパ）
+    let presetSel; // 候補select（存在する場合）
+
+    if (LONG_FIELDS.has(item.key)){
+      input = document.createElement("textarea");
+      input.rows = Math.min(8, Math.max(2, (v.split("\n").length||1)));
+      mount = input;
+    } else if (FIELD_OPTIONS[item.key]){
+      // select（候補プルダウン）＋ input（自由記述／実際の値）の組み合わせ
+      mount = document.createElement("div");
+      mount.className = "input-pair";
+
+      presetSel = document.createElement("select");
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "▼ 候補から選択";
+      opt0.disabled = true;
+      presetSel.appendChild(opt0);
+      for (const opt of FIELD_OPTIONS[item.key]){
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        presetSel.appendChild(o);
+      }
+      // 現値が候補にあれば選択、無ければプレースホルダ
+      if (FIELD_OPTIONS[item.key].includes(v)) presetSel.value = v;
+      else presetSel.selectedIndex = 0;
+      mount.appendChild(presetSel);
+
+      input = document.createElement("input");
+      input.type = "text";
+      mount.appendChild(input);
+
+      // select 変更 → input にコピーして同じ更新フローへ
+      presetSel.addEventListener("change", ()=>{
+        if (!presetSel.value) return;
+        input.value = presetSel.value;
+        handleFieldChange(item.key, presetSel.value);
+      });
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+      mount = input;
+    }
+    input.id = `f_${item.key}`;
+    input.value = v;
+    input.dataset.key = item.key;
+    input.addEventListener("input", e=>{
+      handleFieldChange(item.key, e.target.value);
+      // select が並んでいる場合、自由入力時は候補に一致しなければプレースホルダへ戻す
+      if (presetSel){
+        if (FIELD_OPTIONS[item.key].includes(e.target.value)) presetSel.value = e.target.value;
+        else presetSel.selectedIndex = 0;
+      }
+    });
+    row.appendChild(mount);
+
+    const cat = document.createElement("span");
+    const isCommon = !isPerSong(item.key);
+    cat.className = `cat ${isCommon ? "common" : "per-song"}`;
+    cat.textContent = isCommon ? "共通" : "曲ごと";
+    row.appendChild(cat);
+
+    (groupEl || area).appendChild(row);
+
+    // 1-7 リリース日：iTunes 取得ボタン
+    if (item.key === "1-7"){
+      const ctrlRow = document.createElement("div");
+      ctrlRow.className = "fetch-row";
+      ctrlRow.appendChild(document.createElement("div"));
+      const btnWrap = document.createElement("div");
+      const fetchBtn = document.createElement("button");
+      fetchBtn.type = "button";
+      fetchBtn.className = "secondary";
+      fetchBtn.textContent = "配信サイトから取得（iTunes/Apple Music）";
+      btnWrap.appendChild(fetchBtn);
+      ctrlRow.appendChild(btnWrap);
+      ctrlRow.appendChild(document.createElement("div"));
+      const status = document.createElement("div");
+      status.className = "fetch-status";
+      status.textContent = "1-1 タイトル と 1-4 アーティスト名 から検索。取得成功時は 3-3 も自動算出。";
+      ctrlRow.appendChild(status);
+
+      fetchBtn.addEventListener("click", async ()=>{
+        const title = state.values["1-1"] || "";
+        const artist = state.values["1-4"] || "";
+        if (!title || title === EMPTY_PLACEHOLDER){
+          status.textContent = "1-1 タイトルを入力してください";
+          status.className = "fetch-status error"; return;
+        }
+        fetchBtn.disabled = true;
+        status.textContent = "iTunes/Apple Music を検索中…";
+        status.className = "fetch-status";
+        try{
+          const r = await fetchReleaseDate(title, artist);
+          if (!r.date) throw new Error("リリース日を解析できませんでした");
+          state.values["1-7"] = r.date;
+          document.getElementById("f_1-7").value = r.date;
+          syncPresetSelect("1-7", r.date);
+          const ver = deriveSunoVersion(r.date);
+          if (ver){
+            state.values["3-3"] = ver;
+            state.autoDerived33 = true;
+            document.getElementById("f_3-3").value = ver;
+            syncPresetSelect("3-3", ver);
+          }
+          status.innerHTML =
+            `取得成功：「${escapeHtml(r.matchedTitle)}」/ ${escapeHtml(r.matchedArtist)} → ${r.date}` +
+            (ver ? ` ／ suno ${escapeHtml(ver)}` : "");
+          status.className = "fetch-status ok";
+          autoSaveTemplate();
+          updatePreview();
+        }catch(err){
+          status.textContent = "取得失敗：" + err.message + "（手入力してください）";
+          status.className = "fetch-status error";
+        }finally{
+          fetchBtn.disabled = false;
+        }
+      });
+      (groupEl || area).appendChild(ctrlRow);
+    }
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- フィールド値変更の統一ハンドラ ---------- */
+function syncPresetSelect(key, value){
+  const inp = document.getElementById(`f_${key}`);
+  if (!inp) return;
+  const wrap = inp.parentElement;
+  if (!wrap || !wrap.querySelector) return;
+  const sel = wrap.querySelector("select");
+  if (!sel) return;
+  if (FIELD_OPTIONS[key] && FIELD_OPTIONS[key].includes(value)) sel.value = value;
+  else sel.selectedIndex = 0;
+}
+function handleFieldChange(key, value){
+  state.values[key] = value;
+  autoSaveTemplate();
+  if (key === "1-7"){
+    const cur = state.values["3-3"];
+    const overridable = !cur || cur === "" || cur === EMPTY_PLACEHOLDER || state.autoDerived33;
+    if (overridable){
+      const ver = deriveSunoVersion(value);
+      if (ver){
+        state.values["3-3"] = ver;
+        state.autoDerived33 = true;
+        const inp33 = document.getElementById("f_3-3");
+        if (inp33) inp33.value = ver;
+        syncPresetSelect("3-3", ver);
+      }
+    }
+  } else if (key === "3-3"){
+    state.autoDerived33 = false; // 手動編集
+  }
+  updatePreview();
+}
+
+/* ---------- 状態 ---------- */
+const state = {
+  values: { ...INITIAL_DEFAULTS },
+  autoDerived33: true,  // 3-3 が自動算出値か手動編集か
+};
+let lastInputFileHandle = null;
+const TEMPLATE_KEY = "feathertune_template_v1";
+
+/* ---------- テンプレート保存／読込 ---------- */
+function extractTemplate(values){
+  const t = {};
+  for (const k of Object.keys(values)){
+    if (!isPerSong(k)) t[k] = values[k];
+  }
+  return t;
+}
+function applyTemplate(tmpl){
+  for (const k of Object.keys(tmpl)){
+    if (!isPerSong(k)) state.values[k] = tmpl[k];
+  }
+}
+function autoSaveTemplate(){
+  try{
+    localStorage.setItem(TEMPLATE_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      values: extractTemplate(state.values),
+    }));
+    setTemplateStatus("ブラウザに自動保存済");
+  }catch(e){ /* localStorage 失敗時は無視 */ }
+}
+function loadTemplateFromBrowser(){
+  try{
+    const raw = localStorage.getItem(TEMPLATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function setTemplateStatus(s){
+  document.getElementById("templateStatus").textContent = s || "";
+}
+
+/* ---------- プレビュー / ダウンロード ---------- */
+function updatePreview(){
+  document.getElementById("preview").value = buildOutput(state.values);
+}
+function safeFilename(){
+  const raw = state.values["1-1"];
+  const title = (!raw || raw === EMPTY_PLACEHOLDER ? "untitled" : raw)
+                  .replace(/[\\/:*?"<>|]+/g,"_").trim() || "untitled";
+  return `${title}_FeatherTune_設問シート_ver1.30.txt`;
+}
+
+/* ---------- イベント結線 ---------- */
+const fileInput     = document.getElementById("fileInput");
+const openFileBtn   = document.getElementById("openFileBtn");
+const newSongBtn    = document.getElementById("newSongBtn");
+const clearAllBtn   = document.getElementById("clearAllBtn");
+const saveTemplateBtn = document.getElementById("saveTemplateBtn");
+const loadTemplateBtn = document.getElementById("loadTemplateBtn");
+const exportTemplateBtn = document.getElementById("exportTemplateBtn");
+const importTemplateBtn = document.getElementById("importTemplateBtn");
+const importTemplateInput = document.getElementById("importTemplateInput");
+const folderHint    = document.getElementById("folderHint");
+const refreshBtn    = document.getElementById("refreshBtn");
+const downloadBtn   = document.getElementById("downloadBtn");
+const copyBtn       = document.getElementById("copyBtn");
+const preview       = document.getElementById("preview");
+
+const fsaSupported = "showOpenFilePicker" in window;
+if (fsaSupported){
+  openFileBtn.hidden = false;
+  fileInput.style.display = "none";
+  openFileBtn.addEventListener("click", async ()=>{
+    try{
+      const [handle] = await window.showOpenFilePicker({
+        types:[{ description:"設問シート ver1.30", accept:{ "text/plain":[".txt",".md"] } }],
+        excludeAcceptAllOption:false, multiple:false,
+        id:"feathertune_input",
+      });
+      lastInputFileHandle = handle;
+      const f = await handle.getFile();
+      const text = await f.text();
+      ingestSheetText(text, f.name + "（フォルダ記憶済）");
+      folderHint.style.display = "none";
+    }catch(e){
+      if (e.name !== "AbortError") alert("ファイルを開けませんでした：" + e.message);
+    }
+  });
+}
+
+fileInput.addEventListener("change", e=>{
+  const f = e.target.files[0]; if (!f) return;
+  lastInputFileHandle = null;
+  if (fsaSupported) folderHint.style.display = "block";
+  const reader = new FileReader();
+  reader.onload = ()=> ingestSheetText(reader.result, f.name);
+  reader.readAsText(f,"UTF-8");
+});
+
+function ingestSheetText(text, name){
+  const parsed = parseNewSheet(text);
+  // 既存値を保持しつつ、上書きできるものは上書き
+  for (const k of Object.keys(parsed)){
+    if (parsed[k] !== undefined && parsed[k] !== "") state.values[k] = parsed[k];
+  }
+  state.autoDerived33 = false;
+  renderForm();
+  updatePreview();
+  autoSaveTemplate();
+  setTemplateStatus("読み込み完了：" + (name || ""));
+}
+
+newSongBtn.addEventListener("click", ()=>{
+  // 共通項目は維持、曲ごと項目を INITIAL_DEFAULTS（≒未記入）に戻す
+  for (const k of Object.keys(INITIAL_DEFAULTS)){
+    if (isPerSong(k)) state.values[k] = INITIAL_DEFAULTS[k];
+  }
+  state.autoDerived33 = true;
+  renderForm();
+  updatePreview();
+  setTemplateStatus("曲ごと項目をリセットしました（共通項目は維持）");
+});
+
+// 全フィールドが完全に空欄の値マップ（1-9="晴一郎" などの既定値も含めず）
+const BLANK_VALUES = (()=>{
+  const o = {};
+  for (const item of SCHEMA) if (item.type === "field") o[item.key] = "";
+  return o;
+})();
+
+clearAllBtn.addEventListener("click", ()=>{
+  if (!confirm("全項目を空欄にし、ブラウザに保存されたテンプレートも空に上書きします（次回起動時の自動復元も空欄になります）。よろしいですか？")) return;
+  state.values = { ...BLANK_VALUES };
+  state.autoDerived33 = true;
+  // 保存テンプレートも空に上書き（INITIAL_DEFAULTS の自動復元を抑止）
+  try{
+    localStorage.setItem(TEMPLATE_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      values: extractTemplate(BLANK_VALUES),
+    }));
+  }catch(e){ /* noop */ }
+  renderForm();
+  updatePreview();
+  setTemplateStatus("全てクリアしました（テンプレートも空に上書き）");
+});
+
+saveTemplateBtn.addEventListener("click", ()=>{
+  autoSaveTemplate();
+  setTemplateStatus("共通項目をブラウザに保存しました");
+});
+
+loadTemplateBtn.addEventListener("click", ()=>{
+  const t = loadTemplateFromBrowser();
+  if (!t){ setTemplateStatus("保存済テンプレートはありません"); return; }
+  applyTemplate(t.values || {});
+  renderForm();
+  updatePreview();
+  setTemplateStatus("テンプレートを読み込みました（保存日時：" + (t.savedAt||"不明") + "）");
+});
+
+exportTemplateBtn.addEventListener("click", ()=>{
+  const data = JSON.stringify({
+    type:"feathertune_template",
+    version:"1.30",
+    savedAt: new Date().toISOString(),
+    values: extractTemplate(state.values),
+  }, null, 2);
+  const blob = new Blob([data], { type:"application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "feathertune_template.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  setTemplateStatus("テンプレートを .json に書き出しました");
+});
+
+importTemplateBtn.addEventListener("click", ()=> importTemplateInput.click());
+importTemplateInput.addEventListener("change", e=>{
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const obj = JSON.parse(reader.result);
+      const vals = obj.values || obj;
+      applyTemplate(vals);
+      renderForm(); updatePreview(); autoSaveTemplate();
+      setTemplateStatus("テンプレート .json を読み込みました：" + f.name);
+    }catch(err){ alert("テンプレートを読み込めませんでした：" + err.message); }
+  };
+  reader.readAsText(f,"UTF-8");
+});
+
+refreshBtn.addEventListener("click", updatePreview);
+
+downloadBtn.addEventListener("click", async ()=>{
+  updatePreview();
+  const filename = safeFilename();
+  const data = preview.value;
+  if ("showSaveFilePicker" in window){
+    try{
+      if (!lastInputFileHandle && fsaSupported){
+        const ok = confirm(
+          "入力フォルダがハンドル経由で取得されていないため、" +
+          "保存先のデフォルトはブラウザ既定（通常は Documents）になります。\n\n" +
+          "入力ファイルと同じフォルダに保存したい場合は「キャンセル」を押し、" +
+          "「📂 既存シートを開く」からファイルを読み込み直してください。\n\n" +
+          "このまま続行しますか？"
+        );
+        if (!ok) return;
+      }
+      const opts = {
+        suggestedName: filename,
+        types:[{ description:"設問シート", accept:{ "text/plain":[".txt"] } }],
+        id: "feathertune_save_" + Date.now().toString(36),
+      };
+      if (lastInputFileHandle) opts.startIn = lastInputFileHandle;
+      const handle = await window.showSaveFilePicker(opts);
+      const w = await handle.createWritable();
+      await w.write(data); await w.close();
+      return;
+    }catch(e){
+      if (e.name === "AbortError") return;
+      console.warn("showSaveFilePicker failed:", e);
+    }
+  }
+  const blob = new Blob([data], { type:"text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+copyBtn.addEventListener("click", async ()=>{
+  updatePreview();
+  try{
+    await navigator.clipboard.writeText(preview.value);
+    copyBtn.textContent = "コピーしました";
+    setTimeout(()=>copyBtn.textContent = "クリップボードへコピー", 1500);
+  }catch(e){ alert("コピーに失敗しました：" + e.message); }
+});
+
+/* ---------- 起動時 ---------- */
+(function init(){
+  // 保存テンプレートがあれば共通項目を自動復元
+  const t = loadTemplateFromBrowser();
+  if (t && t.values){
+    applyTemplate(t.values);
+    setTemplateStatus("保存済テンプレートを自動復元しました（" + (t.savedAt||"") + "）");
+  } else {
+    setTemplateStatus("テンプレート未保存。記入後に💾ボタンで保存できます。");
+  }
+  renderForm();
+  updatePreview();
+})();
+</script>
+</body>
+</html>
