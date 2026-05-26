@@ -2584,6 +2584,63 @@ h3 {
   text-underline-offset: 0.2em;
 }
 
+.help-input-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.help-input-form label {
+  color: var(--color-gold-soft);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.help-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.help-input-row input {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0.74rem 0.9rem;
+  border: 1px solid rgba(140, 244, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.055);
+  font: inherit;
+  outline: none;
+}
+
+.help-input-row input::placeholder {
+  color: var(--color-dim);
+}
+
+.help-input-row input:focus {
+  border-color: rgba(140, 244, 255, 0.58);
+  box-shadow: 0 0 0 3px rgba(140, 244, 255, 0.08);
+}
+
+.help-input-row button {
+  min-height: 48px;
+  padding: 0.74rem 1rem;
+  border: 1px solid rgba(216, 183, 106, 0.44);
+  border-radius: var(--radius-sm);
+  color: var(--color-bg);
+  background: linear-gradient(135deg, var(--color-gold-soft), var(--color-gold));
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.help-input-note {
+  color: var(--color-dim);
+  font-size: 0.78rem;
+}
+
 .help-quick-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3211,6 +3268,10 @@ h3 {
   }
 
   .help-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .help-input-row {
     grid-template-columns: 1fr;
   }
 
