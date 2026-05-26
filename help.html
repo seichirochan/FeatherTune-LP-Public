@@ -69,6 +69,12 @@
               </p>
             </div>
             <form class="help-input-form" data-help-form>
+              <label class="help-consent">
+                <input type="checkbox" data-help-consent />
+                <span>
+                  この自動案内は参考情報です。内容が不正確な場合があるため、重要な確認は公式ページまたはお問い合わせで確認します。
+                </span>
+              </label>
               <label for="help-question">質問を書く</label>
               <div class="help-input-row">
                 <input
@@ -78,8 +84,9 @@
                   autocomplete="off"
                   placeholder="例: ORIGIN登録はどこから？"
                   data-help-input
+                  disabled
                 />
-                <button type="submit">聞く</button>
+                <button type="submit" data-help-submit disabled>聞く</button>
               </div>
               <p class="help-input-note">入力内容は送信されません。このページ内だけで案内を選びます。</p>
             </form>

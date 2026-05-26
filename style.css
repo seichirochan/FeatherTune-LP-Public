@@ -2589,11 +2589,39 @@ h3 {
   gap: 0.55rem;
 }
 
+.help-consent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(216, 183, 106, 0.28);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  background: rgba(216, 183, 106, 0.055);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.help-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.25rem;
+  accent-color: var(--color-gold);
+}
+
 .help-input-form label {
   color: var(--color-gold-soft);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0.08em;
+}
+
+.help-input-form .help-consent {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .help-input-row {
@@ -2621,6 +2649,12 @@ h3 {
 .help-input-row input:focus {
   border-color: rgba(140, 244, 255, 0.58);
   box-shadow: 0 0 0 3px rgba(140, 244, 255, 0.08);
+}
+
+.help-input-row input:disabled,
+.help-input-row button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
 }
 
 .help-input-row button {

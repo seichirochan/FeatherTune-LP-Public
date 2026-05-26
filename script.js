@@ -6,6 +6,8 @@ const aiMark = document.querySelector("[data-ai-mark]");
 const helpAnswer = document.querySelector("[data-help-answer]");
 const helpForm = document.querySelector("[data-help-form]");
 const helpInput = document.querySelector("[data-help-input]");
+const helpConsent = document.querySelector("[data-help-consent]");
+const helpSubmit = document.querySelector("[data-help-submit]");
 
 const helpTopics = {
   about: {
@@ -189,8 +191,29 @@ document.querySelectorAll("[data-help-topic]").forEach((button) => {
   button.addEventListener("click", () => renderHelpAnswer(button.dataset.helpTopic));
 });
 
+const updateHelpConsentState = () => {
+  const enabled = Boolean(helpConsent?.checked);
+
+  if (helpInput) {
+    helpInput.disabled = !enabled;
+  }
+
+  if (helpSubmit) {
+    helpSubmit.disabled = !enabled;
+  }
+};
+
+helpConsent?.addEventListener("change", updateHelpConsentState);
+updateHelpConsentState();
+
 helpForm?.addEventListener("submit", (event) => {
   event.preventDefault();
+
+  if (!helpConsent?.checked) {
+    renderHelpAnswer("fallback");
+    return;
+  }
+
   const topicKey = detectHelpTopic(helpInput?.value ?? "");
   renderHelpAnswer(topicKey);
 });
