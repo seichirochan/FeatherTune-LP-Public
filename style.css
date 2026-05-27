@@ -2044,6 +2044,30 @@ h3 {
   margin-bottom: var(--space-md);
 }
 
+.reception-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.reception-product-link {
+  display: grid;
+  gap: 0.65rem;
+  color: var(--color-ink);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.reception-product-link .reception-visual {
+  margin-bottom: 0;
+}
+
+.reception-product-link span {
+  color: var(--color-cyan);
+  font-size: 0.9rem;
+}
+
 .edition-hero-visual {
   max-width: 1040px;
   margin: 0 auto var(--space-lg);
@@ -3092,6 +3116,7 @@ h3 {
 
   .do-dont-grid,
   .asset-lanes,
+  .reception-product-grid,
   .three-columns,
   .delivery-timeline {
     grid-template-columns: 1fr;
