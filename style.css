@@ -1982,12 +1982,24 @@ h3 {
   transform: none;
 }
 
+.showcase-section-heading {
+  margin-bottom: var(--space-lg);
+}
+
+.showcase-grid .sample-card {
+  min-height: 280px;
+}
+
 .sample-extension {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-lg);
   padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.sample-extension.showcase-status-panel {
+  align-items: start;
 }
 
 .sample-extension-actions {
