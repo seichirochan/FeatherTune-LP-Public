@@ -2029,6 +2029,26 @@ h3 {
   padding: var(--space-lg);
 }
 
+.reception-visual,
+.edition-hero-visual {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid rgba(140, 244, 255, 0.2);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.reception-visual {
+  margin-bottom: var(--space-md);
+}
+
+.edition-hero-visual {
+  max-width: 1040px;
+  margin: 0 auto var(--space-lg);
+}
+
 .route-card-primary,
 .origin-pass {
   border-color: rgba(216, 183, 106, 0.34);
