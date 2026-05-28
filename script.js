@@ -22,9 +22,9 @@ const helpTopics = {
   origin: {
     title: "ORIGIN登録したい",
     body:
-      "まずはORIGIN登録フォームから始めます。登録特典として初回1回・1曲までORIGIN分析を受けられます。メールアドレスが正本で、Discord参加は任意です。",
+      "まずはORIGIN参加希望メールから始めます。登録特典として初回1回・1曲までORIGIN分析を受けられます。メールアドレスが正本で、Discord参加は任意です。",
     links: [
-      ["ORIGIN登録フォームを開く", "https://docs.google.com/forms/d/e/1FAIpQLScmKYl528g_DqiLRK5ZPPgFjS2ex607TepTx1w34TiYIlHdcQ/viewform"],
+      ["ORIGIN参加希望をメールする", "mailto:contact@feathertune.com?subject=ORIGIN%E5%8F%82%E5%8A%A0%E5%B8%8C%E6%9C%9B"],
       ["ORIGINの流れを見る", "origin.html"],
     ],
   },
