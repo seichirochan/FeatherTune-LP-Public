@@ -22,9 +22,9 @@ const helpTopics = {
   origin: {
     title: "ORIGIN登録したい",
     body:
-      "まずはORIGIN参加希望メールから始めます。登録特典として初回1回・1曲までORIGIN分析を受けられます。メールアドレスが正本で、Discord参加は任意です。",
+      "まずはORIGIN登録フォームから始めます。登録特典として初回1回・1曲までORIGIN分析を受けられます。フォーム回答とメールアドレスが正本で、Discord参加は任意です。",
     links: [
-      ["ORIGIN参加希望をメールする", "mailto:contact@feathertune.com?subject=ORIGIN%E5%8F%82%E5%8A%A0%E5%B8%8C%E6%9C%9B"],
+      ["ORIGIN登録フォームを開く", "https://docs.google.com/forms/d/e/1FAIpQLScmHJ3drWOM7LKGkZBH63f2toCiUhpDbWH7VKj77cbA4EPs6Q/viewform"],
       ["ORIGINの流れを見る", "origin.html"],
     ],
   },
@@ -49,9 +49,9 @@ const helpTopics = {
   discord: {
     title: "Discordは必要？",
     body:
-      "Discord参加は任意です。コミュニティ参加、質問、共有には便利ですが、連絡の正本はメールアドレスです。気軽な待合室くらいに考えてください。",
+      "Discord参加は任意です。コミュニティ参加、質問、共有には便利ですが、招待はORIGIN登録後の案内で共有します。気軽な待合室くらいに考えてください。",
     links: [
-      ["Discordに参加する", "https://discord.gg/W6tg5UJN"],
+      ["Discord参加の流れを見る", "origin.html#discord"],
       ["やさしいルールを見る", "guide.html"],
     ],
   },
