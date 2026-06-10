@@ -3792,6 +3792,20 @@ h3 {
 .rank-chip-b { background: linear-gradient(120deg, #b6a6ff, var(--color-violet)); }
 .rank-chip-c { background: linear-gradient(120deg, #8cf4ff, #4aa7c8); }
 
+.special-kicker {
+  display: inline-block;
+  margin-right: 0.6rem;
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  vertical-align: middle;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), #f3b6d6 50%, var(--color-cyan));
+  box-shadow: var(--shadow-gold);
+}
+
 .special-badge-row {
   display: flex;
   flex-wrap: wrap;
