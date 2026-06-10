@@ -3583,3 +3583,259 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* What's New / status board (現在の状況) + CRS stance — added 2026-06-10 */
+.status-section {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+.status-board {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-glass);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(8px);
+}
+
+.status-board-head h2 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.status-board-lead {
+  color: var(--color-muted);
+  margin: 0 0 1.25rem;
+}
+
+.status-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.status-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: rgba(7, 11, 25, 0.5);
+}
+
+.status-list li p {
+  margin: 0;
+  color: var(--color-ink);
+}
+
+.status-tag {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), var(--color-gold));
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.crs-stance-note {
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
+
+/* 個性の見える化 / 称号システム (title system) — added 2026-06-10 */
+.title-system .section-heading {
+  max-width: 720px;
+  margin: 0 auto var(--space-lg);
+  text-align: center;
+}
+
+.title-example {
+  max-width: 760px;
+  margin: 0 auto var(--space-lg);
+  padding: clamp(1.25rem, 3.5vw, 2.25rem);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, rgba(108, 85, 255, 0.14), rgba(12, 22, 48, 0.72));
+  box-shadow: var(--shadow-soft);
+}
+
+.title-example-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.875rem;
+  margin-bottom: 0.875rem;
+}
+
+.title-example-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold-soft);
+}
+
+.title-example-song {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.title-type-name {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+.title-type-desc {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted);
+}
+
+.title-example-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.title-mood {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--color-ink);
+  background: rgba(7, 11, 25, 0.5);
+}
+
+.title-example-note {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-dim);
+}
+
+.title-block {
+  max-width: var(--max-width);
+  margin: 0 auto var(--space-lg);
+}
+
+.title-block-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.title-block-lead {
+  margin: 0 0 1.1rem;
+  color: var(--color-muted);
+}
+
+.title-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.title-type-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-glass);
+}
+
+.title-type-card strong {
+  font-size: 1rem;
+  color: var(--color-ink);
+}
+
+.title-type-card span {
+  font-size: 0.8rem;
+  color: var(--color-dim);
+}
+
+.rank-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.rank-chip {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-bg);
+  background: var(--color-muted);
+  white-space: nowrap;
+}
+
+.rank-chip-s { background: linear-gradient(120deg, var(--color-gold-soft), var(--color-gold)); }
+.rank-chip-a { background: linear-gradient(120deg, var(--color-cyan), var(--color-blue)); color: var(--color-bg); }
+.rank-chip-b { background: linear-gradient(120deg, #b6a6ff, var(--color-violet)); }
+.rank-chip-c { background: linear-gradient(120deg, #8cf4ff, #4aa7c8); }
+
+.special-kicker {
+  display: inline-block;
+  margin-right: 0.6rem;
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  vertical-align: middle;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), #f3b6d6 50%, var(--color-cyan));
+  box-shadow: var(--shadow-gold);
+}
+
+.special-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.special-badge {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), #f3b6d6 45%, var(--color-cyan));
+  box-shadow: var(--shadow-gold);
+  white-space: nowrap;
+}
+
+.special-badge-note {
+  margin: 0;
+  flex: 1 1 240px;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.title-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: var(--space-md);
+}
