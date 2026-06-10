@@ -3791,7 +3791,32 @@ h3 {
 .rank-chip-a { background: linear-gradient(120deg, var(--color-cyan), var(--color-blue)); color: var(--color-bg); }
 .rank-chip-b { background: linear-gradient(120deg, #b6a6ff, var(--color-violet)); }
 .rank-chip-c { background: linear-gradient(120deg, #8cf4ff, #4aa7c8); }
-.rank-chip-d { background: linear-gradient(120deg, #f3b6d6, #d76aa8); }
+
+.special-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.special-badge {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), #f3b6d6 45%, var(--color-cyan));
+  box-shadow: var(--shadow-gold);
+  white-space: nowrap;
+}
+
+.special-badge-note {
+  margin: 0;
+  flex: 1 1 240px;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
 
 .title-actions {
   display: flex;
