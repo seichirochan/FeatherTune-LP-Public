@@ -3583,3 +3583,78 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* What's New / status board (現在の状況) + CRS stance — added 2026-06-10 */
+.status-section {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+.status-board {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-glass);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(8px);
+}
+
+.status-board-head h2 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.status-board-lead {
+  color: var(--color-muted);
+  margin: 0 0 1.25rem;
+}
+
+.status-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.status-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: rgba(7, 11, 25, 0.5);
+}
+
+.status-list li p {
+  margin: 0;
+  color: var(--color-ink);
+}
+
+.status-tag {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-bg);
+  background: linear-gradient(120deg, var(--color-gold-soft), var(--color-gold));
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.crs-stance-note {
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
