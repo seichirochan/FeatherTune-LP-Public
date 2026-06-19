@@ -3110,7 +3110,11 @@ h3 {
   .infographic-map,
   .infographic-split,
   .handoff-board {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero-content {
+    min-width: 0;
   }
 
   main {
