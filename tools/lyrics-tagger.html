@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeatherTune 歌詞タグ付けツール</title>
+<style>
+ :root{--bg:#faf8f5;--card:#fff;--accent:#6ea8a1;--accent-d:#4f857e;--tag:#f0e6d2;--tagb:#caa96a;--line:#e6e0d8;--text:#3a3530;}
+ *{box-sizing:border-box;}
+ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:var(--bg);color:var(--text);}
+ header{background:var(--accent);color:#fff;padding:14px 20px;}
+ header h1{margin:0;font-size:18px;font-weight:600;}
+ header p{margin:4px 0 0;font-size:12px;opacity:.92;}
+ .wrap{max-width:1000px;margin:0 auto;padding:16px;}
+ .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px;}
+ .card h2{margin:0 0 10px;font-size:14px;color:var(--accent-d);}
+ .titlerow{margin-bottom:10px;font-size:13px;}
+ .titlerow input{font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;width:60%;min-width:220px;font-family:inherit;}
+ .dropzone{border:2px dashed var(--tagb);border-radius:10px;padding:10px;transition:.15s;background:#fffdf8;}
+ .dropzone.over{background:#f3ead6;border-color:var(--accent);}
+ .dz-label{font-size:12px;color:#998f82;margin-bottom:6px;display:block;}
+ textarea{width:100%;min-height:130px;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px;font-family:inherit;resize:vertical;background:#fff;}
+ .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+ button{cursor:pointer;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-family:inherit;background:var(--accent);color:#fff;}
+ button.sub{background:#eee;color:#555;}
+ button:hover{opacity:.9;}
+ .tagpalette button{background:var(--tag);color:#7a5e25;border:1px solid var(--tagb);font-weight:600;width:100%;}
+ .tagpalette button:hover{background:var(--tagb);color:#fff;}
+ .editor{display:flex;gap:16px;flex-wrap:wrap;}
+ .lines{flex:1;min-width:280px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;}
+ .ln{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;}
+ .ln:last-child{border-bottom:none;}
+ .ln .num{color:#c4bdb2;font-size:11px;width:24px;text-align:right;flex:none;}
+ .ln.sel{background:#eef6f4;outline:2px solid var(--accent);outline-offset:-2px;}
+ .ln.tag{background:var(--tag);color:#7a5e25;font-weight:600;cursor:default;}
+ .ln.empty span:last-child{color:#ccc;font-style:italic;}
+ .ln .del{margin-left:auto;background:#e08a8a;color:#fff;border-radius:6px;padding:1px 8px;font-size:12px;cursor:pointer;}
+ .ln input.lineedit{flex:1;font-size:14px;padding:3px 6px;border:1px solid var(--accent);border-radius:6px;font-family:inherit;}
+ .rowtools{display:flex;gap:6px;margin-top:8px;}
+ .rowtools button{flex:1;font-size:12px;padding:6px;}
+ .tagdesc{margin-top:8px;padding:9px 11px;background:#fffdf8;border:1px solid var(--tagb);border-radius:8px;font-size:12px;line-height:1.55;min-height:70px;color:var(--text);}
+ .tagdesc .m{color:var(--accent-d);font-weight:600;}
+ .tagdesc .h{font-size:13px;}
+ .side{flex:none;width:200px;}
+ .side .tagpalette{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+ .hint{font-size:12px;color:#998f82;margin:6px 0;}
+ pre.preview{background:#2d2a26;color:#e8e2d8;border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;}
+ .notation{font-size:12px;margin-bottom:6px;}
+ .notation label{margin-right:12px;cursor:pointer;}
+ details.desc{margin:8px 0;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fffdf8;}
+ details.desc summary{cursor:pointer;color:var(--accent-d);font-weight:600;}
+ details.desc table{border-collapse:collapse;margin-top:8px;width:100%;}
+ details.desc th,details.desc td{border:1px solid var(--line);padding:4px 8px;text-align:left;font-size:12px;}
+ details.desc th{background:var(--tag);color:#7a5e25;}
+ .aibox{margin-top:8px;}
+ .aistat{width:100%;font-size:13px;color:var(--accent-d);margin-top:6px;font-weight:600;min-height:18px;}
+ .aibox input[type=password]{font-family:inherit;}
+ .warn{margin-top:10px;padding:10px 12px;background:#fff4f4;border:1px solid #e0a0a0;border-radius:8px;font-size:12px;line-height:1.65;color:#8a4a4a;}
+ .warn b{color:#a13d3d;}
+ details.help{margin-top:10px;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fffdf8;}
+ details.help summary{cursor:pointer;color:var(--accent-d);font-weight:600;}
+ details.help ol{margin:8px 0 4px;padding-left:20px;}
+ details.help li{margin:3px 0;line-height:1.5;}
+ #aiSetup>summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--accent-d);}
+ .foot{font-size:11px;color:#b3a89c;text-align:center;padding:12px;}
+</style>
+</head>
+<body>
+<header>
+ <h1>🐦 FeatherTune 歌詞タグ付けツール</h1>
+ <p>タイトルと歌詞を入力 → 行を選んで構成タグ（Verse・Chorus等）を挿入 → テキストファイルで保存</p>
+</header>
+<div class="wrap">
+
+ <div class="card">
+  <h2>① タイトル & 歌詞を入力</h2>
+  <div class="titlerow">タイトル: <input id="title" type="text" placeholder="曲のタイトル（ファイル名に使われます）" oninput="syncTitle(this.value)"></div>
+  <div class="dropzone" id="dropzone">
+   <span class="dz-label">📄 ここに .txt ファイルをドラッグ＆ドロップ、または下に直接貼り付け</span>
+   <textarea id="input" placeholder="ここに歌詞を貼り付け、またはファイルをドラッグ＆ドロップしてください。"></textarea>
+  </div>
+  <div class="row" style="margin-top:10px;">
+   <button onclick="loadFromTextarea()">この歌詞を読み込む</button>
+   <button class="sub" onclick="openFilePicker()">ファイルを読み込む(.txt)</button>
+   <input type="file" id="file" accept=".txt,text/plain" style="display:none" onchange="loadFromFileInput(event)">
+  </div>
+ </div>
+
+ <div class="card">
+  <details id="aiSetup">
+   <summary>🤖 AI構成判定の設定（任意・Gemini APIキー）</summary>
+   <div class="aibox">
+    <p class="hint">AIに歌詞の構成（Verse／Chorus等）を<b>意味から</b>判定させたい場合は、ご自身のGemini APIキーを設定してください。設定しなくても「それなりタグ付け」は使えます。</p>
+    <div class="row">
+     <input id="apiKey" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Gemini APIキーを貼り付け" style="flex:1;min-width:200px;padding:8px;border:1px solid var(--line);border-radius:8px;-webkit-text-security:disc;text-security:disc;">
+     <button class="sub" onclick="document.getElementById('apiKey').value='';setAiStatus('キーを消しました')">クリア</button>
+    </div>
+    <p class="hint">🔑 入力したキーは<b>このブラウザに一時的に保持</b>されます。<b>リロード（再読み込み）すると消えます</b>（安全のため永続保存はしません）。</p>
+    <p class="hint" id="aiStatus"></p>
+    <div class="warn">
+     <b>⚠️ APIキーの厳重な取り扱いについて</b><br>
+     ・APIキーは「あなただけのパスワード」です。<b>他人に教えない／SNS・公開リポジトリ・スクリーンショットに貼らない</b>でください。<br>
+     ・このアプリはキーを<b>あなたのブラウザ内だけ</b>で使用し、送信先はGoogleのAPIのみです。<b>FeatherTuneのサーバーやスタッフには一切送信・保存されません</b>。<br>
+     ・キーは<b>このブラウザに一時的に保持</b>され、<b>リロードすると消えます</b>（安全のため永続保存はしません）。共有PCでも使用後は画面を閉じれば残りません。<br>
+     ・使い終わったら「クリア」でいつでも消せます。<br>
+     ・万一の不正利用に備え、Google Cloud側で<b>使用量の上限設定</b>をおすすめします。
+    </div>
+    <details class="help">
+     <summary>📘 Gemini APIキーの取得方法</summary>
+     <ol>
+      <li><b>Google AI Studio</b>（aistudio.google.com）にアクセス</li>
+      <li>Googleアカウントで<b>ログイン</b></li>
+      <li>「<b>Get API key（APIキーを取得）</b>」をクリック</li>
+      <li>「<b>Create API key（APIキーを作成）</b>」を選択</li>
+      <li>表示されたキーを<b>コピー</b>して、上の入力欄に貼り付け</li>
+     </ol>
+     <p class="hint">無料利用枠があります（一定回数まで無料）。最新の料金・利用条件はGoogleの公式ページをご確認ください。</p>
+    </details>
+   </div>
+  </details>
+ </div>
+
+ <div class="card" id="editorCard" style="display:none;">
+  <h2>② 行を選んでタグを付ける</h2>
+  <div class="titlerow">タイトル: <input id="title2" type="text" placeholder="曲のタイトル（ファイル名に使われます）" oninput="syncTitle(this.value)"></div>
+  <div class="notation">
+   記法:
+   <label><input type="radio" name="nota" value="zen" checked onchange="render()"> ＜Verse＞（全角）</label>
+   <label><input type="radio" name="nota" value="kaku" onchange="render()"> [Verse]（半角角括弧）</label>
+  </div>
+  <p class="hint">歌詞の行をクリックして選択 → 右のタグボタンを押すと、その行の<b>前</b>にタグが入ります。タグ行の「×」で削除できます。タグ付き歌詞を読み込むと、既存タグも自動認識して編集できます。</p>
+  <div class="row" style="margin-bottom:12px;">
+   <button onclick="autoTag()">✨ それなりタグ付け（要修正）</button>
+   <button onclick="aiTag()">🤖 AIでそこそこタグ付け（要修正・要APIキー）</button>
+   <span class="hint">「それなり」は歌詞の繰り返しから推定（オフライン）。「AI」は意味から判定（要Gemini APIキー）。どちらも結果は手で直せます。</span>
+   <div id="aiInlineStatus" class="aistat"></div>
+  </div>
+  <div class="editor">
+   <div class="lines" id="lines"></div>
+   <div class="side">
+    <div class="tagpalette" id="palette"></div>
+    <div id="tagDesc" class="tagdesc">タグにマウスを乗せると、意味と使い所がここに表示されます。</div>
+    <div class="rowtools">
+     <button class="sub" onclick="insertBlank('before')">↑ 上に空行</button>
+     <button class="sub" onclick="insertBlank('after')">↓ 下に空行</button>
+    </div>
+    <p class="hint" id="selinfo">行を選択してください</p>
+    <p class="hint">歌詞行は<b>ダブルクリックで編集</b>、「×」で削除できます。</p>
+   </div>
+  </div>
+ </div>
+
+ <div class="card" id="previewCard" style="display:none;">
+  <h2>③ プレビュー & 保存</h2>
+  <pre class="preview" id="preview"></pre>
+  <div class="row" style="margin-top:10px;">
+   <button onclick="saveFile()">テキストファイルで保存</button>
+   <button class="sub" onclick="copyText()">クリップボードにコピー</button>
+   <button class="sub" onclick="resetKeepKey()">APIキーを保持して最初から</button>
+   <button class="sub" onclick="resetAll()">最初からやり直す</button>
+  </div>
+  <p class="hint" id="saveinfo"></p>
+ </div>
+
+</div>
+<div class="foot">FeatherTune ORIGIN — 歌詞タグ付けツール（オフライン動作・入力データは外部に送信されません）</div>
+
+<script>
+// 英語の構成タグ（プリコーラス含む）＋日本語の目安＋説明
+const TAGS = [
+  {en:"Intro",       ja:"イントロ",       meaning:"曲の導入部。まだ歌の本編に入る前の入口。",                 usage:"曲のいちばん最初に置く。短い演奏や静かな歌い出しで、曲の雰囲気・世界観・キーやテンポを提示してリスナーを引き込む。"},
+  {en:"Verse",       ja:"Aメロ／Bメロ",   meaning:"物語や状況を語っていく主部。サビへ向けて積み上げる部分。", usage:"サビの前に置く。情景や心情を順に語り、サビへの助走をつくる。1番・2番で歌詞が変わるのが一般的。日本語の『Aメロ→Bメロ』はどちらもVerseとして扱える。"},
+  {en:"Pre-Chorus",  ja:"プリコーラス",   meaning:"VerseからChorusへの橋渡し。期待感を高める助走区間。",      usage:"VerseとChorusの間に置く。メロディや言葉を少し高揚させ、『次に来るサビ』への期待・緊張を作って自然につなぐ。"},
+  {en:"Chorus",      ja:"サビ",           meaning:"曲の山場であり核。いちばん伝えたい部分。",                 usage:"最も伝えたいメッセージやキャッチーな旋律を置く。曲中で繰り返し登場し、リスナーの記憶に残る中心になる。"},
+  {en:"Post-Chorus", ja:"後サビ／フック", meaning:"サビ直後の余韻・印象づけ。",                               usage:"Chorusの直後に置く。短い反復フレーズや『ラララ』などで余韻と中毒性を残し、サビの印象を強める。"},
+  {en:"Bridge",      ja:"Cメロ／ブリッジ",meaning:"曲に変化・展開を与える転換部。",                           usage:"2番サビの後〜最後のサビの前に置くことが多い。それまでと違うメロディ・視点で流れを変え、ラストのクライマックスへ導く。通常は曲中1度だけ。"},
+  {en:"Final Chorus",ja:"大サビ／ラスサビ",meaning:"最後の最も盛り上がるサビ。曲のクライマックス。",           usage:"曲の終盤に置く最後のサビ。転調・音域アップ・コーラス追加などで最高潮を作ることが多い。"},
+  {en:"Interlude",   ja:"間奏",           meaning:"歌のない演奏だけの区間。",                                 usage:"歌と歌の間に置く。場面転換や呼吸の余白をつくり、次の展開へつなぐ。ギターソロ等もここ。"},
+  {en:"Outro",       ja:"アウトロ",       meaning:"曲の締めくくり・終結部。",                                 usage:"曲のいちばん最後に置く。余韻を残して締める。フレーズの繰り返しやフェードアウトで終わることが多い。"},
+];
+const EN_LIST = TAGS.map(t=>t.en);
+// 旧・日本語タグも認識して英語に正規化（後方互換）
+const JA_ALIAS = {
+  "イントロ":"Intro","Aメロ":"Verse","Bメロ":"Verse","Cメロ":"Bridge","サビ":"Chorus",
+  "プリコーラス":"Pre-Chorus","間奏":"Interlude","ブリッジ":"Bridge","大サビ":"Final Chorus",
+  "ラスサビ":"Final Chorus","アウトロ":"Outro","後サビ":"Post-Chorus","フック":"Post-Chorus",
+  "ファイナルコーラス":"Final Chorus"
+};
+
+let lines = [];
+let selId = null;
+let uid = 1;
+let fileHandle = null; // File System Access API のハンドル（読込元に保存するため）
+let editingId = null;  // 編集中の歌詞行ID
+
+const tagRe = /^\s*(?:＜(.+?)＞|<(.+?)>|\[(.+?)\])\s*$/;
+function normalizeTag(name){
+  const n = String(name||"").trim();
+  if(EN_LIST.includes(n)) return n;
+  // 大文字小文字ゆらぎ
+  const hit = EN_LIST.find(e=>e.toLowerCase()===n.toLowerCase());
+  if(hit) return hit;
+  if(JA_ALIAS[n]) return JA_ALIAS[n];
+  return null;
+}
+function detectTag(line){
+  const m = String(line).match(tagRe);
+  if(!m) return null;
+  return normalizeTag(m[1]||m[2]||m[3]||"");
+}
+
+function syncTitle(v){ ['title','title2'].forEach(function(id){ const e=document.getElementById(id); if(e) e.value=v; }); }
+function setTitleFromFilename(name){
+  const base = String(name||"").replace(/\.[^.]+$/,'');
+  if(base) syncTitle(base);
+}
+
+function loadFromTextarea(){
+  const v = document.getElementById('input').value;
+  if(!v.trim()){ alert('歌詞を入力してください'); return; }
+  fileHandle = null; // 貼り付けは保存先を毎回選択
+  buildLines(v);
+}
+// ファイル選択（File System Access API 優先・ハンドル保持で読込元に保存可）
+async function openFilePicker(){
+  if(window.showOpenFilePicker){
+    try{
+      const [h] = await window.showOpenFilePicker({types:[{description:'Text',accept:{'text/plain':['.txt']}}]});
+      fileHandle = h;
+      const f = await h.getFile();
+      setTitleFromFilename(f.name);
+      const text = await f.text();
+      document.getElementById('input').value = text;
+      buildLines(text);
+    }catch(e){ if(e && e.name==='AbortError') return; }
+  } else {
+    document.getElementById('file').click();
+  }
+}
+// フォールバック（API非対応ブラウザ）
+function loadFromFileInput(e){
+  const f = e.target.files[0]; if(!f) return;
+  fileHandle = null;
+  setTitleFromFilename(f.name);
+  const r = new FileReader();
+  r.onload = ()=>{ document.getElementById('input').value = r.result; buildLines(r.result); };
+  r.readAsText(f,'utf-8');
+}
+
+// ドラッグ＆ドロップ
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', ()=> dz.classList.remove('over'));
+dz.addEventListener('drop', async e=>{
+  e.preventDefault(); dz.classList.remove('over');
+  const items = e.dataTransfer.items;
+  if(items && items[0] && items[0].getAsFileSystemHandle){
+    try{
+      const h = await items[0].getAsFileSystemHandle();
+      if(h && h.kind==='file'){
+        fileHandle = h;
+        const f = await h.getFile();
+        setTitleFromFilename(f.name);
+        const text = await f.text();
+        document.getElementById('input').value = text;
+        buildLines(text);
+        return;
+      }
+    }catch(err){}
+  }
+  const f = e.dataTransfer.files[0];
+  if(f){
+    fileHandle = null;
+    setTitleFromFilename(f.name);
+    const text = await f.text();
+    document.getElementById('input').value = text;
+    buildLines(text);
+  }
+});
+
+function buildLines(text){
+  lines = []; uid = 1; selId = null;
+  String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').forEach(raw=>{
+    const sec = detectTag(raw);
+    if(sec) lines.push({id:uid++, kind:'tag', section:sec});
+    else lines.push({id:uid++, kind:'lyric', text:raw});
+  });
+  document.getElementById('editorCard').style.display='block';
+  document.getElementById('previewCard').style.display='block';
+  buildPalette(); render();
+}
+function buildPalette(){
+  const p = document.getElementById('palette'); p.innerHTML='';
+  TAGS.forEach(t=>{ const b=document.createElement('button'); b.textContent=t.en; b.title=t.ja+'（'+t.meaning+'）\n使い所: '+t.usage;
+    b.onmouseenter=()=>showTagDesc(t); b.onfocus=()=>showTagDesc(t); b.onclick=()=>insertTag(t.en); p.appendChild(b); });
+}
+function showTagDesc(t){
+  document.getElementById('tagDesc').innerHTML =
+    '<span class="h"><b>'+t.en+'</b>（'+t.ja+'）</span><br>'
+    +'<span class="m">意味:</span> '+t.meaning+'<br>'
+    +'<span class="m">使い所:</span> '+t.usage;
+}
+function selectLine(id){ selId=id; render(); }
+function insertTag(section){
+  if(selId==null){ alert('先に歌詞の行を選んでください'); return; }
+  const idx = lines.findIndex(l=>l.id===selId);
+  if(idx<0) return;
+  lines.splice(idx,0,{id:uid++, kind:'tag', section:section});
+  render();
+}
+function delLine(id){ lines=lines.filter(l=>l.id!==id); if(selId===id) selId=null; if(editingId===id) editingId=null; render(); }
+function commitEdit(id,val){ const l=lines.find(x=>x.id===id); if(l) l.text=val; editingId=null; render(); }
+function insertBlank(pos){
+  if(selId==null){ alert('基準となる歌詞の行を選んでください'); return; }
+  const idx=lines.findIndex(l=>l.id===selId); if(idx<0) return;
+  const at = pos==='after' ? idx+1 : idx;
+  lines.splice(at,0,{id:uid++, kind:'lyric', text:''});
+  render();
+}
+
+// 歌詞の繰り返しパターンから構成タグをざっくり自動推定（API不要・あくまで叩き台）。
+// 既存タグは一度外し、空行で区切ったブロック単位で判定する。
+function autoTag(){
+  const lyricLines = lines.filter(l=>l.kind==='lyric').map(l=>l.text);
+  // 空行でブロック分割
+  const blocks=[]; let cur=[];
+  lyricLines.forEach(t=>{ if(String(t).trim()===''){ if(cur.length){blocks.push(cur);cur=[];} } else cur.push(t); });
+  if(cur.length) blocks.push(cur);
+  if(!blocks.length){ alert('先に歌詞を読み込んでください'); return; }
+  // ブロックを正規化したキーで出現回数を数える
+  const norm = b => b.map(s=>String(s).replace(/\s+/g,'').toLowerCase()).join('｜');
+  const count={}; blocks.forEach(b=>{ const k=norm(b); count[k]=(count[k]||0)+1; });
+  // 最頻出（2回以上）のブロック＝サビ(Chorus)とみなす
+  let chorusKey=null, max=1;
+  Object.keys(count).forEach(k=>{ if(count[k]>max){ max=count[k]; chorusKey=k; } });
+  // 再構築
+  // 繰り返すブロック＝Chorus（サビ）、それ以外＝Verse。残り(Intro/Bridge/Outro等)は手で調整する前提。
+  const newLines=[];
+  blocks.forEach((b,bi)=>{
+    const k=norm(b);
+    const tag = (chorusKey && (k===chorusKey || count[k]>=2)) ? 'Chorus' : 'Verse';
+    newLines.push({id:uid++, kind:'tag', section:tag});
+    b.forEach(line=>newLines.push({id:uid++, kind:'lyric', text:line}));
+    if(bi<blocks.length-1) newLines.push({id:uid++, kind:'lyric', text:''}); // ブロック間の空行を復元
+  });
+  lines=newLines; selId=null; editingId=null; render();
+}
+
+// ===== AI構成判定（Gemini・APIキーはユーザー自身のもの。ブラウザ内のみで使用）=====
+function getApiKey(){ return (document.getElementById('apiKey').value||'').trim(); }
+function setAiStatus(m){ ['aiStatus','aiInlineStatus'].forEach(function(id){ const e=document.getElementById(id); if(e) e.textContent=m; }); }
+
+// 利用可能な Gemini モデルを取得して generateContent 対応のものを選ぶ（モデル廃止に強い）
+let _cachedModel = null;
+async function pickGeminiModel(key){
+  if(_cachedModel) return _cachedModel;
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
+  if(!res.ok){ const t=await res.text(); throw new Error('モデル一覧の取得に失敗 '+res.status+'：'+t.slice(0,120)); }
+  const data = await res.json();
+  const names = (data.models||[])
+    .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+    .map(m=>String(m.name||'').replace(/^models\//,''));
+  // flash系(速い・安い)を優先 → だめなら任意のgemini → 何でも
+  const pick = names.find(n=>/flash/i.test(n) && !/thinking|exp/i.test(n))
+            || names.find(n=>/flash/i.test(n))
+            || names.find(n=>/gemini/i.test(n))
+            || names[0];
+  if(!pick) throw new Error('利用可能な生成モデルが見つかりませんでした');
+  _cachedModel = pick;
+  return pick;
+}
+
+async function aiTag(){
+  const key = getApiKey();
+  if(!key){ alert('先に「🤖 AI構成判定の設定」でGemini APIキーを入力してください'); document.getElementById('aiSetup').open=true; return; }
+  const lyricLines = lines.filter(l=>l.kind==='lyric').map(l=>l.text);
+  if(!lyricLines.some(t=>String(t).trim())){ alert('先に歌詞を読み込んでください'); return; }
+  const numbered = lyricLines.map((t,i)=>(i+1)+': '+t).join('\n');
+  const prompt = 'あなたは音楽の楽曲構成解析の専門家です。次の歌詞を構成セクションに分けてください。\n'
+    + '使えるタグ(英語): Intro, Verse, Pre-Chorus, Chorus, Post-Chorus, Bridge, Final Chorus, Interlude, Outro\n'
+    + '各行に最も適切なセクションを割り当て、JSONのみを出力してください。\n'
+    + '形式: [{"section":"Verse","from":1,"to":4},{"section":"Chorus","from":5,"to":8}] （from/toは行番号で1始まり、歌詞全体を隙間なくカバー）。\n'
+    + '説明文やコードブロック記号は不要、JSON配列だけを返してください。\n\n歌詞:\n' + numbered;
+  setAiStatus('⏳ ただいま判定中。少しお待ちください');
+  try{
+    const model = await pickGeminiModel(key);
+    setAiStatus('⏳ ただいま判定中。少しお待ちください（'+model+'）');
+    const url='https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(key);
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+    if(!res.ok){ const t=await res.text(); _cachedModel=null; throw new Error('APIエラー '+res.status+'：'+t.slice(0,160)); }
+    const data=await res.json();
+    let txt=((((data.candidates||[])[0]||{}).content||{}).parts||[{}])[0].text||'';
+    txt=txt.replace(/```json/gi,'').replace(/```/g,'').trim();
+    const m=txt.match(/\[[\s\S]*\]/); if(m) txt=m[0];
+    const spans=JSON.parse(txt);
+    applyAiSpans(lyricLines, spans);
+    setAiStatus('✅ AI判定が完了しました（結果は手で調整できます）');
+  }catch(err){
+    setAiStatus('⚠️ AI判定に失敗：'+err.message+'（キーやネット接続をご確認ください。「それなりタグ付け」も使えます）');
+  }
+}
+function applyAiSpans(lyricLines, spans){
+  const secOf={};
+  (spans||[]).forEach(s=>{ const sec=normalizeTag(s.section)||'Verse'; const a=Number(s.from)||1, b=Number(s.to)||a; for(let i=a;i<=b;i++) secOf[i]=sec; });
+  const newLines=[]; let prevSec=null;
+  lyricLines.forEach((t,idx)=>{
+    const sec=secOf[idx+1];
+    if(sec && sec!==prevSec){ newLines.push({id:uid++,kind:'tag',section:sec}); prevSec=sec; }
+    newLines.push({id:uid++,kind:'lyric',text:t});
+  });
+  lines=newLines; selId=null; editingId=null; render();
+}
+
+function notation(){ return (document.querySelector('input[name=nota]:checked')||{}).value || 'zen'; }
+function renderTag(sec){ return notation()==='kaku' ? '['+sec+']' : '＜'+sec+'＞'; }
+
+function render(){
+  const c = document.getElementById('lines'); c.innerHTML='';
+  lines.forEach((l,i)=>{
+    const d = document.createElement('div'); d.className='ln';
+    const num = document.createElement('span'); num.className='num'; num.textContent=(i+1);
+    d.appendChild(num);
+    if(l.kind==='tag'){
+      d.classList.add('tag');
+      const t=document.createElement('span'); t.textContent=renderTag(l.section); d.appendChild(t);
+      const x=document.createElement('span'); x.className='del'; x.textContent='×';
+      x.onclick=(e)=>{e.stopPropagation();delLine(l.id);}; d.appendChild(x);
+    } else if(l.id===editingId){
+      const inp=document.createElement('input'); inp.type='text'; inp.className='lineedit'; inp.value=l.text;
+      inp.onclick=(e)=>e.stopPropagation();
+      inp.onkeydown=(e)=>{ if(e.key==='Enter'){ commitEdit(l.id,inp.value); } else if(e.key==='Escape'){ editingId=null; render(); } };
+      inp.onblur=()=>commitEdit(l.id,inp.value);
+      d.appendChild(inp);
+      setTimeout(()=>{ inp.focus(); inp.select(); },0);
+    } else {
+      if(l.id===selId) d.classList.add('sel');
+      const t=document.createElement('span'); t.style.flex='1';
+      if(String(l.text).trim()===''){ t.textContent='(空行)'; d.classList.add('empty'); } else t.textContent=l.text;
+      d.appendChild(t);
+      d.onclick=()=>selectLine(l.id);
+      d.ondblclick=()=>{ editingId=l.id; render(); };
+      const x=document.createElement('span'); x.className='del'; x.textContent='×';
+      x.onclick=(e)=>{e.stopPropagation();delLine(l.id);}; d.appendChild(x);
+    }
+    c.appendChild(d);
+  });
+  const sel = lines.find(l=>l.id===selId);
+  document.getElementById('selinfo').textContent = sel ? ('選択中: '+(String(sel.text).trim()||'(空行)')) : '行を選択してください';
+  document.getElementById('preview').textContent = outputText();
+}
+function outputText(){
+  return lines.map(l=> l.kind==='tag' ? renderTag(l.section) : l.text).join('\n');
+}
+function pad2(n){ return (n<10?'0':'')+n; }
+function makeFilename(){
+  const t = (document.getElementById('title').value||'lyrics').trim().replace(/[\\/:*?"<>|]/g,'_');
+  const d = new Date();
+  const ymd = d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate());
+  const hm = pad2(d.getHours())+pad2(d.getMinutes());
+  return t + '_' + ymd + '_' + hm + '.txt';
+}
+async function saveFile(){
+  const text = outputText();
+  const fname = makeFilename();
+  const info = document.getElementById('saveinfo');
+  // 保存時は必ず「保存先を選ぶダイアログ（ツリー）」を出す。
+  // 読み込んだファイルがあれば、そのフォルダを初期表示にする（対応ブラウザ）。
+  if(window.showSaveFilePicker){
+    try{
+      const opts = {suggestedName:fname, types:[{description:'テキスト',accept:{'text/plain':['.txt']}}]};
+      if(fileHandle){ opts.startIn = fileHandle; }       // 読込元フォルダを初期表示
+      else { opts.startIn = 'documents'; }                // 貼り付け等はドキュメントを初期表示
+      const h = await window.showSaveFilePicker(opts);
+      const w = await h.createWritable(); await w.write(text); await w.close();
+      info.textContent = '✅ 保存しました: '+(h.name||fname);
+      return;
+    }catch(e){ if(e && e.name==='AbortError'){ info.textContent='保存をキャンセルしました'; return; } info.textContent='⚠️ 保存に失敗：'+e.message; return; }
+  }
+  // フォールバック（保存先選択に非対応のブラウザはダウンロード）
+  const blob = new Blob([text],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=fname; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(a.href);
+  info.textContent = '✅ ダウンロードしました（このブラウザは保存先選択に非対応）: '+fname;
+}
+function copyText(){ navigator.clipboard.writeText(outputText()).then(()=>alert('クリップボードにコピーしました')); }
+function resetCommon(){ lines=[];selId=null;editingId=null;fileHandle=null;
+  document.getElementById('input').value=''; syncTitle('');
+  document.getElementById('saveinfo').textContent='';
+  document.getElementById('editorCard').style.display='none';
+  document.getElementById('previewCard').style.display='none'; }
+function resetKeepKey(){ resetCommon(); }   // 歌詞等はクリア、APIキーは残す
+function resetAll(){ resetCommon(); document.getElementById('apiKey').value=''; setAiStatus(''); } // APIキーも消す
+// 過去にlocalStorageへ保存されたキーが残っていれば掃除（一時保持方針・安全のため）
+try{ localStorage.removeItem('ft_gemini_key'); }catch(e){}
+</script>
+</body>
+</html>
