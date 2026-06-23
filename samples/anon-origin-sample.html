@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="feathertune-sync-id" content="FT-20260512-ANONORIGIN-AAA001">
 <meta name="feathertune-version" content="v1.00">
 <meta name="feathertune-report-type" content="core-analysis">
@@ -116,7 +117,7 @@ text-align: center;
 }
 .header-inner {
 display: flex;
-align-items: center;
+align-items: flex-start;
 justify-content: space-between;
 gap: 24px;
 }
@@ -397,6 +398,126 @@ font-weight: 700;
 color: #f3fbff;
 text-align: right;
 }
+/* PR-D: CRS 3パネル(header下段・横並び・ダークnavy) */
+.crs-panels {
+margin-top: 22px;
+}
+.crs-panels-title {
+font-size: 0.82em;
+letter-spacing: 1.2px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 10px;
+}
+.crs-panels-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 14px;
+align-items: start;
+}
+/* せいちゃん指定(2026-06-22): AIマーク(CO-CREATED WITH AI)をCRS Breakdownの下に通常配置(右下absoluteの被り解消) */
+.ai-mark-row {
+text-align: center;
+margin: 14px 0 2px;
+}
+.ai-mark-row img {
+position: static !important;
+display: inline-block;
+width: auto;
+max-height: 64px;
+opacity: 0.9;
+}
+.crs-panel {
+border: 1px solid rgba(125, 211, 252, 0.28);
+border-radius: 10px;
+background: linear-gradient(145deg, rgba(5, 18, 48, 0.92), rgba(10, 37, 82, 0.72));
+box-shadow: inset 0 1px 18px rgba(255, 255, 255, 0.05);
+padding: 14px 16px;
+}
+/* せいちゃん指定(2026-06-22): 「あなたの曲の個性」を下段で横2カラム+大きめに見せる */
+/* MUSIC内訳を2行ぶち抜きにし、個性パネルを残り高さいっぱい(stretch)に伸ばして下端を揃える */
+.crs-panel-tall {
+grid-row: span 2;
+}
+.crs-panel-wide {
+grid-column: span 2;
+align-self: stretch;
+display: flex;
+flex-direction: column;
+justify-content: center;
+padding: 20px 24px;
+}
+.crs-panel-wide .crs-persona-name { font-size: 1.62em; margin: 4px 0 10px; }
+.crs-panel-wide .crs-persona-desc { font-size: 0.5em; }
+.crs-panel-wide .crs-persona-temps { font-size: 1.12em; margin-top: 4px; }
+.crs-panel-wide .crs-badge { font-size: 1.08em; }
+.crs-panel-wide .crs-mirror { font-size: 0.92em; }
+.crs-panel-title {
+font-size: 0.8em;
+letter-spacing: 0.6px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 8px;
+}
+.crs-panel-muted {
+font-size: 0.72em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.62);
+margin-top: 5px;
+}
+.crs-panel-muted strong { color: #eaf9ff; }
+.crs-row-hint { font-size: 0.82em; color: rgba(196, 232, 255, 0.5); }
+/* せい哲学＋こで設計(2026-06-22): 制作関与の信頼要素を暖色で暖かく明示 */
+.crs-involve-pt {
+color: #ffd49b;
+font-weight: 800;
+font-size: 0.94em;
+text-shadow: 0 0 10px rgba(255, 196, 128, 0.35);
+}
+.crs-involve-muted { color: rgba(196, 232, 255, 0.5); font-weight: 500; }
+.crs-involve-total {
+margin-top: 7px;
+font-size: 0.72em;
+color: #ffd49b;
+font-weight: 700;
+letter-spacing: 0.3px;
+}
+.crs-persona-name {
+font-size: 1.18em;
+font-weight: 800;
+color: #ffffff;
+margin: 2px 0 6px;
+text-shadow: 0 0 14px rgba(125, 211, 252, 0.30);
+}
+.crs-persona-desc {
+font-size: 0.62em;
+font-weight: 500;
+color: rgba(196, 232, 255, 0.66);
+}
+.crs-persona-temps {
+margin-bottom: 6px;
+font-size: 0.9em;
+color: #eaf9ff;
+}
+.crs-badge-wrap { margin-top: 10px; }
+.crs-badge {
+display: inline-block;
+padding: 3px 12px;
+border-radius: 999px;
+background: rgba(14, 52, 95, 0.7);
+border: 1px solid rgba(125, 211, 252, 0.5);
+color: #d8f7ff;
+font-weight: 700;
+font-size: 0.86em;
+}
+.crs-mirror {
+font-size: 0.74em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.6);
+margin-top: 8px;
+}
 .content {
 padding: 40px;
 }
@@ -604,6 +725,9 @@ max-width: none;
 width: auto;
 margin-right: 0;
 }
+.crs-panels-grid {
+grid-template-columns: 1fr;
+}
 }
 @media (max-width: 560px) {
 .header-meta {
@@ -639,7 +763,7 @@ gap: 2px;
 <div class="plan-watermark" aria-hidden="true">ORIGIN</div>
 <div style="position: fixed; right: 28px; bottom: 24px; z-index: 2; pointer-events: none; text-align: right; color: rgba(26, 35, 126, 0.68); font-size: 11px; line-height: 1.45; letter-spacing: 0.08em; font-weight: 700;">
 <div>FeatherTune Music</div>
-<div>ORIGIN-A001</div>
+<div>FT_A-001</div>
 </div>
 <div class="container">
 <div class="header">
@@ -656,12 +780,12 @@ gap: 2px;
     <div class="plan-meta" style="font-size: 0.95em; margin-bottom: 5px;">プラン：ORIGIN</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">曲名：サンプル楽曲タイトルα</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">アーティスト名：サンプル・アーティスト名α</div>
+    <div style="font-size: 0.95em; margin-bottom: 5px;">ORIGIN番号：FT_A-001</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">レポートID：FT-origin01</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">作成日：2026-05-12</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">Version：v1.00</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">分析依頼者：サンプル依頼者A</div>
 </div>
-
 </div>
 <div class="summary-card" aria-label="Analysis summary" style="">
 <div class="summary-card-top">
@@ -671,21 +795,22 @@ gap: 2px;
 <div class="crs-score-grid" aria-label="Creative Resonance Score breakdown">
 <div class="crs-score-item">
 <div class="crs-score-name">LYRICS</div>
-<div class="crs-score-number">92</div>
+<div class="crs-score-number">77</div>
 <div class="crs-score-caption">Score</div>
 </div>
 <div class="crs-score-item crs-score-item-main">
 <div class="crs-score-name">CRS</div>
-<div class="crs-score-number">92</div>
-<div class="crs-score-caption">Score / Rank S</div>
+<div class="crs-score-number">77</div>
+<div class="crs-score-caption">Score / Badge A</div>
 </div>
 <div class="crs-score-item">
 <div class="crs-score-name">MUSIC</div>
-<div class="crs-score-number">92</div>
+<div class="crs-score-number">77</div>
 <div class="crs-score-caption">Score</div>
 </div>
 </div>
 <div class="crs-score-note">CRSは、歌詞・楽曲・構成・創造性を総合的に見た、FeatherTune独自の創造的共鳴スコアです。</div>
+<div class="crs-involve-total">制作関与の反映: +12</div>
 <div class="summary-card-rows">
 <div class="summary-card-row"><span>SUMMARY</span><span>王道進行に独自の余白を残した構成 (匿名サンプル)</span></div>
 <div class="summary-card-row"><span>Key / Tempo</span><span class="summary-key-tempo-cell"><span class="summary-key-tempo-stack"><span>Key: C major</span><span>Tempo: 92 BPM</span></span></span></div>
@@ -695,25 +820,36 @@ gap: 2px;
 <div class="summary-card-row"><span>LYRICS</span><span class="summary-level-cell"><span class="summary-level summary-level-low">LOW</span></span></div>
 </div>
 <div class="summary-card-note">※各レベルは音楽分析上の確認優先度であり、法的判断ではありません。「要確認」は侵害可能性を断定するものではありません。</div>
-<div class="crs-breakdown">
-<div class="crs-breakdown-title">CRS Breakdown</div>
-<div class="crs-breakdown-row"><span>Lyrics Score</span><strong>92 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Music Score</span><strong>92 / 100</strong></div>
-<div class="crs-breakdown-row"><span>CRS</span><strong>92 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Rank</span><strong>S</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Lyrics</span><strong>人間創作</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Music</span><strong>人間創作</strong></div>
-<div class="crs-breakdown-row"><span>Lyrics Analysis</span><strong>62 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Lyrics</span><strong>0 / 10</strong></div>
-<div class="crs-breakdown-row"><span>ACRCloud / AI probability</span><strong>8.0% / 30.0pt (max 30)</strong></div>
-<div class="crs-breakdown-row"><span>Chord Structure</span><strong>32 / 40</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Music</span><strong>0 / 10</strong></div>
-<div class="crs-breakdown-row"><span>Music Analysis</span><strong>62.0 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Music Human Bonus</span><strong>30 / 30</strong></div>
-<div class="crs-breakdown-row"><span>Type / Attribute</span><strong>narrative / acoustic</strong></div>
 </div>
 </div>
+<div class="crs-panels"><div class="crs-panels-title">CRS Breakdown</div><div class="crs-panels-grid"><div class="crs-panel">
+<div class="crs-panel-title">制作プロセスの開示（How it was made）</div>
+<div class="crs-breakdown-row"><span>作詞</span><strong>人間の手で制作　<span class="crs-involve-pt">制作関与 +6</span></strong></div>
+<div class="crs-breakdown-row"><span>作曲</span><strong>人間の手で制作　<span class="crs-involve-pt">制作関与 +6</span></strong></div>
+<div class="crs-breakdown-row"><span>AI検知度（参考）</span><strong>8.0%</strong></div>
+<div class="crs-panel-muted">※ 現在の受容段階に合わせ、作詞・作曲への人の関わり(共創)を信頼要素として創造スコアに反映しています。AI主体の作品は品質本体で評価します。</div>
+<div class="crs-panel-muted">※ AI検知度は参考情報です。<strong>創造スコアには影響しません。</strong></div>
+<div class="crs-panel-muted">制作に関わった人とAIの関係を、正直に開示しています。</div>
 </div>
+<div class="crs-panel crs-panel-tall">
+<div class="crs-panel-title">MUSICの内訳（なぜこのスコアか）</div>
+<div class="crs-breakdown-row"><span>基本キー整合<span class="crs-row-hint">（キーと進行の土台がそろっているか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>王道進行の安定<span class="crs-row-hint">（親しみやすい定番進行か）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>区間の変化<span class="crs-row-hint">（展開・場面転換の豊かさ）</span></span><strong>0 / 8</strong></div>
+<div class="crs-breakdown-row"><span>独創性<span class="crs-row-hint">（転調・借用など冒険的な工夫）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>感情適合<span class="crs-row-hint">（曲の感情にコードが寄り添うか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>コード構造 合計</span><strong>32 / 40</strong></div>
+<div class="crs-panel-muted">※ 各軸は既存Chord AI情報からの暫定算出です。</div>
+</div>
+<div class="crs-panel crs-panel-wide">
+<div class="crs-panel-title">あなたの曲の個性</div>
+<div class="crs-persona-name">情景えがき系くん <span class="crs-persona-desc">（映像系・ドリーマー）</span></div>
+<div class="crs-persona-temps">🎨 詩的・ロマンチスト</div>
+<div class="crs-breakdown-row"><span>表現タイプ</span><strong>narrative / acoustic</strong></div>
+<div class="crs-badge-wrap"><span class="crs-badge">A 意識高い系くん</span><div class="crs-panel-muted">ねらいがぐっと効いた、表現力の伸びる回。</div><div class="crs-panel-muted">お楽しみの参考バッジ(今回の創造スコアの目安)。点数は曲の優劣ではなく、個性の一面です。</div></div>
+<div class="crs-mirror">これは順位づけではなく、あなたの曲の個性を映す鏡です。</div>
+</div></div></div>
+<div class="ai-mark-row"></div>
 </div>
 <div class="content">
 <div class="plan-report-meta">
