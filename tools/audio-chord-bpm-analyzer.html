@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FeatherTune 音楽データ解析ツール</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --panel:#ffffff;
+    --ink:#1f2937;
+    --muted:#667085;
+    --line:#d9e0e8;
+    --soft:#edf2f7;
+    --teal:#147d7f;
+    --teal-dark:#0f5f61;
+    --coral:#d85c4a;
+    --indigo:#4959b8;
+    --amber:#b7791f;
+    --ok:#237a57;
+    --warn:#a15c13;
+    --bad:#b42318;
+    --shadow:0 12px 28px rgba(31,41,55,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.65;
+    overflow-x:hidden;
+  }
+  header{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar{
+    max-width:1180px;
+    margin:0 auto;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+  .mark{
+    width:36px;
+    height:36px;
+    border-radius:8px;
+    background:
+      linear-gradient(135deg,rgba(20,125,127,.16),rgba(73,89,184,.16)),
+      repeating-linear-gradient(90deg,transparent 0 6px,rgba(20,125,127,.28) 6px 7px);
+    border:1px solid rgba(20,125,127,.28);
+    flex:0 0 auto;
+  }
+  h1{
+    margin:0;
+    font-size:20px;
+    letter-spacing:.02em;
+    line-height:1.3;
+  }
+  .brand small{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    margin-top:2px;
+  }
+  .header-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:22px 20px 72px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:360px 1fr;
+    gap:18px;
+    align-items:start;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow:var(--shadow);
+    min-width:0;
+  }
+  .panel-inner{padding:18px}
+  .panel h2{
+    margin:0 0 12px;
+    font-size:15px;
+    color:var(--teal-dark);
+    letter-spacing:.02em;
+  }
+  .drop{
+    display:block;
+    border:2px dashed #b9c7d6;
+    border-radius:8px;
+    background:#fbfdff;
+    padding:26px 18px;
+    text-align:center;
+    cursor:pointer;
+    transition:.18s border-color,.18s background,.18s transform;
+  }
+  .drop:hover,.drop.dragging{
+    border-color:var(--teal);
+    background:#eefafa;
+  }
+  .drop.dragging{transform:translateY(-1px)}
+  .drop strong{display:block;font-size:15px;margin-bottom:4px}
+  .drop span{display:block;color:var(--muted);font-size:12px}
+  input[type=file]{display:none}
+  .controls{
+    display:grid;
+    gap:12px;
+    margin-top:16px;
+  }
+  label.field{
+    display:grid;
+    gap:6px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  select,input[type=number]{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 10px;
+    background:#fff;
+    color:var(--ink);
+    font:inherit;
+    font-size:13px;
+  }
+  input[type=checkbox]{accent-color:var(--teal)}
+  .check{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  }
+  button,.button{
+    border:1px solid transparent;
+    border-radius:6px;
+    padding:9px 12px;
+    font:inherit;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-height:38px;
+    color:inherit;
+  }
+  button.primary{
+    background:var(--teal);
+    color:#fff;
+  }
+  button.primary:hover{background:var(--teal-dark)}
+  button.secondary,.button.secondary{
+    background:#fff;
+    border-color:var(--line);
+    color:var(--ink);
+  }
+  button.secondary:hover,.button.secondary:hover{background:var(--soft)}
+  button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+  }
+  .status{
+    margin-top:14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fbfdff;
+    padding:12px;
+    font-size:12px;
+    color:var(--muted);
+    min-height:44px;
+  }
+  .status strong{color:var(--ink)}
+  .meter{
+    height:8px;
+    border-radius:999px;
+    background:#e5ebf2;
+    overflow:hidden;
+    margin-top:8px;
+  }
+  .meter span{
+    display:block;
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--teal),var(--indigo));
+    transition:width .2s ease;
+  }
+  .note{
+    margin-top:14px;
+    padding:12px;
+    background:#fff8eb;
+    border:1px solid #f0d9aa;
+    border-radius:8px;
+    color:#725018;
+    font-size:12px;
+  }
+  .results{
+    display:grid;
+    gap:18px;
+    min-width:0;
+  }
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+  .metric{
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    padding:14px;
+    min-height:96px;
+    min-width:0;
+  }
+  .metric .label{
+    display:block;
+    color:var(--muted);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .metric .value{
+    display:block;
+    font-size:26px;
+    line-height:1.2;
+    margin-top:8px;
+    font-weight:800;
+    color:var(--ink);
+    overflow-wrap:anywhere;
+  }
+  .metric .sub{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    margin-top:4px;
+  }
+  .metric.accent-a{border-top:4px solid var(--teal)}
+  .metric.accent-b{border-top:4px solid var(--indigo)}
+  .metric.accent-c{border-top:4px solid var(--coral)}
+  .metric.accent-d{border-top:4px solid var(--amber)}
+  canvas{
+    width:100%;
+    height:164px;
+    display:block;
+    background:#101828;
+    border-radius:8px;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    border-bottom:1px solid var(--line);
+    padding:0 12px;
+    overflow-x:auto;
+  }
+  .tab{
+    border:0;
+    background:transparent;
+    border-radius:0;
+    color:var(--muted);
+    padding:12px 10px;
+    min-height:42px;
+    border-bottom:3px solid transparent;
+    white-space:nowrap;
+  }
+  .tab.active{
+    color:var(--teal-dark);
+    border-bottom-color:var(--teal);
+  }
+  .tab-panel{display:none;padding:16px}
+  .tab-panel.active{display:block}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  th,td{
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    padding:9px 8px;
+    vertical-align:top;
+  }
+  th{
+    color:var(--muted);
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    background:#fbfdff;
+    position:sticky;
+    top:0;
+  }
+  .table-wrap{
+    max-height:520px;
+    overflow:auto;
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    padding:2px 8px;
+    font-size:11px;
+    font-weight:700;
+    background:#edf7f7;
+    color:var(--teal-dark);
+  }
+  .tag.warn{background:#fff3df;color:var(--warn)}
+  .tag.bad{background:#fff0ed;color:var(--bad)}
+  .mono{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  textarea{
+    width:100%;
+    min-height:360px;
+    resize:vertical;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color:#172033;
+    background:#fbfdff;
+  }
+  .empty{
+    padding:34px 18px;
+    text-align:center;
+    color:var(--muted);
+    background:#fff;
+    border:1px dashed var(--line);
+    border-radius:8px;
+  }
+  .inline-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .quality{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  .quality div{
+    background:#fbfdff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+  }
+  .quality strong{display:block;font-size:12px}
+  .quality span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr}
+    .summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:560px){
+    .topbar{align-items:flex-start;flex-direction:column}
+    .header-actions{justify-content:flex-start}
+    .summary,.quality{grid-template-columns:1fr}
+    h1{font-size:18px}
+    main{padding-left:14px;padding-right:14px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div>
+        <h1>FeatherTune 音楽データ解析ツール</h1>
+        <small>音声ファイルからBPM・キー・コード進行をブラウザ内で推定します</small>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="button secondary" href="../index.html">LPへ戻る</a>
+      <a class="button secondary" href="./music-report-generator.html">レポート生成</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <aside class="panel">
+      <div class="panel-inner">
+        <h2>1. 音楽データ読み込み</h2>
+        <label class="drop" id="dropZone">
+          <input id="fileInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.aac,.flac,.ogg" />
+          <strong>音声ファイルを選択 / ドロップ</strong>
+          <span>WAV, MP3, M4A, AAC, FLAC, OGG など</span>
+        </label>
+
+        <div class="controls">
+          <label class="field">
+            解析粒度
+            <select id="precision">
+              <option value="balanced" selected>標準: 2秒窓 / 1秒間隔</option>
+              <option value="fine">細かめ: 1.5秒窓 / 0.5秒間隔</option>
+              <option value="fast">高速: 3秒窓 / 1.5秒間隔</option>
+            </select>
+          </label>
+          <label class="field">
+            BPM探索範囲
+            <select id="tempoRange">
+              <option value="60-200" selected>60 - 200 BPM</option>
+              <option value="50-180">50 - 180 BPM</option>
+              <option value="70-220">70 - 220 BPM</option>
+              <option value="80-170">80 - 170 BPM</option>
+            </select>
+          </label>
+          <label class="field">
+            先頭/末尾の無音扱い
+            <select id="trimMode">
+              <option value="auto" selected>自動で弱い無音部を除外</option>
+              <option value="none">除外しない</option>
+            </select>
+          </label>
+          <label class="check">
+            <input id="collapseRepeats" type="checkbox" checked />
+            <span>同じコードが続く区間をまとめて出力する</span>
+          </label>
+          <label class="check">
+            <input id="preferSimple" type="checkbox" checked />
+            <span>低信頼度の7th/sus/dimは基本形へ寄せる</span>
+          </label>
+        </div>
+
+        <div class="buttons">
+          <button id="analyzeBtn" class="primary" type="button" disabled>解析する</button>
+          <button id="resetBtn" class="secondary" type="button">リセット</button>
+        </div>
+
+        <div class="status" id="status">
+          <strong>待機中</strong><br />
+          音声ファイルを読み込んでください。
+          <div class="meter" aria-hidden="true"><span id="progress"></span></div>
+        </div>
+
+        <div class="note">
+          このツールは静的HTML単体で動作します。解析は推定値です。公式納品や権利判断では、ChordAI/DAW/手作業確認などの別系統データと照合してください。
+        </div>
+      </div>
+    </aside>
+
+    <section class="results">
+      <div class="summary" aria-label="解析サマリー">
+        <div class="metric accent-a">
+          <span class="label">BPM</span>
+          <span class="value" id="bpmValue">--</span>
+          <span class="sub" id="bpmSub">未解析</span>
+        </div>
+        <div class="metric accent-b">
+          <span class="label">Key</span>
+          <span class="value" id="keyValue">--</span>
+          <span class="sub" id="keySub">未解析</span>
+        </div>
+        <div class="metric accent-c">
+          <span class="label">Main Chords</span>
+          <span class="value" id="mainChordValue">--</span>
+          <span class="sub" id="mainChordSub">未解析</span>
+        </div>
+        <div class="metric accent-d">
+          <span class="label">Duration</span>
+          <span class="value" id="durationValue">--</span>
+          <span class="sub" id="fileSub">ファイル未選択</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-inner">
+          <h2>2. 波形 / 音量エネルギー</h2>
+          <canvas id="waveCanvas" width="1400" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="panel" id="resultPanel">
+        <div class="tabs" role="tablist" aria-label="結果表示">
+          <button class="tab active" type="button" data-tab="chords">コード区間</button>
+          <button class="tab" type="button" data-tab="summaryText">レポート用テキスト</button>
+          <button class="tab" type="button" data-tab="quality">信頼度</button>
+          <button class="tab" type="button" data-tab="raw">JSON</button>
+        </div>
+        <div class="tab-panel active" id="tab-chords">
+          <div id="chordOutput" class="empty">解析後にコード区間が表示されます。</div>
+          <div class="buttons">
+            <button id="downloadCsvBtn" class="secondary" type="button" disabled>CSVをダウンロード</button>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-summaryText">
+          <textarea id="reportText" readonly>解析後にFeatherTuneレポートへ貼り込めるテキストを表示します。</textarea>
+          <div class="buttons">
+            <button id="copyTextBtn" class="secondary" type="button" disabled>テキストをコピー</button>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-quality">
+          <div class="quality">
+            <div>
+              <strong id="tempoQuality">BPM: 未解析</strong>
+              <span id="tempoQualityDetail">オンセット密度と自己相関ピークから評価します。</span>
+            </div>
+            <div>
+              <strong id="keyQuality">Key: 未解析</strong>
+              <span id="keyQualityDetail">集約クロマと長短調テンプレートの差から評価します。</span>
+            </div>
+            <div>
+              <strong id="chordQuality">Chord: 未解析</strong>
+              <span id="chordQualityDetail">各区間のクロマ一致度から評価します。</span>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-raw">
+          <textarea id="jsonText" readonly>{}</textarea>
+          <div class="buttons">
+            <button id="downloadJsonBtn" class="secondary" type="button" disabled>JSONをダウンロード</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  const NOTE_NAMES = ["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+  const MAJOR_PROFILE = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+  const MINOR_PROFILE = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+  const CHORD_TEMPLATES = [
+    {suffix:"", tones:[0,4,7], weight:[1,.86,.9]},
+    {suffix:"m", tones:[0,3,7], weight:[1,.86,.9]},
+    {suffix:"7", tones:[0,4,7,10], weight:[1,.78,.84,.52]},
+    {suffix:"maj7", tones:[0,4,7,11], weight:[1,.78,.84,.48]},
+    {suffix:"m7", tones:[0,3,7,10], weight:[1,.78,.84,.5]},
+    {suffix:"sus4", tones:[0,5,7], weight:[1,.7,.88]},
+    {suffix:"dim", tones:[0,3,6], weight:[1,.78,.68]}
+  ];
+  const LOWPASS_KERNEL = [0.05,0.12,0.2,0.26,0.2,0.12,0.05];
+  const state = {
+    file:null,
+    buffer:null,
+    mono:null,
+    sampleRate:0,
+    activeStart:0,
+    activeEnd:0,
+    result:null
+  };
+
+  const el = {
+    fileInput:document.getElementById("fileInput"),
+    dropZone:document.getElementById("dropZone"),
+    analyzeBtn:document.getElementById("analyzeBtn"),
+    resetBtn:document.getElementById("resetBtn"),
+    status:document.getElementById("status"),
+    progress:document.getElementById("progress"),
+    precision:document.getElementById("precision"),
+    tempoRange:document.getElementById("tempoRange"),
+    trimMode:document.getElementById("trimMode"),
+    collapseRepeats:document.getElementById("collapseRepeats"),
+    preferSimple:document.getElementById("preferSimple"),
+    bpmValue:document.getElementById("bpmValue"),
+    bpmSub:document.getElementById("bpmSub"),
+    keyValue:document.getElementById("keyValue"),
+    keySub:document.getElementById("keySub"),
+    mainChordValue:document.getElementById("mainChordValue"),
+    mainChordSub:document.getElementById("mainChordSub"),
+    durationValue:document.getElementById("durationValue"),
+    fileSub:document.getElementById("fileSub"),
+    canvas:document.getElementById("waveCanvas"),
+    chordOutput:document.getElementById("chordOutput"),
+    reportText:document.getElementById("reportText"),
+    jsonText:document.getElementById("jsonText"),
+    copyTextBtn:document.getElementById("copyTextBtn"),
+    downloadCsvBtn:document.getElementById("downloadCsvBtn"),
+    downloadJsonBtn:document.getElementById("downloadJsonBtn"),
+    tempoQuality:document.getElementById("tempoQuality"),
+    tempoQualityDetail:document.getElementById("tempoQualityDetail"),
+    keyQuality:document.getElementById("keyQuality"),
+    keyQualityDetail:document.getElementById("keyQualityDetail"),
+    chordQuality:document.getElementById("chordQuality"),
+    chordQualityDetail:document.getElementById("chordQualityDetail")
+  };
+
+  function setStatus(title, body = "", pct = 0){
+    el.status.innerHTML = `<strong>${escapeHtml(title)}</strong>${body ? "<br />" + escapeHtml(body) : ""}<div class="meter" aria-hidden="true"><span id="progress"></span></div>`;
+    el.progress = document.getElementById("progress");
+    el.progress.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  }
+  function escapeHtml(text){
+    return String(text).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+  function sleepFrame(){
+    return new Promise(resolve => requestAnimationFrame(resolve));
+  }
+  function fmtTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = Math.max(0, sec - m * 60);
+    return `${m}:${s.toFixed(1).padStart(4,"0")}`;
+  }
+  function confidenceLabel(value){
+    if(value >= .72) return "高";
+    if(value >= .48) return "中";
+    return "低";
+  }
+  function confidenceClass(value){
+    if(value >= .72) return "";
+    if(value >= .48) return "warn";
+    return "bad";
+  }
+  function clamp(v, min, max){
+    return Math.max(min, Math.min(max, v));
+  }
+
+  async function loadFile(file){
+    resetResults(false);
+    state.file = file;
+    setStatus("読み込み中", file.name, 8);
+    const arrayBuffer = await file.arrayBuffer();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContextClass();
+    state.buffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    state.sampleRate = state.buffer.sampleRate;
+    state.mono = mixToMono(state.buffer);
+    state.activeStart = 0;
+    state.activeEnd = state.buffer.duration;
+    await ctx.close();
+    detectActiveRange();
+    el.analyzeBtn.disabled = false;
+    el.durationValue.textContent = fmtTime(state.buffer.duration);
+    el.fileSub.textContent = `${file.name} / ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    drawWaveform();
+    setStatus("読み込み完了", "解析ボタンを押すとBPM・キー・コードを推定します。", 100);
+  }
+
+  function mixToMono(buffer){
+    const length = buffer.length;
+    const channels = buffer.numberOfChannels;
+    const mono = new Float32Array(length);
+    for(let ch = 0; ch < channels; ch++){
+      const data = buffer.getChannelData(ch);
+      for(let i = 0; i < length; i++) mono[i] += data[i] / channels;
+    }
+    return mono;
+  }
+
+  function detectActiveRange(){
+    if(el.trimMode.value === "none" || !state.mono) return;
+    const sr = state.sampleRate;
+    const block = Math.max(512, Math.floor(sr * .08));
+    const rms = [];
+    for(let i = 0; i < state.mono.length; i += block){
+      let sum = 0;
+      const end = Math.min(state.mono.length, i + block);
+      for(let j = i; j < end; j++) sum += state.mono[j] * state.mono[j];
+      rms.push(Math.sqrt(sum / Math.max(1, end - i)));
+    }
+    const sorted = rms.slice().sort((a,b) => a - b);
+    const peak = sorted[sorted.length - 1] || 0;
+    const threshold = Math.max(0.006, peak * 0.035);
+    let startBlock = 0;
+    let endBlock = rms.length - 1;
+    while(startBlock < rms.length && rms[startBlock] < threshold) startBlock++;
+    while(endBlock > startBlock && rms[endBlock] < threshold) endBlock--;
+    state.activeStart = clamp(startBlock * block / sr, 0, state.buffer.duration);
+    state.activeEnd = clamp((endBlock + 1) * block / sr, state.activeStart, state.buffer.duration);
+  }
+
+  function drawWaveform(markers = []){
+    const canvas = el.canvas;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#101828";
+    ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle = "rgba(255,255,255,.12)";
+    ctx.lineWidth = 1;
+    for(let i = 1; i < 5; i++){
+      const y = h * i / 5;
+      ctx.beginPath();
+      ctx.moveTo(0,y);
+      ctx.lineTo(w,y);
+      ctx.stroke();
+    }
+    if(!state.mono){
+      ctx.fillStyle = "rgba(255,255,255,.54)";
+      ctx.font = "24px sans-serif";
+      ctx.fillText("Load audio file", 36, 60);
+      return;
+    }
+    const mid = h / 2;
+    const samplesPerPixel = Math.max(1, Math.floor(state.mono.length / w));
+    ctx.strokeStyle = "#67e8f9";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let x = 0; x < w; x++){
+      let min = 1, max = -1;
+      const start = x * samplesPerPixel;
+      const end = Math.min(state.mono.length, start + samplesPerPixel);
+      for(let i = start; i < end; i++){
+        const v = state.mono[i];
+        if(v < min) min = v;
+        if(v > max) max = v;
+      }
+      ctx.moveTo(x, mid + min * mid * .88);
+      ctx.lineTo(x, mid + max * mid * .88);
+    }
+    ctx.stroke();
+    if(state.activeEnd > state.activeStart){
+      const x1 = state.activeStart / state.buffer.duration * w;
+      const x2 = state.activeEnd / state.buffer.duration * w;
+      ctx.fillStyle = "rgba(255,255,255,.08)";
+      ctx.fillRect(0,0,x1,h);
+      ctx.fillRect(x2,0,w - x2,h);
+    }
+    ctx.strokeStyle = "#fdb022";
+    ctx.lineWidth = 2;
+    markers.forEach(m => {
+      const x = m.time / state.buffer.duration * w;
+      ctx.beginPath();
+      ctx.moveTo(x,0);
+      ctx.lineTo(x,h);
+      ctx.stroke();
+    });
+  }
+
+  async function analyze(){
+    if(!state.buffer || !state.mono) return;
+    el.analyzeBtn.disabled = true;
+    setStatus("解析中", "オンセットとテンポを計算しています。", 12);
+    await sleepFrame();
+    detectActiveRange();
+    const onset = buildOnsetEnvelope();
+    const tempo = estimateTempo(onset);
+    setStatus("解析中", "全体キーとピッチクラスを集計しています。", 34);
+    await sleepFrame();
+    const settings = precisionSettings();
+    const globalChroma = computeChroma(state.activeStart, state.activeEnd, settings.globalStep);
+    const key = estimateKey(globalChroma);
+    setStatus("解析中", "区間ごとのコードを推定しています。", 58);
+    await sleepFrame();
+    const chordFrames = await estimateChordFrames(settings);
+    const chords = el.collapseRepeats.checked ? mergeChordFrames(chordFrames) : chordFrames;
+    const mainChords = topChords(chords);
+    const result = {
+      file:{
+        name:state.file.name,
+        sizeBytes:state.file.size,
+        durationSeconds:Number(state.buffer.duration.toFixed(3)),
+        sampleRate:state.sampleRate,
+        activeRange:{start:Number(state.activeStart.toFixed(3)), end:Number(state.activeEnd.toFixed(3))}
+      },
+      tempo,
+      key,
+      mainChords,
+      chords,
+      generatedAt:new Date().toISOString(),
+      note:"Static browser-side estimate. Verify with DAW, ChordAI/manual chord sheet, or production analyzer before official delivery."
+    };
+    state.result = result;
+    renderResult(result);
+    drawWaveform(chords);
+    setStatus("解析完了", "結果を確認し、必要に応じてCSV/JSONを保存してください。", 100);
+    el.analyzeBtn.disabled = false;
+  }
+
+  function precisionSettings(){
+    const mode = el.precision.value;
+    if(mode === "fine") return {windowSec:1.5, hopSec:.5, globalStep:.7};
+    if(mode === "fast") return {windowSec:3, hopSec:1.5, globalStep:1.5};
+    return {windowSec:2, hopSec:1, globalStep:1};
+  }
+
+  function buildOnsetEnvelope(){
+    const sr = state.sampleRate;
+    const start = Math.floor(state.activeStart * sr);
+    const end = Math.floor(state.activeEnd * sr);
+    const frame = 1024;
+    const hop = 512;
+    const env = [];
+    let lastEnergy = 0;
+    for(let i = start; i + frame < end; i += hop){
+      let energy = 0;
+      for(let j = 0; j < frame; j++){
+        const x = state.mono[i + j];
+        const prev = state.mono[Math.max(i + j - 1, 0)];
+        const diff = Math.max(0, x - prev);
+        energy += diff * diff + Math.abs(x) * .0004;
+      }
+      energy = Math.sqrt(energy / frame);
+      env.push(Math.max(0, energy - lastEnergy * .72));
+      lastEnergy = energy;
+    }
+    return {
+      values:smooth(env),
+      rate:sr / hop
+    };
+  }
+
+  function smooth(values){
+    const out = new Float32Array(values.length);
+    const half = Math.floor(LOWPASS_KERNEL.length / 2);
+    for(let i = 0; i < values.length; i++){
+      let sum = 0;
+      for(let k = 0; k < LOWPASS_KERNEL.length; k++){
+        const idx = clamp(i + k - half, 0, values.length - 1);
+        sum += values[idx] * LOWPASS_KERNEL[k];
+      }
+      out[i] = sum;
+    }
+    return Array.from(out);
+  }
+
+  function estimateTempo(onset){
+    const [minBpm, maxBpm] = el.tempoRange.value.split("-").map(Number);
+    const values = onset.values;
+    const mean = values.reduce((a,b) => a + b, 0) / Math.max(1, values.length);
+    const centered = values.map(v => Math.max(0, v - mean * .8));
+    const candidates = [];
+    for(let bpm = minBpm; bpm <= maxBpm; bpm += .5){
+      const lag = Math.round(onset.rate * 60 / bpm);
+      if(lag < 2 || lag >= centered.length) continue;
+      let sum = 0, count = 0;
+      for(let i = lag; i < centered.length; i++){
+        sum += centered[i] * centered[i - lag];
+        count++;
+      }
+      const score = sum / Math.max(1, count);
+      candidates.push({bpm, score});
+    }
+    candidates.sort((a,b) => b.score - a.score);
+    let best = candidates[0] || {bpm:0, score:0};
+    best = normalizeTempoCandidate(best, candidates, minBpm, maxBpm);
+    const second = candidates.find(c => Math.abs(c.bpm - best.bpm) > 4) || {score:0};
+    const peakRatio = best.score / Math.max(second.score, best.score * .3, 1e-9);
+    const density = centered.filter(v => v > mean).length / Math.max(1, centered.length);
+    const confidence = clamp((peakRatio - 1) * .34 + density * 1.2, .12, .95);
+    return {
+      bpm:Number(best.bpm.toFixed(1)),
+      confidence:Number(confidence.toFixed(3)),
+      range:el.tempoRange.value,
+      candidates:candidates.slice(0,8).map(c => ({bpm:Number(c.bpm.toFixed(1)), score:Number(c.score.toExponential(4))}))
+    };
+  }
+
+  function normalizeTempoCandidate(best, candidates, minBpm, maxBpm){
+    const variants = [best.bpm, best.bpm * 2, best.bpm / 2]
+      .filter(bpm => bpm >= minBpm && bpm <= maxBpm)
+      .map(bpm => {
+        const near = candidates.find(c => Math.abs(c.bpm - bpm) <= .5) || best;
+        return {bpm:near.bpm, score:near.score};
+      });
+    variants.sort((a,b) => b.score - a.score);
+    return variants[0] || best;
+  }
+
+  function computeChroma(startSec, endSec, stepSec){
+    const sr = state.sampleRate;
+    const chroma = new Float32Array(12);
+    const start = Math.floor(startSec * sr);
+    const end = Math.floor(endSec * sr);
+    const maxChunk = Math.max(4096, Math.floor(sr * stepSec));
+    for(let pos = start; pos < end; pos += maxChunk){
+      const chunkEnd = Math.min(end, pos + maxChunk);
+      addChunkChroma(chroma, pos, chunkEnd);
+    }
+    normalizeVector(chroma);
+    return Array.from(chroma);
+  }
+
+  function addChunkChroma(chroma, start, end){
+    const sr = state.sampleRate;
+    const n = end - start;
+    if(n < 512) return;
+    for(let midi = 36; midi <= 84; midi++){
+      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+      const power = goertzelPower(state.mono, start, end, freq, sr);
+      const pc = ((midi % 12) + 12) % 12;
+      const octaveWeight = midi < 45 ? .55 : midi > 76 ? .72 : 1;
+      chroma[pc] += Math.log1p(power * 5000) * octaveWeight;
+    }
+  }
+
+  function goertzelPower(data, start, end, freq, sr){
+    const n = end - start;
+    const sampleStride = 2;
+    const omega = 2 * Math.PI * freq * sampleStride / sr;
+    const coeff = 2 * Math.cos(omega);
+    let s0 = 0, s1 = 0, s2 = 0;
+    for(let i = start; i < end; i += sampleStride){
+      const windowPos = (i - start) / Math.max(1, n - 1);
+      const win = .5 - .5 * Math.cos(2 * Math.PI * windowPos);
+      s0 = data[i] * win + coeff * s1 - s2;
+      s2 = s1;
+      s1 = s0;
+    }
+    return s1 * s1 + s2 * s2 - coeff * s1 * s2;
+  }
+
+  function normalizeVector(vec){
+    const max = Math.max(...vec);
+    if(max <= 0) return vec;
+    for(let i = 0; i < vec.length; i++) vec[i] = vec[i] / max;
+    return vec;
+  }
+
+  function estimateKey(chroma){
+    const scores = [];
+    for(let root = 0; root < 12; root++){
+      scores.push({root, mode:"major", score:correlateRotated(chroma, MAJOR_PROFILE, root)});
+      scores.push({root, mode:"minor", score:correlateRotated(chroma, MINOR_PROFILE, root)});
+    }
+    scores.sort((a,b) => b.score - a.score);
+    const best = scores[0];
+    const second = scores[1] || {score:best.score};
+    const confidence = clamp((best.score - second.score) * 1.8 + .35, .15, .95);
+    return {
+      name:`${NOTE_NAMES[best.root]} ${best.mode}`,
+      root:NOTE_NAMES[best.root],
+      mode:best.mode,
+      confidence:Number(confidence.toFixed(3)),
+      chroma:chroma.map(v => Number(v.toFixed(4))),
+      candidates:scores.slice(0,5).map(s => ({key:`${NOTE_NAMES[s.root]} ${s.mode}`, score:Number(s.score.toFixed(4))}))
+    };
+  }
+
+  function correlateRotated(chroma, profile, root){
+    const a = [];
+    const b = [];
+    for(let i = 0; i < 12; i++){
+      a.push(chroma[(i + root) % 12]);
+      b.push(profile[i]);
+    }
+    return correlation(a,b);
+  }
+
+  function correlation(a,b){
+    const am = a.reduce((x,y) => x + y, 0) / a.length;
+    const bm = b.reduce((x,y) => x + y, 0) / b.length;
+    let num = 0, ad = 0, bd = 0;
+    for(let i = 0; i < a.length; i++){
+      const av = a[i] - am;
+      const bv = b[i] - bm;
+      num += av * bv;
+      ad += av * av;
+      bd += bv * bv;
+    }
+    return num / Math.sqrt(Math.max(1e-9, ad * bd));
+  }
+
+  async function estimateChordFrames(settings){
+    const frames = [];
+    const start = state.activeStart;
+    const end = state.activeEnd;
+    let index = 0;
+    const total = Math.max(1, Math.ceil((end - start) / settings.hopSec));
+    for(let t = start; t < end; t += settings.hopSec){
+      const wEnd = Math.min(end, t + settings.windowSec);
+      const chroma = computeChroma(t, wEnd, settings.windowSec);
+      const chord = matchChord(chroma);
+      frames.push({
+        start:Number(t.toFixed(3)),
+        end:Number(Math.min(t + settings.hopSec, end).toFixed(3)),
+        label:chord.label,
+        root:chord.root,
+        quality:chord.quality,
+        confidence:Number(chord.confidence.toFixed(3)),
+        bass:chord.bass,
+        chroma:chroma.map(v => Number(v.toFixed(4)))
+      });
+      index++;
+      if(index % 4 === 0){
+        setStatus("解析中", `コード区間を推定しています (${index}/${total})。`, 58 + index / total * 34);
+        await sleepFrame();
+      }
+    }
+    return frames;
+  }
+
+  function matchChord(chroma){
+    const sum = chroma.reduce((a,b) => a + b, 0);
+    if(sum < .08) return {label:"N.C.", root:null, quality:"none", bass:null, confidence:.2};
+    const bass = chroma.indexOf(Math.max(...chroma));
+    const matches = [];
+    for(let root = 0; root < 12; root++){
+      for(const tmpl of CHORD_TEMPLATES){
+        const template = new Array(12).fill(0);
+        tmpl.tones.forEach((tone, i) => template[(root + tone) % 12] = tmpl.weight[i]);
+        const score = cosine(chroma, template) - outsidePenalty(chroma, template) * .16;
+        matches.push({root, suffix:tmpl.suffix, score});
+      }
+    }
+    matches.sort((a,b) => b.score - a.score);
+    let best = matches[0];
+    if(el.preferSimple.checked && best.suffix && best.score < .74){
+      const simpleSuffix = best.suffix.includes("m") && best.suffix !== "maj7" ? "m" : "";
+      const simple = matches.find(m => m.root === best.root && m.suffix === simpleSuffix);
+      if(simple && simple.score > best.score - .08) best = simple;
+    }
+    const second = matches.find(m => m.root !== best.root || m.suffix !== best.suffix) || best;
+    const confidence = clamp((best.score - second.score) * 2.2 + best.score * .72, .12, .98);
+    return {
+      label:`${NOTE_NAMES[best.root]}${best.suffix}`,
+      root:NOTE_NAMES[best.root],
+      quality:best.suffix || "major",
+      bass:NOTE_NAMES[bass],
+      confidence
+    };
+  }
+
+  function cosine(a,b){
+    let num = 0, ad = 0, bd = 0;
+    for(let i = 0; i < a.length; i++){
+      num += a[i] * b[i];
+      ad += a[i] * a[i];
+      bd += b[i] * b[i];
+    }
+    return num / Math.sqrt(Math.max(1e-9, ad * bd));
+  }
+
+  function outsidePenalty(chroma, template){
+    let outside = 0, total = 0;
+    for(let i = 0; i < 12; i++){
+      total += chroma[i];
+      if(template[i] === 0) outside += chroma[i];
+    }
+    return outside / Math.max(.001, total);
+  }
+
+  function mergeChordFrames(frames){
+    const merged = [];
+    for(const frame of frames){
+      const last = merged[merged.length - 1];
+      if(last && last.label === frame.label && Math.abs(last.end - frame.start) < .05){
+        const durationA = last.end - last.start;
+        const durationB = frame.end - frame.start;
+        last.end = frame.end;
+        last.confidence = Number(((last.confidence * durationA + frame.confidence * durationB) / (durationA + durationB)).toFixed(3));
+      }else{
+        merged.push({...frame});
+      }
+    }
+    return merged.filter(row => row.end - row.start >= .35);
+  }
+
+  function topChords(chords){
+    const map = new Map();
+    chords.forEach(ch => {
+      const dur = ch.end - ch.start;
+      const prev = map.get(ch.label) || {label:ch.label, seconds:0, confidence:0, count:0};
+      prev.seconds += dur;
+      prev.confidence += ch.confidence;
+      prev.count++;
+      map.set(ch.label, prev);
+    });
+    return Array.from(map.values())
+      .map(v => ({label:v.label, seconds:Number(v.seconds.toFixed(2)), confidence:Number((v.confidence / v.count).toFixed(3))}))
+      .sort((a,b) => b.seconds - a.seconds)
+      .slice(0,8);
+  }
+
+  function renderResult(result){
+    el.bpmValue.textContent = result.tempo.bpm ? result.tempo.bpm : "--";
+    el.bpmSub.textContent = `信頼度 ${confidenceLabel(result.tempo.confidence)} / ${Math.round(result.tempo.confidence * 100)}%`;
+    el.keyValue.textContent = result.key.name;
+    el.keySub.textContent = `信頼度 ${confidenceLabel(result.key.confidence)} / ${Math.round(result.key.confidence * 100)}%`;
+    el.mainChordValue.textContent = result.mainChords.slice(0,4).map(c => c.label).join(" - ") || "--";
+    el.mainChordSub.textContent = `${result.chords.length} 区間 / 主要コード上位${result.mainChords.length}件`;
+    el.durationValue.textContent = fmtTime(result.file.durationSeconds);
+    el.fileSub.textContent = result.file.name;
+    renderChordTable(result.chords);
+    el.reportText.value = buildReportText(result);
+    el.jsonText.value = JSON.stringify(result, null, 2);
+    el.copyTextBtn.disabled = false;
+    el.downloadCsvBtn.disabled = false;
+    el.downloadJsonBtn.disabled = false;
+    renderQuality(result);
+  }
+
+  function renderChordTable(chords){
+    if(!chords.length){
+      el.chordOutput.className = "empty";
+      el.chordOutput.textContent = "コード区間を検出できませんでした。";
+      return;
+    }
+    el.chordOutput.className = "table-wrap";
+    const rows = chords.map((ch, i) => `
+      <tr>
+        <td class="mono">${i + 1}</td>
+        <td class="mono">${fmtTime(ch.start)}</td>
+        <td class="mono">${fmtTime(ch.end)}</td>
+        <td><strong>${escapeHtml(ch.label)}</strong></td>
+        <td>${escapeHtml(ch.bass || "-")}</td>
+        <td><span class="tag ${confidenceClass(ch.confidence)}">${confidenceLabel(ch.confidence)} ${Math.round(ch.confidence * 100)}%</span></td>
+      </tr>`).join("");
+    el.chordOutput.innerHTML = `
+      <table>
+        <thead><tr><th>#</th><th>Start</th><th>End</th><th>Chord</th><th>Peak note</th><th>Confidence</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function buildReportText(result){
+    const main = result.mainChords.slice(0,6).map(c => `${c.label} (${c.seconds.toFixed(1)}秒)`).join(" / ");
+    const progression = result.chords.slice(0,32).map(c => `${fmtTime(c.start)} ${c.label}`).join(" | ");
+    return [
+      "【音楽データ解析 推定結果】",
+      `ファイル: ${result.file.name}`,
+      `長さ: ${fmtTime(result.file.durationSeconds)} / 解析対象: ${fmtTime(result.file.activeRange.start)} - ${fmtTime(result.file.activeRange.end)}`,
+      `BPM: ${result.tempo.bpm} (信頼度: ${confidenceLabel(result.tempo.confidence)} ${Math.round(result.tempo.confidence * 100)}%)`,
+      `Key: ${result.key.name} (信頼度: ${confidenceLabel(result.key.confidence)} ${Math.round(result.key.confidence * 100)}%)`,
+      `主要コード: ${main || "未検出"}`,
+      "",
+      "【コード進行タイムライン】",
+      progression || "未検出",
+      "",
+      "【確認メモ】",
+      "この結果はブラウザ内の音響特徴量から算出した推定値です。正式なFeatherTune納品では、コード譜・ChordAI/DAW解析・手作業確認と照合してください。"
+    ].join("\n");
+  }
+
+  function renderQuality(result){
+    el.tempoQuality.textContent = `BPM: ${confidenceLabel(result.tempo.confidence)} (${Math.round(result.tempo.confidence * 100)}%)`;
+    el.tempoQualityDetail.textContent = `探索範囲 ${result.tempo.range}。候補: ${result.tempo.candidates.slice(0,3).map(c => c.bpm).join(", ")} BPM`;
+    el.keyQuality.textContent = `Key: ${confidenceLabel(result.key.confidence)} (${Math.round(result.key.confidence * 100)}%)`;
+    el.keyQualityDetail.textContent = `候補: ${result.key.candidates.map(c => c.key).join(" / ")}`;
+    const avg = result.chords.reduce((a,b) => a + b.confidence, 0) / Math.max(1, result.chords.length);
+    el.chordQuality.textContent = `Chord: ${confidenceLabel(avg)} (${Math.round(avg * 100)}%)`;
+    el.chordQualityDetail.textContent = `区間数 ${result.chords.length}。低信頼度区間は耳確認または手動補正してください。`;
+  }
+
+  function download(filename, content, type){
+    const blob = new Blob([content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function csvEscape(v){
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
+
+  function downloadCsv(){
+    if(!state.result) return;
+    const rows = [["index","start_sec","end_sec","start_time","end_time","chord","peak_note","confidence"]];
+    state.result.chords.forEach((ch, i) => rows.push([
+      i + 1, ch.start, ch.end, fmtTime(ch.start), fmtTime(ch.end), ch.label, ch.bass, ch.confidence
+    ]));
+    download("feathertune_audio_chord_bpm_analysis.csv", rows.map(r => r.map(csvEscape).join(",")).join("\n"), "text/csv;charset=utf-8");
+  }
+
+  function resetResults(clearFile = true){
+    if(clearFile){
+      state.file = null;
+      state.buffer = null;
+      state.mono = null;
+      state.sampleRate = 0;
+      state.activeStart = 0;
+      state.activeEnd = 0;
+      el.fileInput.value = "";
+      el.analyzeBtn.disabled = true;
+    }
+    state.result = null;
+    el.bpmValue.textContent = "--";
+    el.bpmSub.textContent = "未解析";
+    el.keyValue.textContent = "--";
+    el.keySub.textContent = "未解析";
+    el.mainChordValue.textContent = "--";
+    el.mainChordSub.textContent = "未解析";
+    el.durationValue.textContent = state.buffer ? fmtTime(state.buffer.duration) : "--";
+    el.fileSub.textContent = state.file ? state.file.name : "ファイル未選択";
+    el.chordOutput.className = "empty";
+    el.chordOutput.textContent = "解析後にコード区間が表示されます。";
+    el.reportText.value = "解析後にFeatherTuneレポートへ貼り込めるテキストを表示します。";
+    el.jsonText.value = "{}";
+    el.copyTextBtn.disabled = true;
+    el.downloadCsvBtn.disabled = true;
+    el.downloadJsonBtn.disabled = true;
+    el.tempoQuality.textContent = "BPM: 未解析";
+    el.tempoQualityDetail.textContent = "オンセット密度と自己相関ピークから評価します。";
+    el.keyQuality.textContent = "Key: 未解析";
+    el.keyQualityDetail.textContent = "集約クロマと長短調テンプレートの差から評価します。";
+    el.chordQuality.textContent = "Chord: 未解析";
+    el.chordQualityDetail.textContent = "各区間のクロマ一致度から評価します。";
+    drawWaveform();
+    setStatus("待機中", "音声ファイルを読み込んでください。", 0);
+  }
+
+  el.fileInput.addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    try{
+      await loadFile(file);
+    }catch(err){
+      console.error(err);
+      setStatus("読み込み失敗", err.message || "この音声ファイルはブラウザでデコードできませんでした。", 0);
+    }
+  });
+
+  ["dragenter","dragover"].forEach(type => {
+    el.dropZone.addEventListener(type, e => {
+      e.preventDefault();
+      el.dropZone.classList.add("dragging");
+    });
+  });
+  ["dragleave","drop"].forEach(type => {
+    el.dropZone.addEventListener(type, e => {
+      e.preventDefault();
+      el.dropZone.classList.remove("dragging");
+    });
+  });
+  el.dropZone.addEventListener("drop", async e => {
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(!file) return;
+    try{
+      await loadFile(file);
+    }catch(err){
+      console.error(err);
+      setStatus("読み込み失敗", err.message || "この音声ファイルはブラウザでデコードできませんでした。", 0);
+    }
+  });
+
+  el.analyzeBtn.addEventListener("click", () => analyze().catch(err => {
+    console.error(err);
+    el.analyzeBtn.disabled = false;
+    setStatus("解析失敗", err.message || "解析中にエラーが発生しました。", 0);
+  }));
+  el.resetBtn.addEventListener("click", () => resetResults(true));
+  el.downloadCsvBtn.addEventListener("click", downloadCsv);
+  el.downloadJsonBtn.addEventListener("click", () => {
+    if(!state.result) return;
+    download("feathertune_audio_chord_bpm_analysis.json", JSON.stringify(state.result, null, 2), "application/json;charset=utf-8");
+  });
+  el.copyTextBtn.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(el.reportText.value);
+    setStatus("コピー完了", "レポート用テキストをクリップボードへコピーしました。", 100);
+  });
+  el.trimMode.addEventListener("change", () => {
+    if(state.buffer){
+      detectActiveRange();
+      drawWaveform();
+    }
+  });
+
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+    });
+  });
+
+  resetResults(true);
+})();
+</script>
+</body>
+</html>
