@@ -227,6 +227,11 @@
     border-color:rgba(244,201,93,0.4);
   }
   .chord-drop input{display:none;}
+  .lyrics-opt{border:1px solid var(--card-border);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--card-bg);}
+  .lyrics-opt .lo-title{font-size:14px;font-weight:500;color:var(--accent-sky);margin-bottom:10px;}
+  .lyrics-opt .lo-radio{display:block;font-size:13px;color:var(--text-main);margin:6px 0;cursor:pointer;}
+  .lyrics-opt .lo-rights{display:none;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-main);margin:10px 0 4px;cursor:pointer;padding-top:10px;border-top:1px dashed var(--card-border);}
+  .lyrics-opt .lo-hint{font-size:12px;color:#ff8fa3;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -258,6 +263,14 @@
     </div>
     <span class="cd-badge" id="chordBadge">未読み込み</span>
   </label>
+
+  <div class="lyrics-opt" id="lyricsOpt">
+    <div class="lo-title">📝 歌詞の掲載方法</div>
+    <label class="lo-radio"><input type="radio" name="lyricsMode" value="excerpt" checked> 印象的な部分のみ（サビ中心の抜粋）</label>
+    <label class="lo-radio"><input type="radio" name="lyricsMode" value="full"> フル歌詞を掲載</label>
+    <label class="lo-rights" id="rightsWrap"><input type="checkbox" id="rightsConfirm"> この歌詞の著作権を自分が保有しています（フル掲載に同意）</label>
+    <div class="lo-hint" id="lyricsHint"></div>
+  </div>
 
   <div class="status" id="status"></div>
 
@@ -330,6 +343,37 @@ const fileInput     = document.getElementById('fileInput');
 const chordDrop     = document.getElementById('chordDrop');
 const chordInput    = document.getElementById('chordInput');
 const chordBadge    = document.getElementById('chordBadge');
+
+// ── 歌詞の掲載方法（フル/抜粋）＋権利確認（せいちゃん指定 2026-06-24）──
+const rightsConfirm = document.getElementById('rightsConfirm');
+const rightsWrap    = document.getElementById('rightsWrap');
+const lyricsHint    = document.getElementById('lyricsHint');
+function currentLyricsMode(){
+  const r = document.querySelector('input[name="lyricsMode"]:checked');
+  return r ? r.value : 'excerpt';
+}
+function lyricsFullAllowed(){
+  return currentLyricsMode()==='full' && !!(rightsConfirm && rightsConfirm.checked);
+}
+function updateLyricsOptUI(){
+  const full = currentLyricsMode()==='full';
+  if(rightsWrap) rightsWrap.style.display = full ? 'flex' : 'none';
+  if(lyricsHint){
+    lyricsHint.textContent = (full && !(rightsConfirm && rightsConfirm.checked))
+      ? '※ フル歌詞の掲載には「権利を保有している」チェックが必要です。未チェックの間は抜粋で掲載します。'
+      : '';
+  }
+}
+function onLyricsOptChange(){
+  updateLyricsOptUI();
+  if(extractedData){
+    generatedHtml = generateReport(extractedData);
+    renderSummary(extractedData);
+  }
+}
+document.querySelectorAll('input[name="lyricsMode"]').forEach(r=>r.addEventListener('change', onLyricsOptChange));
+if(rightsConfirm) rightsConfirm.addEventListener('change', onLyricsOptChange);
+updateLyricsOptUI();
 const statusEl      = document.getElementById('status');
 const authErrorEl   = document.getElementById('authError');
 const syncBadgeEl   = document.getElementById('syncBadge');
@@ -1090,6 +1134,20 @@ function pickLyricStanzas(lyrics){
   return [filtered[0], filtered[Math.floor(filtered.length/3)], filtered[Math.floor(filtered.length*2/3)], filtered[filtered.length-1]];
 }
 
+// フル歌詞: 連を間引かず、全連を返す（権利保有チェック時のみ使用）。
+function pickAllStanzas(lyrics){
+  if(!lyrics) return [];
+  const lines = lyrics.split(/\n/).map(l=>l.trim());
+  const stanzas = [];
+  let cur = [];
+  lines.forEach(l=>{
+    if(l===''){ if(cur.length){ stanzas.push(cur); cur=[]; } }
+    else { cur.push(l); }
+  });
+  if(cur.length) stanzas.push(cur);
+  return stanzas.filter(s=>s.length>=2 && s.join('').length>=8);
+}
+
 function highlightLyricLine(line, charPhrases){
   let h = escapeHtml(line);
   h = h.replace(/「([^」]+)」/g, '<span class="highlight">「$1」</span>');
@@ -1124,7 +1182,8 @@ function generateReport(data){
   const stages = buildTimelineStages(sections, fallbackChords, chordCompanionData);
   const nonDia = data.nonDiatonic || [];
   const appeals = (data.appeals && data.appeals.length>=2) ? data.appeals : defaultAppeals();
-  const stanzas = pickLyricStanzas(data.lyrics);
+  // 権利チェック付きフル選択時のみ全文、それ以外は印象的な部分(サビ中心)の抜粋
+  const stanzas = lyricsFullAllowed() ? pickAllStanzas(data.lyrics) : pickLyricStanzas(data.lyrics);
   const charPhrases = data.charPhrases || [];
   const metrics = deriveMetrics(data);
 
@@ -1137,6 +1196,7 @@ function generateReport(data){
     identityProse: data.identityProse, similarProse: data.similarProse,
     improvementProse: data.improvementProse, overallComment: data.overallComment,
     stages, mainChords, nonDia, appeals, stanzas, charPhrases, metrics,
+    lyricsFull: lyricsFullAllowed(),
     mainProgressionText: data.mainProgression,
     aiProb: data.aiProb,
     expressionProfile: data.expressionProfile,
@@ -1821,8 +1881,9 @@ function reportTemplate(d){
   if(d.stanzas.length){
     sections.push(`
       <section class="sec-lyrics">
-        <div class="section-header"><span class="section-num">${N()} / LYRICS</span><h2 class="section-title">印象的な歌詞表現<small>SIGNATURE LYRICS</small></h2></div>
+        <div class="section-header"><span class="section-num">${N()} / LYRICS</span><h2 class="section-title">${d.lyricsFull?'歌詞（全文）':'印象的な歌詞表現'}<small>${d.lyricsFull?'FULL LYRICS':'SIGNATURE LYRICS'}</small></h2></div>
         <div class="lyrics-block">${stanzasHtml}</div>
+        ${d.lyricsFull?'<div style="margin-top:16px;font-size:12px;color:#8a93a6;text-align:center;line-height:1.7;">※掲載歌詞は、権利者ご本人が著作権を保有していることを確認のうえ掲載しています。</div>':''}
       </section>`);
   }
 
