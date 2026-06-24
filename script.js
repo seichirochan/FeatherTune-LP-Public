@@ -153,7 +153,7 @@ const renderHelpAnswer = (topicKey) => {
   }
 
   const links = topic.links
-    .map(([label, href]) => `<a href="${href}"${href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}>${label}</a>`)
+    .map(([label, href]) => `<a href="${href}"${href.startsWith("http") ? ' target="_blank" rel="noopener noreferrer"' : ""}>${label}</a>`)
     .join(" / ");
 
   helpAnswer.innerHTML = `
