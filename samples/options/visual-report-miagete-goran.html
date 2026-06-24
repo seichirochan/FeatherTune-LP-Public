@@ -369,14 +369,14 @@ footer{text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid r
   .conclusion .one-line{font-size:12px;margin-top:12px;padding-top:12px;}
   footer{margin-top:12px;padding-top:10px;font-size:9px;}
 }
-.ft-ai-mark{display:inline-flex;align-items:center;gap:8px;margin:0 0 18px;padding:6px 11px;border:1px solid rgba(210,176,90,.45);border-radius:999px;background:rgba(255,255,255,.08);color:var(--accent-gold);font-size:12px;font-weight:800;letter-spacing:.08em;width:max-content}
-.ft-ai-mark img{width:22px;height:22px;object-fit:contain;display:block}
-@media(max-width:640px){.ft-ai-mark{font-size:11px;margin-bottom:14px}.ft-ai-mark img{width:20px;height:20px}}
+.ft-ai-mark{position:fixed;right:24px;bottom:20px;z-index:4;width:58px;height:58px;pointer-events:none;opacity:.88;filter:drop-shadow(0 8px 18px rgba(0,0,0,.28))}
+.ft-ai-mark-svg{width:100%;height:100%;display:block}
+@media(max-width:640px){.ft-ai-mark{right:16px;bottom:16px;width:48px;height:48px}}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="ft-ai-mark" aria-label="AI活用マーク"><img src="../../assets/ai-mark-gold.png" alt="AI活用"><span>AI活用</span></div>
+<div class="ft-ai-mark" aria-label="CO-CREATED WITH AI"><svg class="ft-ai-mark-svg" viewBox="0 0 80 80" role="img" aria-label="CO-CREATED WITH AI" xmlns="http://www.w3.org/2000/svg"><title>CO-CREATED WITH AI</title><circle cx="40" cy="40" r="37" fill="rgba(255,248,220,.9)" stroke="#d2b05a" stroke-width="3"/><circle cx="40" cy="40" r="28" fill="none" stroke="#b9902e" stroke-width="1.5" stroke-dasharray="4 5"/><text x="40" y="45" text-anchor="middle" font-family="Georgia, serif" font-size="24" font-weight="700" fill="#76540d">AI</text><path d="M25 55c9 6 21 6 30 0" fill="none" stroke="#b9902e" stroke-width="2" stroke-linecap="round"/></svg></div>
 <div class="hero">
   <div class="stars"></div>
   <div class="moon"></div>
