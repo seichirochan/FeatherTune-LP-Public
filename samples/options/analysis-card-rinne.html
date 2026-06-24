@@ -278,10 +278,14 @@ body{margin:0;background:#050218}
     transition:opacity .25s, transform .25s;
     border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px)}
   .toast.show{opacity:1;transform:translate(-50%,0)}
+  .ft-ai-mark{display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;padding:6px 11px;border:1px solid rgba(246,210,122,.45);border-radius:999px;background:rgba(255,255,255,.08);color:var(--c-gold);font-size:12px;font-weight:800;letter-spacing:.08em;width:max-content}
+  .ft-ai-mark img{width:22px;height:22px;object-fit:contain;display:block}
+  @media(max-width:640px){.ft-ai-mark{font-size:11px;margin-bottom:12px}.ft-ai-mark img{width:20px;height:20px}}
 
 </style>
 </head><body>
 <div class="card-stage" id="card">
+  <div class="ft-ai-mark" aria-label="AI活用マーク"><img src="../../assets/ai-mark-gold.png" alt="AI活用"><span>AI活用</span></div>
   <div class="c-brand">
     <div class="c-logo">FeatherTune</div>
     <div class="c-rank">CRS RANK C</div>
