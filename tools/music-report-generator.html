@@ -1220,13 +1220,17 @@ function buildTimelineStages(sections, fallbackChords, companion){
     let cls = '';
     if(/サビ|大サビ/.test(sec.name) && !/前/.test(sec.name)) cls = 'climax';
     if(/Dメロ|Bridge/.test(sec.name)) cls = 'dmelo';
-    // When companion loaded: use per-section companion chords (best)
-    // When no companion: show only explicitly extracted section chords; otherwise empty (shows placeholder)
+    // 優先順: ①HTMLから抽出したセクション別コード ②chordAIファイル(companion) ③メイン進行(fallback)
+    // せいちゃん指定(2026-06-25): chordAIファイルが無くても、レポートHTMLから拾った主要進行(fallbackChords)で
+    // セクションのコードチップを埋め、これまでのビジュアルレポートと同様にコード表示する（companion非依存）。
     let chords = (sec.chords && sec.chords.length > 0) ? sec.chords : [];
     if(companion){
       const nextSec = sections[i+1] || null;
       const cChords = getChordsForSectionFromCompanion(sec, nextSec, companion);
       if(cChords && cChords.length > 0) chords = cChords;
+    }
+    if((!chords || chords.length === 0) && fallbackChords && fallbackChords.length > 0){
+      chords = fallbackChords.slice(0, 8);
     }
     return Object.assign({}, sec, {pct, cls, chords});
   });
