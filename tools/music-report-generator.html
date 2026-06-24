@@ -1941,6 +1941,9 @@ function baseHtml(d, body){
 html,body{background:linear-gradient(180deg,#070a1f 0%,#0b1026 25%,#1a1f4a 70%,#2a1f50 100%);color:var(--text-main);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.75;min-height:100vh;}
 .container{max-width:1100px;margin:0 auto;padding:48px 24px 80px;}
 .hero{position:relative;text-align:center;padding:80px 24px 64px;border-radius:24px;background:radial-gradient(ellipse at top,rgba(196,181,253,0.25),transparent 60%),radial-gradient(ellipse at bottom right,rgba(244,201,93,0.15),transparent 50%),linear-gradient(180deg,rgba(11,16,38,0.6),rgba(26,31,74,0.4));border:1px solid var(--card-border);overflow:hidden;margin-bottom:48px;}
+.ft-ai-mark{display:inline-flex;align-items:center;gap:8px;margin:0 0 18px;padding:6px 11px;border:1px solid rgba(210,176,90,.45);border-radius:999px;background:rgba(255,255,255,.08);color:var(--accent-gold);font-size:12px;font-weight:800;letter-spacing:.08em;width:max-content}
+.ft-ai-mark img{width:22px;height:22px;object-fit:contain;display:block}
+@media(max-width:640px){.ft-ai-mark{font-size:11px;margin-bottom:14px}.ft-ai-mark img{width:20px;height:20px}}
 .stars{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 28% 42%,#fff,transparent),radial-gradient(1.5px 1.5px at 47% 12%,rgba(255,255,255,0.9),transparent),radial-gradient(1px 1px at 65% 30%,#fff,transparent),radial-gradient(1px 1px at 78% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 22%,rgba(244,201,93,0.8),transparent),radial-gradient(1px 1px at 35% 75%,#fff,transparent),radial-gradient(1px 1px at 8% 60%,#fff,transparent),radial-gradient(1px 1px at 55% 85%,#fff,transparent),radial-gradient(2px 2px at 92% 80%,rgba(125,211,252,0.6),transparent);opacity:0.7;}
 .moon{position:absolute;top:32px;right:48px;width:64px;height:64px;background:radial-gradient(circle at 35% 35%,#fef3c7,#f4c95d 60%,#d4a017);border-radius:50%;box-shadow:0 0 40px rgba(244,201,93,0.5),0 0 80px rgba(244,201,93,0.2);}
 .rpt-badge{position:absolute;right:18px;bottom:16px;width:68px;height:68px;opacity:0.88;}
@@ -2300,6 +2303,8 @@ footer{text-align:center;margin-top:64px;padding-top:32px;border-top:1px solid r
 </head>
 <body>
 <div class="container">
+<!-- せいちゃん指定(2026-06-24): AI活用マーク(こで標準 .ft-ai-mark)をレポート冒頭に表示 -->
+<div class="ft-ai-mark" aria-label="AI活用マーク"><img src="https://feathertune.com/assets/ai-mark-gold.png" alt="AI活用"><span>AI活用</span></div>
 <div class="hero">
   <div class="stars"></div>
   <div class="moon"></div>
