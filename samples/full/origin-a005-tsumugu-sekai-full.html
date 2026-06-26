@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="feathertune-sync-id" content="FT-20260531-SONG-F08DF6">
 <meta name="feathertune-version" content="v1.00">
 <meta name="feathertune-report-type" content="core-analysis">
@@ -116,7 +117,7 @@ text-align: center;
 }
 .header-inner {
 display: flex;
-align-items: center;
+align-items: flex-start;
 justify-content: space-between;
 gap: 24px;
 }
@@ -397,6 +398,81 @@ font-weight: 700;
 color: #f3fbff;
 text-align: right;
 }
+/* PR-D: CRS 3パネル(header下段・横並び・ダークnavy) */
+.crs-panels {
+margin-top: 22px;
+}
+.crs-panels-title {
+font-size: 0.82em;
+letter-spacing: 1.2px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 10px;
+}
+.crs-panels-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 14px;
+align-items: start;
+}
+.crs-panel {
+border: 1px solid rgba(125, 211, 252, 0.28);
+border-radius: 10px;
+background: linear-gradient(145deg, rgba(5, 18, 48, 0.92), rgba(10, 37, 82, 0.72));
+box-shadow: inset 0 1px 18px rgba(255, 255, 255, 0.05);
+padding: 14px 16px;
+}
+.crs-panel-title {
+font-size: 0.8em;
+letter-spacing: 0.6px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 8px;
+}
+.crs-panel-muted {
+font-size: 0.72em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.62);
+margin-top: 5px;
+}
+.crs-panel-muted strong { color: #eaf9ff; }
+.crs-row-hint { font-size: 0.82em; color: rgba(196, 232, 255, 0.5); }
+.crs-persona-name {
+font-size: 1.18em;
+font-weight: 800;
+color: #ffffff;
+margin: 2px 0 6px;
+text-shadow: 0 0 14px rgba(125, 211, 252, 0.30);
+}
+.crs-persona-desc {
+font-size: 0.62em;
+font-weight: 500;
+color: rgba(196, 232, 255, 0.66);
+}
+.crs-persona-temps {
+margin-bottom: 6px;
+font-size: 0.9em;
+color: #eaf9ff;
+}
+.crs-badge-wrap { margin-top: 10px; }
+.crs-badge {
+display: inline-block;
+padding: 3px 12px;
+border-radius: 999px;
+background: rgba(14, 52, 95, 0.7);
+border: 1px solid rgba(125, 211, 252, 0.5);
+color: #d8f7ff;
+font-weight: 700;
+font-size: 0.86em;
+}
+.crs-mirror {
+font-size: 0.74em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.6);
+margin-top: 8px;
+}
 .content {
 padding: 40px;
 }
@@ -604,6 +680,9 @@ max-width: none;
 width: auto;
 margin-right: 0;
 }
+.crs-panels-grid {
+grid-template-columns: 1fr;
+}
 }
 @media (max-width: 560px) {
 .header-meta {
@@ -657,7 +736,7 @@ gap: 2px;
     <div style="font-size: 0.95em; margin-bottom: 5px;">曲名：ツムグセカイ</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">アーティスト名：kindlyfeatherWORKS</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">レポートID：FT-119dc9dd</div>
-    <div style="font-size: 0.95em; margin-bottom: 5px;">作成日：2026-05-31</div>
+    <div style="font-size: 0.95em; margin-bottom: 5px;">作成日：2026-06-26</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">Version：v1.00</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">分析依頼者：吉村　晴一郎</div>
 </div>
@@ -676,12 +755,12 @@ gap: 2px;
 </div>
 <div class="crs-score-item crs-score-item-main">
 <div class="crs-score-name">CRS</div>
-<div class="crs-score-number">61</div>
-<div class="crs-score-caption">Score / Rank B</div>
+<div class="crs-score-number">71</div>
+<div class="crs-score-caption">Score / Badge A</div>
 </div>
 <div class="crs-score-item">
 <div class="crs-score-name">MUSIC</div>
-<div class="crs-score-number">47</div>
+<div class="crs-score-number">67</div>
 <div class="crs-score-caption">Score</div>
 </div>
 </div>
@@ -695,26 +774,31 @@ gap: 2px;
 <div class="summary-card-row"><span>LYRICS</span><span class="summary-level-cell"><span class="summary-level summary-level-medium">MEDIUM</span></span></div>
 </div>
 <div class="summary-card-note">※各レベルは音楽分析上の確認優先度であり、法的判断ではありません。「要確認」は侵害可能性を断定するものではありません。</div>
-<div class="crs-breakdown">
-<div class="crs-breakdown-title">CRS Breakdown</div>
-<div class="crs-breakdown-row"><span>Lyrics Score</span><strong>75 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Music Score</span><strong>47 / 100</strong></div>
-<div class="crs-breakdown-row"><span>CRS</span><strong>61 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Rank</span><strong>B</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Lyrics</span><strong>人間創作</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Music</span><strong>人間/AI</strong></div>
-<div class="crs-breakdown-row"><span>Lyrics Analysis</span><strong>60 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Lyrics Human Involvement</span><strong>15 / 15</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Lyrics</span><strong>5 / 10</strong></div>
-<div class="crs-breakdown-row"><span>ACRCloud / AI probability</span><strong>92.0% / 4.8pt (max 30)</strong></div>
-<div class="crs-breakdown-row"><span>Chord Structure</span><strong>37 / 40</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Music</span><strong>5 / 10</strong></div>
-<div class="crs-breakdown-row"><span>Music Analysis</span><strong>46.8 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Music Human Involvement</span><strong>0 / 15</strong></div>
-<div class="crs-breakdown-row"><span>Type / Attribute</span><strong>詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）</strong></div>
 </div>
 </div>
+<div class="crs-panels"><div class="crs-panels-title">CRS Breakdown</div><div class="crs-panels-grid"><div class="crs-panel">
+<div class="crs-panel-title">あなたの曲の個性</div>
+<div class="crs-breakdown-row"><span>表現タイプ</span><strong>詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）</strong></div>
 </div>
+<div class="crs-panel">
+<div class="crs-panel-title">制作プロセスの開示（How it was made）</div>
+<div class="crs-breakdown-row"><span>作詞</span><strong>人間創作</strong></div>
+<div class="crs-breakdown-row"><span>作曲</span><strong>人間/AI</strong></div>
+<div class="crs-breakdown-row"><span>AI検知度（参考）</span><strong>92.0%</strong></div>
+<div class="crs-panel-muted">※ 作詞・作曲への人の関わり(共創)は、ごく小さな"温度"として創造スコアに加点しています（加点のみ・AI利用も加点・減点なし）。</div>
+<div class="crs-panel-muted">※ AI検知度は参考情報です。<strong>創造スコアには影響しません。</strong></div>
+<div class="crs-panel-muted">AIを隠さず、罰せず、正直に開示しています。</div>
+</div>
+<div class="crs-panel">
+<div class="crs-panel-title">MUSICの内訳（なぜこのスコアか）</div>
+<div class="crs-breakdown-row"><span>基本キー整合<span class="crs-row-hint">（キーと進行の土台がそろっているか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>王道進行の安定<span class="crs-row-hint">（親しみやすい定番進行か）</span></span><strong>5 / 8</strong></div>
+<div class="crs-breakdown-row"><span>区間の変化<span class="crs-row-hint">（展開・場面転換の豊かさ）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>独創性<span class="crs-row-hint">（転調・借用など冒険的な工夫）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>感情適合<span class="crs-row-hint">（曲の感情にコードが寄り添うか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>コード構造 合計</span><strong>37 / 40</strong></div>
+<div class="crs-panel-muted">※ 各軸は既存Chord AI情報からの暫定算出です。</div>
+</div></div></div>
 </div>
 <div class="content">
 <div class="plan-report-meta">
@@ -723,7 +807,7 @@ gap: 2px;
 曲名：ツムグセカイ<br>
 アーティスト名：kindlyfeatherWORKS<br>
 レポートID：FT-119dc9dd<br>
-作成日：2026-05-31</p>
+作成日：2026-06-26</p>
 </div>
 
 
@@ -950,7 +1034,7 @@ FM7 | G | Em7 | Am
         <tr><th>分析軸</th><th>評価</th><th>点数</th><th>補足</th></tr>
         <tr><td>抽象性・具体性バランス</td><td><strong>高</strong></td><td>7/10</td><td>内訳：抽象性67% / 具体性33%<br>方向性：やや抽象寄り<br>タイプ：抽象優位型</td></tr><tr><td>比喩独自性</td><td><strong>中</strong></td><td>6/10</td><td>比喩表現と特徴的表現を確認</td></tr><tr><td>情景描写力</td><td><strong>中</strong></td><td>6/10</td><td>自然物・身体・場所・時間帯・色彩語を確認</td></tr><tr><td>感情ダイナミクス</td><td><strong>中</strong></td><td>6/10</td><td>複数の感情表現は確認されるものの、感情の時間的変化や対比構造は限定的であり、ダイナミクス（振れ幅）は中程度に留まります</td></tr><tr><td>文体リズムの自然さ</td><td><strong>高</strong></td><td>10/10</td><td>繰り返し表現・n-gram特徴を文体として確認</td></tr><tr><td>既視感の少なさ</td><td><strong>中</strong></td><td>6/10</td><td>特徴的な表現は見られますが、一部に定型的または確認対象となる表現も含まれます</td></tr><tr><td>表現構造の一貫性</td><td><strong>高</strong></td><td>9/10</td><td>語彙傾向・リズム・既存解析結果のまとまりを評価</td></tr>
     </table>
-    <p><strong>短評：</strong>補正後の総合点は55/70、総合ランクはAです。表現称号は「詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）」です。抽象性・具体性バランスは7/10、内訳は抽象性67%・具体性33%、方向性はやや抽象寄り、タイプは抽象優位型です。抽象語を軸に、概念や内面の動きを中心に展開する傾向があります。感情の揺れも伴い、内面的な変化としての表現に厚みがあります。この曲の強みは、文体リズムの自然さ・表現構造の一貫性が突出している点です。リズム型・構造型・ビジュアル型※の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として概念駆動型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・リズムパターン型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。</p>
+    <p><strong>短評：</strong>補正後の総合点は71/70、総合ランクはAです。表現称号は「詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）」です。抽象性・具体性バランスは7/10、内訳は抽象性67%・具体性33%、方向性はやや抽象寄り、タイプは抽象優位型です。抽象語を軸に、概念や内面の動きを中心に展開する傾向があります。感情の揺れも伴い、内面的な変化としての表現に厚みがあります。この曲の強みは、文体リズムの自然さ・表現構造の一貫性が突出している点です。リズム型・構造型・ビジュアル型※の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として概念駆動型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・リズムパターン型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。</p>
     <div style="margin-top:12px; color:#6c757d; font-size:0.9em;">本項目は、歌詞に含まれる表現傾向・文体の均質性・抽象語の密度・定型表現の傾向などを分析した参考指標です。AI生成の有無を判定・断定するものではありません。</div>
 </div>
 <div class="lyrics-box">
@@ -1229,7 +1313,7 @@ ACRCloudによる明確な類似楽曲は検出されなかった。コード進
 </ul>
 <h4>最終結論</h4>
 <p style="margin-top: 15px; line-height: 1.8; color: #2c3e50;">
-提供された楽曲「ツムグセカイ」は、AI作曲ツールSuno（Pro版 V5）を用いて制作されており、歌詞は人間が創作し、作曲は人間とAIの共同、歌唱はAIによって行われたと申告されています。音楽的にはJ-POPの要素を持つポップスジャンルで、明確なメロディラインと展開を持っています。Chord AIの分析によると、Aマイナーキーを基調とし、転調や非ダイアトニックコードを効果的に使用して楽曲に変化を与えています。音源のスペクトル分析では、Suno V5特有の音響的特徴が見られるものの、全体的に高品質な仕上がりです。現行の著作権法においてAI生成部分の著作権の帰属が明確でないため、この点が本楽曲の著作権上の主な論点となります。JASRACへの登録申請中であると申告されていますが、AI作曲部分は、入力者の申告のみでは著作権成立を認定せず、明確な根拠が示されない限り本レポート上は著作権対象として扱いません。ACRCloudの類似楽曲検索では明確な一致は見られず、既存楽曲との直接的な侵害リスクは低いと判断されます。 補正後の総合点は55/70、総合ランクはAです。表現称号は「詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）」です。抽象性・具体性バランスは7/10、内訳は抽象性67%・具体性33%、方向性はやや抽象寄り、タイプは抽象優位型です。抽象語を軸に、概念や内面の動きを中心に展開する傾向があります。感情の揺れも伴い、内面的な変化としての表現に厚みがあります。この曲の強みは、文体リズムの自然さ・表現構造の一貫性が突出している点です。リズム型・構造型・ビジュアル型※の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として概念駆動型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・リズムパターン型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。
+提供された楽曲「ツムグセカイ」は、AI作曲ツールSuno（Pro版 V5）を用いて制作されており、歌詞は人間が創作し、作曲は人間とAIの共同、歌唱はAIによって行われたと申告されています。音楽的にはJ-POPの要素を持つポップスジャンルで、明確なメロディラインと展開を持っています。Chord AIの分析によると、Aマイナーキーを基調とし、転調や非ダイアトニックコードを効果的に使用して楽曲に変化を与えています。音源のスペクトル分析では、Suno V5特有の音響的特徴が見られるものの、全体的に高品質な仕上がりです。現行の著作権法においてAI生成部分の著作権の帰属が明確でないため、この点が本楽曲の著作権上の主な論点となります。JASRACへの登録申請中であると申告されていますが、AI作曲部分は、入力者の申告のみでは著作権成立を認定せず、明確な根拠が示されない限り本レポート上は著作権対象として扱いません。ACRCloudの類似楽曲検索では明確な一致は見られず、既存楽曲との直接的な侵害リスクは低いと判断されます。 補正後の総合点は71/70、総合ランクはAです。表現称号は「詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）」です。抽象性・具体性バランスは7/10、内訳は抽象性67%・具体性33%、方向性はやや抽象寄り、タイプは抽象優位型です。抽象語を軸に、概念や内面の動きを中心に展開する傾向があります。感情の揺れも伴い、内面的な変化としての表現に厚みがあります。この曲の強みは、文体リズムの自然さ・表現構造の一貫性が突出している点です。リズム型・構造型・ビジュアル型※の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として概念駆動型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・リズムパターン型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。
 </p>
 <div class="technical-details" style="margin-top:20px; border-left:4px solid #17a2b8;">
 <h4>■ 類似確認レベル</h4>
@@ -1525,5 +1609,6 @@ AI作曲部分については、明確な根拠が示されない限り著作権
 </div>
 </div>
 </div>
+<script type="application/json" id="feathertune-crs-summary-json">{"kind":"feathertune-crs-summary/v1","crs_summary":{"score_name":"Creative Resonance Score","score_abbr":"CRS","score":71,"rank":"A","lyrics_score":75,"music_score":67,"human_creation_lyrics":"人間創作","human_creation_music":"人間/AI","lyrics_originality_score_70":55,"lyrics_rights_registration_bonus_10":5,"lyrics_analysis_score_70":60,"lyrics_human_creation_bonus_30":15,"lyrics_human_creation_bonus_max":15,"acr_ai_probability":92.0,"final_acr_score_30":4.8,"chord_structure_score_40":37,"music_rights_registration_bonus_10":5,"music_analysis_score_70":46.8,"music_human_creation_bonus_30":0,"music_human_creation_bonus_max":15,"chord_structure_details":{"score":37,"details":{"basic_key_alignment":8,"royal_progression_stability":5,"section_variation":8,"ingenuity":8,"emotion_fit":8},"note":"既存Chord AI情報から可能な範囲で暫定算出 (Chord Structure 40点満点 / spec v2.1)"},"chord_structure":"FM7 | G | Em7 | Am","type_attribute":"詩的情景描写型（リズム型 × 構造型 × ビジュアル型※）","todo":"Chord Structure各軸は既存Chord AI情報からの暫定算出。専用楽理判定器は別実装。JASRAC/NexTone作品コードは管理・登録情報の参考評価であり、権利状態の保証ではありません。","lyrics_creative_100":75,"music_creative_100":67,"lyrics_involvement_pt":0,"music_involvement_pt":2,"lyrics_implemented_frame_max_effective":80,"music_implemented_frame_max_effective":68,"music_implemented_frame_max":68}}</script>
 </body>
 </html>

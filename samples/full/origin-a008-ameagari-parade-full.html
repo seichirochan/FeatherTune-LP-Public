@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="feathertune-sync-id" content="FT-20260601-PARADE-297188">
 <meta name="feathertune-version" content="v1.00">
 <meta name="feathertune-report-type" content="core-analysis">
@@ -116,7 +117,7 @@ text-align: center;
 }
 .header-inner {
 display: flex;
-align-items: center;
+align-items: flex-start;
 justify-content: space-between;
 gap: 24px;
 }
@@ -397,6 +398,81 @@ font-weight: 700;
 color: #f3fbff;
 text-align: right;
 }
+/* PR-D: CRS 3パネル(header下段・横並び・ダークnavy) */
+.crs-panels {
+margin-top: 22px;
+}
+.crs-panels-title {
+font-size: 0.82em;
+letter-spacing: 1.2px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 10px;
+}
+.crs-panels-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 14px;
+align-items: start;
+}
+.crs-panel {
+border: 1px solid rgba(125, 211, 252, 0.28);
+border-radius: 10px;
+background: linear-gradient(145deg, rgba(5, 18, 48, 0.92), rgba(10, 37, 82, 0.72));
+box-shadow: inset 0 1px 18px rgba(255, 255, 255, 0.05);
+padding: 14px 16px;
+}
+.crs-panel-title {
+font-size: 0.8em;
+letter-spacing: 0.6px;
+font-weight: 800;
+color: #b7ecff;
+font-family: 'Orbitron', 'Rajdhani', 'Share Tech Mono', 'Trebuchet MS', sans-serif;
+margin-bottom: 8px;
+}
+.crs-panel-muted {
+font-size: 0.72em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.62);
+margin-top: 5px;
+}
+.crs-panel-muted strong { color: #eaf9ff; }
+.crs-row-hint { font-size: 0.82em; color: rgba(196, 232, 255, 0.5); }
+.crs-persona-name {
+font-size: 1.18em;
+font-weight: 800;
+color: #ffffff;
+margin: 2px 0 6px;
+text-shadow: 0 0 14px rgba(125, 211, 252, 0.30);
+}
+.crs-persona-desc {
+font-size: 0.62em;
+font-weight: 500;
+color: rgba(196, 232, 255, 0.66);
+}
+.crs-persona-temps {
+margin-bottom: 6px;
+font-size: 0.9em;
+color: #eaf9ff;
+}
+.crs-badge-wrap { margin-top: 10px; }
+.crs-badge {
+display: inline-block;
+padding: 3px 12px;
+border-radius: 999px;
+background: rgba(14, 52, 95, 0.7);
+border: 1px solid rgba(125, 211, 252, 0.5);
+color: #d8f7ff;
+font-weight: 700;
+font-size: 0.86em;
+}
+.crs-mirror {
+font-size: 0.74em;
+line-height: 1.5;
+color: rgba(196, 232, 255, 0.6);
+margin-top: 8px;
+}
 .content {
 padding: 40px;
 }
@@ -604,6 +680,9 @@ max-width: none;
 width: auto;
 margin-right: 0;
 }
+.crs-panels-grid {
+grid-template-columns: 1fr;
+}
 }
 @media (max-width: 560px) {
 .header-meta {
@@ -657,7 +736,7 @@ gap: 2px;
     <div style="font-size: 0.95em; margin-bottom: 5px;">曲名：雨上がりのParade</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">アーティスト名：FeathertuneP.D.</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">レポートID：FT-ad1e601e</div>
-    <div style="font-size: 0.95em; margin-bottom: 5px;">作成日：2026-06-01</div>
+    <div style="font-size: 0.95em; margin-bottom: 5px;">作成日：2026-06-26</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">Version：v1.00</div>
     <div style="font-size: 0.95em; margin-bottom: 5px;">分析依頼者：吉村　晴一郎</div>
 </div>
@@ -671,17 +750,17 @@ gap: 2px;
 <div class="crs-score-grid" aria-label="Creative Resonance Score breakdown">
 <div class="crs-score-item">
 <div class="crs-score-name">LYRICS</div>
-<div class="crs-score-number">60</div>
+<div class="crs-score-number">83</div>
 <div class="crs-score-caption">Score</div>
 </div>
 <div class="crs-score-item crs-score-item-main">
 <div class="crs-score-name">CRS</div>
-<div class="crs-score-number">48</div>
-<div class="crs-score-caption">Score / Rank C</div>
+<div class="crs-score-number">71</div>
+<div class="crs-score-caption">Score / Badge A</div>
 </div>
 <div class="crs-score-item">
 <div class="crs-score-name">MUSIC</div>
-<div class="crs-score-number">37</div>
+<div class="crs-score-number">58</div>
 <div class="crs-score-caption">Score</div>
 </div>
 </div>
@@ -695,26 +774,31 @@ gap: 2px;
 <div class="summary-card-row"><span>LYRICS</span><span class="summary-level-cell"><span class="summary-level summary-level-medium">MEDIUM</span></span></div>
 </div>
 <div class="summary-card-note">※各レベルは音楽分析上の確認優先度であり、法的判断ではありません。「要確認」は侵害可能性を断定するものではありません。</div>
-<div class="crs-breakdown">
-<div class="crs-breakdown-title">CRS Breakdown</div>
-<div class="crs-breakdown-row"><span>Lyrics Score</span><strong>60 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Music Score</span><strong>37 / 100</strong></div>
-<div class="crs-breakdown-row"><span>CRS</span><strong>48 / 100</strong></div>
-<div class="crs-breakdown-row"><span>Rank</span><strong>C</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Lyrics</span><strong>AI</strong></div>
-<div class="crs-breakdown-row"><span>Human Creation - Music</span><strong>AI</strong></div>
-<div class="crs-breakdown-row"><span>Lyrics Analysis</span><strong>60 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Lyrics Human Involvement</span><strong>0 / 15</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Lyrics</span><strong>0 / 10</strong></div>
-<div class="crs-breakdown-row"><span>ACRCloud / AI probability</span><strong>94.0% / 3.6pt (max 30)</strong></div>
-<div class="crs-breakdown-row"><span>Chord Structure</span><strong>33 / 40</strong></div>
-<div class="crs-breakdown-row"><span>Rights Code Bonus - Music</span><strong>0 / 10</strong></div>
-<div class="crs-breakdown-row"><span>Music Analysis</span><strong>36.6 / 70</strong></div>
-<div class="crs-breakdown-row"><span>Music Human Involvement</span><strong>0 / 15</strong></div>
-<div class="crs-breakdown-row"><span>Type / Attribute</span><strong>詩的情景描写型（感情型 × リズム型 × 構造型）</strong></div>
 </div>
 </div>
+<div class="crs-panels"><div class="crs-panels-title">CRS Breakdown</div><div class="crs-panels-grid"><div class="crs-panel">
+<div class="crs-panel-title">あなたの曲の個性</div>
+<div class="crs-breakdown-row"><span>表現タイプ</span><strong>詩的情景描写型（感情型 × リズム型 × 構造型）</strong></div>
 </div>
+<div class="crs-panel">
+<div class="crs-panel-title">制作プロセスの開示（How it was made）</div>
+<div class="crs-breakdown-row"><span>作詞</span><strong>AI</strong></div>
+<div class="crs-breakdown-row"><span>作曲</span><strong>AI</strong></div>
+<div class="crs-breakdown-row"><span>AI検知度（参考）</span><strong>94.0%</strong></div>
+<div class="crs-panel-muted">※ 作詞・作曲への人の関わり(共創)は、ごく小さな"温度"として創造スコアに加点しています（加点のみ・AI利用も加点・減点なし）。</div>
+<div class="crs-panel-muted">※ AI検知度は参考情報です。<strong>創造スコアには影響しません。</strong></div>
+<div class="crs-panel-muted">AIを隠さず、罰せず、正直に開示しています。</div>
+</div>
+<div class="crs-panel">
+<div class="crs-panel-title">MUSICの内訳（なぜこのスコアか）</div>
+<div class="crs-breakdown-row"><span>基本キー整合<span class="crs-row-hint">（キーと進行の土台がそろっているか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>王道進行の安定<span class="crs-row-hint">（親しみやすい定番進行か）</span></span><strong>5 / 8</strong></div>
+<div class="crs-breakdown-row"><span>区間の変化<span class="crs-row-hint">（展開・場面転換の豊かさ）</span></span><strong>4 / 8</strong></div>
+<div class="crs-breakdown-row"><span>独創性<span class="crs-row-hint">（転調・借用など冒険的な工夫）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>感情適合<span class="crs-row-hint">（曲の感情にコードが寄り添うか）</span></span><strong>8 / 8</strong></div>
+<div class="crs-breakdown-row"><span>コード構造 合計</span><strong>33 / 40</strong></div>
+<div class="crs-panel-muted">※ 各軸は既存Chord AI情報からの暫定算出です。</div>
+</div></div></div>
 </div>
 <div class="content">
 <div class="plan-report-meta">
@@ -723,7 +807,7 @@ gap: 2px;
 曲名：雨上がりのParade<br>
 アーティスト名：FeathertuneP.D.<br>
 レポートID：FT-ad1e601e<br>
-作成日：2026-06-01</p>
+作成日：2026-06-26</p>
 </div>
 
 
@@ -947,7 +1031,7 @@ Db | Ab | Bbm | Fm | Gb | Db | Ebm7 | Ab
         <tr><th>分析軸</th><th>評価</th><th>点数</th><th>補足</th></tr>
         <tr><td>抽象性・具体性バランス</td><td><strong>高</strong></td><td>7/10</td><td>内訳：抽象性4% / 具体性96%<br>方向性：強い具体寄り<br>タイプ：具体特化型</td></tr><tr><td>比喩独自性</td><td><strong>中</strong></td><td>6/10</td><td>比喩表現と特徴的表現を確認</td></tr><tr><td>情景描写力</td><td><strong>中</strong></td><td>6/10</td><td>自然物・身体・場所・時間帯・色彩語を確認</td></tr><tr><td>感情ダイナミクス</td><td><strong>高</strong></td><td>9/10</td><td>感情の対比や時間的変化が確認され、振れ幅のある展開です</td></tr><tr><td>文体リズムの自然さ</td><td><strong>高</strong></td><td>10/10</td><td>繰り返し表現・n-gram特徴を文体として確認</td></tr><tr><td>既視感の少なさ</td><td><strong>中</strong></td><td>6/10</td><td>特徴的な表現は見られますが、一部に定型的または確認対象となる表現も含まれます</td></tr><tr><td>表現構造の一貫性</td><td><strong>高</strong></td><td>10/10</td><td>語彙傾向・リズム・既存解析結果のまとまりを評価</td></tr>
     </table>
-    <p><strong>短評：</strong>補正後の総合点は60/70、総合ランクはAです。表現称号は「詩的情景描写型（感情型 × リズム型 × 構造型）」です。抽象性・具体性バランスは7/10、内訳は抽象性4%・具体性96%、方向性は強い具体寄り、タイプは具体特化型です。具体語が大きく優位で、情景・身体感覚・空間表現を前面に出す描写型の作風です。具体的な描写の中に感情の揺れが重なり、場面と心情が連動しています。この曲の強みは、感情ダイナミクス・文体リズムの自然さ・表現構造の一貫性が突出している点です。感情型・リズム型・構造型の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として情景描写特化型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・感情展開型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。</p>
+    <p><strong>短評：</strong>補正後の総合点は71/70、総合ランクはAです。表現称号は「詩的情景描写型（感情型 × リズム型 × 構造型）」です。抽象性・具体性バランスは7/10、内訳は抽象性4%・具体性96%、方向性は強い具体寄り、タイプは具体特化型です。具体語が大きく優位で、情景・身体感覚・空間表現を前面に出す描写型の作風です。具体的な描写の中に感情の揺れが重なり、場面と心情が連動しています。この曲の強みは、感情ダイナミクス・文体リズムの自然さ・表現構造の一貫性が突出している点です。感情型・リズム型・構造型の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として情景描写特化型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・感情展開型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。</p>
     <div style="margin-top:12px; color:#6c757d; font-size:0.9em;">本項目は、歌詞に含まれる表現傾向・文体の均質性・抽象語の密度・定型表現の傾向などを分析した参考指標です。AI生成の有無を判定・断定するものではありません。</div>
 </div>
 <div class="lyrics-box">
@@ -1251,7 +1335,7 @@ ACRCloudでの類似楽曲は検出されず、既存楽曲に対する直接的
 </ul>
 <h4>最終結論</h4>
 <p style="margin-top: 15px; line-height: 1.8; color: #2c3e50;">
-本楽曲『雨上がりのParade』は、タイトル、歌詞、楽曲構成、歌唱スタイルから判断して、希望と前向きなメッセージを伝えるポップバラードとして制作されています。アーティストの申告によると、作詞、作曲、歌唱の全てがAIツール「Suno V5.5」によって生成されたとのことです。音源のスペクトル分析および聴覚分析からも、AI生成楽曲に特徴的な音響特性が複数確認されました。具体的には、高周波帯域の不自然なカットオフ、ボーカルの感情表現の画一性、楽器の音色のデジタル的な質感などが挙げられます。人間の創作的寄与としては「日本語＋英語の曲作って」というプロンプト入力が挙げられていますが、これは現行の著作権法における『創作』行為とは一般的に解釈されにくい範囲に留まります。したがって、著作権の帰属に関して高いリスクを伴うと判断されます。 補正後の総合点は60/70、総合ランクはAです。表現称号は「詩的情景描写型（感情型 × リズム型 × 構造型）」です。抽象性・具体性バランスは7/10、内訳は抽象性4%・具体性96%、方向性は強い具体寄り、タイプは具体特化型です。具体語が大きく優位で、情景・身体感覚・空間表現を前面に出す描写型の作風です。具体的な描写の中に感情の揺れが重なり、場面と心情が連動しています。この曲の強みは、感情ダイナミクス・文体リズムの自然さ・表現構造の一貫性が突出している点です。感情型・リズム型・構造型の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として情景描写特化型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・感情展開型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。
+本楽曲『雨上がりのParade』は、タイトル、歌詞、楽曲構成、歌唱スタイルから判断して、希望と前向きなメッセージを伝えるポップバラードとして制作されています。アーティストの申告によると、作詞、作曲、歌唱の全てがAIツール「Suno V5.5」によって生成されたとのことです。音源のスペクトル分析および聴覚分析からも、AI生成楽曲に特徴的な音響特性が複数確認されました。具体的には、高周波帯域の不自然なカットオフ、ボーカルの感情表現の画一性、楽器の音色のデジタル的な質感などが挙げられます。人間の創作的寄与としては「日本語＋英語の曲作って」というプロンプト入力が挙げられていますが、これは現行の著作権法における『創作』行為とは一般的に解釈されにくい範囲に留まります。したがって、著作権の帰属に関して高いリスクを伴うと判断されます。 補正後の総合点は71/70、総合ランクはAです。表現称号は「詩的情景描写型（感情型 × リズム型 × 構造型）」です。抽象性・具体性バランスは7/10、内訳は抽象性4%・具体性96%、方向性は強い具体寄り、タイプは具体特化型です。具体語が大きく優位で、情景・身体感覚・空間表現を前面に出す描写型の作風です。具体的な描写の中に感情の揺れが重なり、場面と心情が連動しています。この曲の強みは、感情ダイナミクス・文体リズムの自然さ・表現構造の一貫性が突出している点です。感情型・リズム型・構造型の性質が称号に反映され、作風の個性として読めます。n-gram由来では反復構文が見られ、文体パターンやリズム感の形成に寄与しています。長いフレーズや比喩表現が多く、独自の言語構造が形成されています。作風特性として情景描写特化型が見え、作品の見せ方として整理できます。個性ラベルとしてはリズム駆動型・反復構造型・感情展開型が近く、この曲らしさの手がかりになります。既存の特徴フレーズ抽出、表現分類、n-gram分析、Gemini補助評価は本文を転載せず傾向のみ参照しています。本項目は生成有無の判定ではなく、歌詞の表現傾向を可視化するための参考指標です。
 </p>
 <div class="technical-details" style="margin-top:20px; border-left:4px solid #17a2b8;">
 <h4>■ 類似確認レベル</h4>
@@ -1546,5 +1630,6 @@ AI作曲部分については、明確な根拠が示されない限り著作権
 </div>
 </div>
 </div>
+<script type="application/json" id="feathertune-crs-summary-json">{"kind":"feathertune-crs-summary/v1","crs_summary":{"score_name":"Creative Resonance Score","score_abbr":"CRS","score":71,"rank":"A","lyrics_score":83,"music_score":58,"human_creation_lyrics":"AI","human_creation_music":"AI","lyrics_originality_score_70":60,"lyrics_rights_registration_bonus_10":0,"lyrics_analysis_score_70":60,"lyrics_human_creation_bonus_30":0,"lyrics_human_creation_bonus_max":15,"acr_ai_probability":94.0,"final_acr_score_30":3.6,"chord_structure_score_40":33,"music_rights_registration_bonus_10":0,"music_analysis_score_70":36.6,"music_human_creation_bonus_30":0,"music_human_creation_bonus_max":15,"chord_structure_details":{"score":33,"details":{"basic_key_alignment":8,"royal_progression_stability":5,"section_variation":4,"ingenuity":8,"emotion_fit":8},"note":"既存Chord AI情報から可能な範囲で暫定算出 (Chord Structure 40点満点 / spec v2.1)"},"chord_structure":"Db | Ab | Bbm | Fm | Gb | Db | Ebm7 | Ab","type_attribute":"詩的情景描写型（感情型 × リズム型 × 構造型）","todo":"Chord Structure各軸は既存Chord AI情報からの暫定算出。専用楽理判定器は別実装。JASRAC/NexTone作品コードは管理・登録情報の参考評価であり、権利状態の保証ではありません。","lyrics_creative_100":83,"music_creative_100":58,"lyrics_involvement_pt":1,"music_involvement_pt":1,"lyrics_implemented_frame_max_effective":80,"music_implemented_frame_max_effective":68,"music_implemented_frame_max":68}}</script>
 </body>
 </html>
