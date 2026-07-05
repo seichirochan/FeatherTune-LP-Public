@@ -408,6 +408,92 @@ h3 {
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(240, 217, 154, 0.2) inset;
 }
 
+/* 特大 CTA（申込ボタンを目立たせる・受付開始用） */
+.button-xl {
+  min-height: 68px;
+  padding: 1.15rem 2.2rem;
+  font-size: 1.22rem;
+  letter-spacing: 0.02em;
+  width: 100%;
+  max-width: 440px;
+  margin: 0.5rem auto;
+  box-shadow: 0 16px 40px rgba(216, 183, 106, 0.28), 0 0 0 1px rgba(240, 217, 154, 0.2) inset;
+  animation: btnPulse 2.6s ease-in-out infinite;
+}
+
+.button-xl:hover {
+  transform: translateY(-3px);
+}
+
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 16px 40px rgba(216, 183, 106, 0.28), 0 0 0 1px rgba(240, 217, 154, 0.2) inset; }
+  50% { box-shadow: 0 20px 52px rgba(216, 183, 106, 0.48), 0 0 0 1px rgba(240, 217, 154, 0.34) inset; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button-xl { animation: none; }
+}
+
+/* ORIGIN受付開始中バナー（“もう始まっている”を明快に伝える） */
+.origin-live-banner {
+  margin: var(--space-md) 0;
+  padding: 1.6rem 1.4rem;
+  border-radius: 22px;
+  border: 1px solid rgba(240, 217, 154, 0.5);
+  background: linear-gradient(135deg, rgba(216, 183, 106, 0.18), rgba(5, 8, 20, 0.5));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(240, 217, 154, 0.14) inset;
+  text-align: center;
+}
+
+.origin-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(216, 183, 106, 0.24);
+  border: 1px solid rgba(240, 217, 154, 0.62);
+  color: #fff4c8;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.09em;
+  animation: btnPulse 2.6s ease-in-out infinite;
+}
+
+.origin-live-badge::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #7CF29B;
+  box-shadow: 0 0 0 0 rgba(124, 242, 155, 0.7);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0% { box-shadow: 0 0 0 0 rgba(124, 242, 155, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(124, 242, 155, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 242, 155, 0); }
+}
+
+.origin-live-title {
+  margin: 0.8rem 0 0.35rem;
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #fff4c8;
+  line-height: 1.3;
+}
+
+.origin-live-sub {
+  margin: 0 0 1rem;
+  color: var(--color-dim);
+  font-size: 1.02rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .origin-live-badge, .origin-live-badge::before { animation: none; }
+}
+
 .monitor-form-button {
   border-color: rgba(240, 217, 154, 0.86);
   color: #fff4c8;
