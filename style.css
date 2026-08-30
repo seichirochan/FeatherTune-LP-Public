@@ -494,6 +494,27 @@ h3 {
   .origin-live-badge, .origin-live-badge::before { animation: none; }
 }
 
+/* 受付停止中の表示（2026-08-31 受付停止にともない追加）
+   緑の点滅ドット＝受付中の合図なので、停止時は静止した灰色ドットにする */
+.origin-live-badge.is-paused {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.34);
+  color: rgba(255, 255, 255, 0.86);
+  animation: none;
+}
+
+.origin-live-badge.is-paused::before {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+  animation: none;
+}
+
+.origin-live-banner.is-paused {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(5, 8, 20, 0.5));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
 .monitor-form-button {
   border-color: rgba(240, 217, 154, 0.86);
   color: #fff4c8;
