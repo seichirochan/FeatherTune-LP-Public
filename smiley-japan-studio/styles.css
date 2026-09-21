@@ -108,6 +108,11 @@ h1 img {
 .site-footer p { margin: 0; font-size: 12px; font-weight: 900; letter-spacing: .14em; }
 .site-footer .preview-note { margin-left: auto; color: rgba(33, 28, 20, .68); font-size: 9px; letter-spacing: .12em; }
 .site-footer img { width: min(250px, 42vw); height: auto; }
+.site-footer .ai-mark {
+  width: clamp(54px, 7vw, 78px);
+  opacity: .92;
+  filter: drop-shadow(0 3px 3px rgba(42, 29, 3, .32));
+}
 :focus-visible { outline: 3px solid #171717; outline-offset: 5px; }
 
 @media (max-width: 700px) {
@@ -118,7 +123,8 @@ h1 img {
   .practices { grid-template-columns: 1fr; gap: 14px; margin-bottom: 40px; }
   .practice-card { grid-template-columns: 148px 1fr; min-height: 182px; align-items: center; padding: 15px; }
   .practice-card img { width: 136px; height: 136px; margin: 0; }
-  .site-footer { align-items: center; gap: 12px; }
+  .site-footer { flex-wrap: wrap; align-items: center; gap: 12px; }
+  .site-footer > p:first-child { flex-basis: 100%; }
   .site-footer .preview-note { margin-left: 0; }
 }
 
