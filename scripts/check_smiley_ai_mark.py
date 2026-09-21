@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "smiley-japan-studio" / "index.html"
-MARK = ROOT / "smiley-japan-studio" / "assets" / "co-created-with-ai-metal.png"
+MARK = ROOT / "smiley-japan-studio" / "assets" / "co-created-with-ai-metal-plate.png"
 
 
 def main() -> int:
@@ -16,7 +16,7 @@ def main() -> int:
     issues: list[str] = []
     if 'class="ai-mark"' not in html:
         issues.append("missing ai-mark class")
-    if 'src="assets/co-created-with-ai-metal.png"' not in html:
+    if 'src="assets/co-created-with-ai-metal-plate.png"' not in html:
         issues.append("missing AI mark asset reference")
     if 'alt="Co-created with AI"' not in html:
         issues.append("missing accessible AI mark label")
